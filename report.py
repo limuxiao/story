@@ -1,12 +1,18 @@
 # -*- coding:utf-8 -*-
 
-import codecs
-
 
 def main():
-    with codecs.open("侠鹿.txt", "r", "utf-8") as f:
-        print(f.readline())
+    f = open("侠鹿.txt", "r", encoding="utf-8")
+    total = 0
+    for s in f.readlines():
+        for ch in s:
+            if '\u4e00' <= ch <= '\u9fff':
+                total += 1
+                pass
+    f.close()
+    return total
 
 
 if __name__ == "__main__":
-    main()
+    total = main()
+    print(total)
