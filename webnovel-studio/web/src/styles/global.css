@@ -1,0 +1,313 @@
+:root {
+  --bg: #f5f4f0;
+  --panel: #ffffff;
+  --panel-soft: #faf8f4;
+  --ink: #2b2a26;
+  --ink-mid: #5c584f;
+  --ink-dim: #8a867d;
+  --line: #e6e2d9;
+  --line-soft: #efece5;
+  --accent: #b4552d;
+  --accent-soft: #f7e8e0;
+  --accent-deep: #8f4020;
+  --green: #4f7a3f;
+  --green-soft: #e9f1e4;
+  --red: #c0392b;
+  --red-soft: #fbe9e7;
+  --amber: #b8860b;
+  --amber-soft: #faf1d8;
+  --shadow: 0 1px 3px rgba(43, 42, 38, 0.06), 0 4px 16px rgba(43, 42, 38, 0.05);
+  --shadow-lg: 0 8px 32px rgba(43, 42, 38, 0.12);
+  --radius: 14px;
+  --radius-sm: 9px;
+  --header-h: 58px;
+  --footer-h: 38px;
+  --nav-w: 236px;
+  --ai-w: 372px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #d9d4ca;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #c4beb2;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---------- 通用按钮 ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 13px;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.btn.primary:hover {
+  background: var(--accent-deep);
+  color: #fff;
+}
+.btn.ghost {
+  background: transparent;
+}
+.btn.danger:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+.btn.sm {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn:disabled:hover {
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+/* ---------- 卡片 ---------- */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.card-head {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line-soft);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.card-head h3 {
+  font-size: 14.5px;
+  font-weight: 700;
+}
+.card-body {
+  padding: 16px 18px;
+}
+
+/* ---------- 标签 ---------- */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: var(--panel-soft);
+  border: 1px solid var(--line);
+  color: var(--ink-mid);
+  white-space: nowrap;
+}
+.tag.accent {
+  background: var(--accent-soft);
+  border-color: #ecd4c8;
+  color: var(--accent-deep);
+}
+.tag.green {
+  background: var(--green-soft);
+  border-color: #cfe0c5;
+  color: var(--green);
+}
+.tag.red {
+  background: var(--red-soft);
+  border-color: #f0cdc7;
+  color: var(--red);
+}
+.tag.amber {
+  background: var(--amber-soft);
+  border-color: #ecd9a6;
+  color: var(--amber);
+}
+
+/* ---------- 文本工具 ---------- */
+.muted {
+  color: var(--ink-dim);
+}
+.small {
+  font-size: 12.5px;
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 表单 ---------- */
+.field {
+  margin-bottom: 16px;
+}
+.field > label {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.input,
+.textarea,
+.select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fdfcfa;
+  padding: 9px 12px;
+  font-size: 14px;
+  line-height: 1.75;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  resize: vertical;
+}
+.input:focus,
+.textarea:focus,
+.select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(180, 85, 45, 0.1);
+}
+.textarea {
+  min-height: 120px;
+}
+
+/* ---------- 布局骨架 ---------- */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+.app-container {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  position: relative;
+}
+.app-wrapper {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.page {
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 26px 32px 72px;
+}
+.page.wide {
+  max-width: 1180px;
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 1180px) {
+  .app-container {
+    --ai-w: 320px;
+  }
+}
+@media (max-width: 960px) {
+  .page {
+    padding: 18px 16px 60px;
+  }
+}
+@media (max-width: 720px) {
+  .app-container {
+    --nav-w: 0px;
+  }
+  .page {
+    padding: 14px 12px 56px;
+  }
+  .btn,
+  .card-head {
+    min-height: 40px;
+  }
+  .input,
+  .textarea,
+  .select {
+    font-size: 16px;
+  }
+}
+
+/* ---------- 动画 ---------- */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.fade-in {
+  animation: fadeIn 0.25s ease;
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
