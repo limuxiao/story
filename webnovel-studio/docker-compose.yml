@@ -1,0 +1,70 @@
+# ============================================================
+# webnovel-studio · Docker 部署编排
+#
+# 架构：
+#   web  (nginx, :5278) ──/api 反向代理──▶  api (NestJS, :5178)
+#                                             │  SQLite 持久化
+#                                             ▼
+#                                    named volume: studio-data
+#
+# 使用：
+#   docker compose up -d --build
+#   然后浏览器访问 http://localhost:5278
+#   如需改端口：WEB_PORT=5278 docker compose up -d --build
+# ============================================================
+name: webnovel-studio
+
+services:
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      # 关闭 buildx provenance 元数据，规避 "No such image: sha256:..." 导出报错
+      provenance: false
+    image: webnovel-studio-api:latest
+    container_name: webnovel-studio-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 5178
+      # SQLite 落盘到挂载卷，容器重建数据不丢
+      DB_PATH: /app/server/data/studio.db
+    volumes:
+      - studio-data:/app/server/data
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - fetch('http://127.0.0.1:5178/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+    # 后端仅在内网供 web 反代使用；如需本机直连调试 API，可取消注释：
+    # ports:
+    #   - "${API_PORT:-5178}:5178"
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      # 同上，关闭 provenance 元数据
+      provenance: false
+    image: webnovel-studio-web:latest
+    container_name: webnovel-studio-web
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${WEB_PORT:-5278}:5278"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:5278/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  # SQLite 数据（练习记录 / 诊断 / AI 密钥等）持久化卷
+  studio-data:

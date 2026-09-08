@@ -1,0 +1,14 @@
+# web/ 构建上下文忽略项
+.DS_Store
+
+# 依赖与构建产物（构建阶段会在容器内重新安装/编译）
+node_modules
+dist
+
+# 环境与日志
+.env
+.env.*
+*.log
+
+# Dockerfile 自身无需进上下文（注意：nginx.conf 被 Dockerfile COPY，不能忽略）
+Dockerfile
