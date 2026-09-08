@@ -12,3 +12,6 @@ server/data/
 
 # 日志
 *.log
+
+# 导出的镜像包（仅供本机上传远端，勿入库）
+docker-images/

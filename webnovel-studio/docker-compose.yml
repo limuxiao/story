@@ -41,9 +41,9 @@ services:
       timeout: 5s
       retries: 5
       start_period: 25s
-    # 后端仅在内网供 web 反代使用；如需本机直连调试 API，可取消注释：
-    # ports:
-    #   - "${API_PORT:-5178}:5178"
+    # 开放后端端口供外部直接访问 API（默认 5178，可用 API_PORT 覆盖）
+    ports:
+      - "${API_PORT:-5178}:5178"
 
   web:
     build:
