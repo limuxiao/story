@@ -1,32 +1,23 @@
 # syntax=docker/dockerfile:1
 # ============================================================
-# webnovel-studio · 前端 (Vite + Vue3)
+# webnovel-studio · 前端运行镜像 (Nginx)
 #
+# 注意：本镜像只负责托管「本地已编译」的静态资源 dist/，
+#       不再包含 node 构建阶段，因此构建/部署时不会拉取 node 镜像。
+#
+# 前提：需先在本地执行 `npm run build` 产出 dist/
 # 构建上下文必须是 web/ 目录（COPY 路径均相对该目录）
 #   推荐（compose 已配好）：docker compose build web
 #   手动构建：cd web && docker build -t webnovel-studio-web .
-#   ✗ 错误用法：在项目根目录执行 docker build -f web/Dockerfile .
 # ============================================================
 
-########## 构建阶段 ##########
-FROM node:22-alpine AS build
+FROM nginx:alpine-slim
 
-WORKDIR /app/web
+# 前端静态资源（由本地 npm run build 预编译）
+COPY dist /usr/share/nginx/html
 
-# 先拷贝依赖清单以充分利用 Docker 层缓存
-COPY package.json package-lock.json ./
-RUN npm ci
-
-# 拷贝源码并产出静态资源到 dist/
-COPY . ./
-RUN npm run build
-
-########## 运行阶段 ##########
-# nginx 托管静态文件，并将 /api 反向代理到后端服务
-FROM nginx:1.27-alpine
-
+# nginx 站点配置：托管静态文件 + 将 /api 反向代理到后端服务
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /app/web/dist /usr/share/nginx/html
 
 EXPOSE 5278
 

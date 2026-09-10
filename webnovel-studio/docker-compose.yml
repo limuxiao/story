@@ -19,8 +19,6 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
-      # 关闭 buildx provenance 元数据，规避 "No such image: sha256:..." 导出报错
-      provenance: false
     image: webnovel-studio-api:latest
     container_name: webnovel-studio-api
     restart: unless-stopped
@@ -49,8 +47,6 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
-      # 同上，关闭 provenance 元数据
-      provenance: false
     image: webnovel-studio-web:latest
     container_name: webnovel-studio-web
     restart: unless-stopped
