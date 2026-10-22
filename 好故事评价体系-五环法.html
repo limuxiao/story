@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>好故事评价体系 · 五环因果链</title>
+<style>
+  :root {
+    --ink: #2b2622;
+    --paper: #f6f1e7;
+    --accent: #8a5a2b;
+    --line: #d9cdb8;
+    --red: #b03a2e;
+    --green: #4a7c59;
+    --bg: #efe6d4;
+    --muted: #9a8c74;
+    --gold: #b8860b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Songti SC", "SimSun", "Noto Serif CJK SC", serif;
+    line-height: 1.9;
+    font-size: 16px;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 56px 28px 96px; }
+
+  h1 {
+    font-size: 34px;
+    letter-spacing: 6px;
+    text-align: center;
+    margin: 0 0 6px;
+  }
+  .sub {
+    text-align: center;
+    color: var(--accent);
+    font-size: 14px;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+  .note {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    margin: 12px 0 36px;
+    border-bottom: 1px dashed var(--line);
+    padding-bottom: 22px;
+  }
+
+  .manifesto {
+    background: #fffaf1;
+    border: 2px solid var(--accent);
+    border-radius: 10px;
+    padding: 28px 32px;
+    margin: 0 0 44px;
+  }
+  .manifesto h2 {
+    margin: 0 0 16px;
+    font-size: 21px;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+  .manifesto p { margin: 10px 0; text-indent: 2em; }
+  .manifesto .core {
+    font-size: 18px;
+    text-align: center;
+    color: var(--accent);
+    letter-spacing: 1px;
+    margin: 20px 0;
+    padding: 14px;
+    background: rgba(138,90,43,0.08);
+    border-radius: 6px;
+    text-indent: 0;
+  }
+
+  .chain-overview {
+    margin: 0 0 48px;
+  }
+  .chain-overview h2 {
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 8px;
+    margin: 0 0 20px;
+  }
+  .chain-visual {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+    margin: 24px 0;
+    flex-wrap: wrap;
+  }
+  .chain-node {
+    text-align: center;
+    padding: 14px 10px;
+    min-width: 150px;
+    background: #fffaf1;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin: 6px 0;
+  }
+  .chain-node .ring-num {
+    display: block;
+    font-size: 26px;
+    color: var(--accent);
+    font-weight: bold;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+  .chain-node .ring-name {
+    font-size: 15px;
+    color: var(--ink);
+    letter-spacing: 1px;
+  }
+  .chain-arrow {
+    font-size: 22px;
+    color: var(--accent);
+    padding: 0 6px;
+  }
+  .chain-desc {
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 8px;
+    letter-spacing: 1px;
+  }
+
+  .ring {
+    margin: 56px 0 24px;
+    border-top: 3px solid var(--accent);
+    padding-top: 20px;
+  }
+  .ring-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 6px;
+  }
+  .ring-header .big-num {
+    font-size: 40px;
+    color: var(--accent);
+    font-weight: bold;
+    line-height: 1;
+    letter-spacing: 2px;
+  }
+  .ring-header .ring-title {
+    font-size: 24px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    font-weight: bold;
+  }
+  .ring-core-q {
+    background: rgba(138,90,43,0.08);
+    border-left: 4px solid var(--accent);
+    padding: 12px 20px;
+    margin: 12px 0 24px;
+    font-size: 16px;
+    color: var(--ink);
+    text-indent: 0;
+  }
+  .ring-core-q::before {
+    content: "这一环的核心问题：";
+    color: var(--red);
+    font-weight: bold;
+  }
+
+  .check {
+    background: #fffaf1;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 18px 24px;
+    margin: 16px 0;
+  }
+  .check h4 {
+    margin: 0 0 6px;
+    font-size: 16px;
+    color: var(--ink);
+    letter-spacing: 1px;
+  }
+  .check h4 .label {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-size: 12px;
+    padding: 1px 9px;
+    border-radius: 10px;
+    margin-right: 8px;
+    letter-spacing: 1px;
+    vertical-align: middle;
+  }
+  .check .why {
+    color: var(--muted);
+    font-size: 14px;
+    margin: 4px 0 10px;
+  }
+  .check .tiers {
+    display: flex;
+    gap: 12px;
+    margin: 10px 0;
+  }
+  .tier {
+    flex: 1;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+  .tier .tier-label {
+    font-weight: bold;
+    letter-spacing: 1px;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .tier.fail { background: rgba(176,58,46,0.08); border: 1px solid rgba(176,58,46,0.25); }
+  .tier.fail .tier-label { color: var(--red); }
+  .tier.pass { background: rgba(138,90,43,0.06); border: 1px solid rgba(138,90,43,0.2); }
+  .tier.pass .tier-label { color: var(--accent); }
+  .tier.good { background: rgba(74,124,89,0.08); border: 1px solid rgba(74,124,89,0.25); }
+  .tier.good .tier-label { color: var(--green); }
+  .check .how {
+    background: rgba(138,90,43,0.05);
+    border-left: 3px solid var(--line);
+    padding: 8px 14px;
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .check .how::before {
+    content: "怎么检验：";
+    color: var(--accent);
+    font-weight: bold;
+  }
+
+  .ring-dependency {
+    background: var(--bg);
+    border: 1px dashed var(--accent);
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin: 20px 0 8px;
+    font-size: 14px;
+  }
+  .ring-dependency::before {
+    content: "⚠ 前置依赖：";
+    color: var(--red);
+    font-weight: bold;
+  }
+
+  .diagnosis {
+    background: #fffaf1;
+    border: 2px solid var(--gold);
+    border-radius: 10px;
+    padding: 28px 32px;
+    margin: 56px 0 40px;
+  }
+  .diagnosis h2 {
+    margin: 0 0 16px;
+    font-size: 22px;
+    color: var(--gold);
+    letter-spacing: 2px;
+  }
+  .diagnosis p { margin: 10px 0; text-indent: 2em; }
+  .diagnosis ol { margin: 10px 0; padding-left: 28px; }
+  .diagnosis li { margin: 8px 0; }
+  .diag-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 18px 0;
+    font-size: 14px;
+  }
+  .diag-table th, .diag-table td {
+    border: 1px solid var(--line);
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  .diag-table th { background: var(--accent); color: #fff; font-weight: normal; letter-spacing: 1px; }
+  .diag-table tr:nth-child(even) { background: rgba(138,90,43,0.05); }
+
+  .foot {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 60px;
+    border-top: 1px solid var(--line);
+    padding-top: 24px;
+  }
+
+  @media (max-width: 700px) {
+    .chain-visual { flex-direction: column; }
+    .chain-arrow { transform: rotate(90deg); }
+    .check .tiers { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>好故事评价体系</h1>
+<div class="sub">五环因果链 · 逐环诊断 · 不是清单，是链条</div>
+<div class="note">
+这不是一份打分表。它是一个诊断工具：找到故事链条上最脆弱的那一环，先修那一环。
+</div>
+
+<!-- ============ 总纲 ============ -->
+<div class="manifesto">
+<h2>为什么是“链”而不是“清单”</h2>
+<p>清单是并列的检查项：这一条打几分，那一条打几分，加起来看总分。清单的问题是，它无法回答“哪个问题最致命”——一条不及格和五条不及格，在总分上可能差不多，但故事的死法完全不同。</p>
+<p>体系是有依赖关系的结构。好故事是一条因果链：<strong>读者先在乎一个人，然后看见她被逼到墙角，然后看她做出选择、付出代价，然后看她发生改变，最后留下一点余味。</strong>这五个环节环环相扣，前一环是后一环的前提。如果第一环断了——读者不在乎主角——后面四环写得再好也没有意义。</p>
+<div class="core">所以这个体系的核心用法是：<br />逐环检查，找到最先断掉的那一环，修它。<br />不要修后面的环来补前面的裂缝。</div>
+</div>
+
+<!-- ============ 链条总览 ============ -->
+<div class="chain-overview">
+<h2>五环总览</h2>
+<div class="chain-visual">
+  <div class="chain-node"><span class="ring-num">环一</span><span class="ring-name">人物锚定</span></div>
+  <div class="chain-arrow">→</div>
+  <div class="chain-node"><span class="ring-num">环二</span><span class="ring-name">压力升级</span></div>
+  <div class="chain-arrow">→</div>
+  <div class="chain-node"><span class="ring-num">环三</span><span class="ring-name">选择与代价</span></div>
+  <div class="chain-arrow">→</div>
+  <div class="chain-node"><span class="ring-num">环四</span><span class="ring-name">改变与弧光</span></div>
+  <div class="chain-arrow">→</div>
+  <div class="chain-node"><span class="ring-num">环五</span><span class="ring-name">余味与思想</span></div>
+</div>
+<div class="chain-desc">每一环都是下一环的前提。环一断了，后面全悬空。</div>
+</div>
+
+<!-- ============ 环一 ============ -->
+<div class="ring">
+<div class="ring-header">
+  <span class="big-num">环一</span>
+  <span class="ring-title">人物锚定</span>
+</div>
+<div class="ring-core-q">读者是否愿意跟着这个人走完整个故事？</div>
+
+<div class="check">
+<h4><span class="label">1.1</span>不公与心疼</h4>
+<div class="why">读者需要在前段就感到“这个人不该遭这个罪”。不是“她惨”，是“她不欠这个”。</div>
+<div class="tiers">
+  <div class="tier fail"><span class="tier-label">断环</span>苦难是设定要求的，读者看不出她凭什么遭罪。惨是概念上的，没有具体画面。</div>
+  <div class="tier pass"><span class="tier-label">勉强扣上</span>有不公，但停留在“孤儿”“被灭门”这类概括。读者知道她惨，没被击中。</div>
+  <div class="tier good"><span class="tier-label">扣紧</span>不公是具体的、有画面的、明显超出她应得的。读者能说出“那一刻我替她难受”的具体场景。</div>
+</div>
+<div class="how">让没读过的人看前三分之一，问他“你希望这个主角得到什么”。答得出且方向与故事一致，扣紧；答“不知道”或“她活该”，断环。</div>
+</div>
+
+<div class="check">
+<h4><span class="label">1.2</span>具体欲望与内在缺失</h4>
+<div class="why">读者不仅要知道她“想要什么”（外部目标），还要感到她“缺了什么”（内在缺失）。两者缺一，读者对她的投入就不完整。</div>
+<div class="tiers">
+  <div class="tier fail"><span class="tier-label">断环</span>目标全是“拯救”“成长”“寻找自我”这类抽象词。读者无法在脑中形成画面。</div>
+  <div class="tier pass"><span class="tier-label">勉强扣上</span>有具体目标，但目标是“她应该要”的，不是“她非要不可”的。读者理解但不揪心。</div>
+  <div class="tier good"><span class="tier-label">扣紧</span>外部目标小到一句说清、具体到能画出画面；内在缺失与外部目标有情感因果。读者同时想看她“得到”和“补上”。</div>
+</div>
+<div class="how">用一句话说出主角前三分之一最想要的东西，禁用“拯救”“改变”“成长”。说不出，断环。</div>
+</div>
+
+<div class="ring-dependency">如果环一有任意一条断了，不要急着看环二。人物没锚定，后面的压力和选择都落不到读者心里。</div>
+</div>
+
+<!-- ============ 环二 ============ -->
+<div class="ring">
+<div class="ring-header">
+  <span class="big-num">环二</span>
+  <span class="ring-title">压力升级</span>
+</div>
+<div class="ring-core-q">主角是否被一步步逼到墙角，而且每一步都是上一步的结果？</div>
+
+<div class="check">
+<h4><span class="label">2.1</span>风险的升级</h4>
+<div class="why">危机不是“有就行”，它必须越来越大。如果第一场和第十场的风险一样大，读者会在第五场失去紧张感。</div>
+<div class="tiers">
+  <div class="tier fail"><span class="tier-label">断环</span>危机从头到尾一个量级。或者危机是“概念上的危险”，读者不觉得主角真的会失去什么。</div>
+  <div class="tier pass"><span class="tier-label">勉强扣上</span>危机在升级，但升级靠“敌人变强”，不是“主角在乎的东西被威胁”。</div>
+  <div class="tier good"><span class="tier-label">扣紧</span>每一次升级都威胁到读者已经在前文爱上的具体的人或东西。失败代价是具体的、有画面的、层层加码的。</div>
+</div>
+<div class="how">把主角在每一幕的处境写成“她必须在X时间内做到Y，否则Z会失去”。如果Z在每一幕都是同一个量级的抽象概念，断环。</div>
+</div>
+
+<div class="check">
+<h4><span class="label">2.2</span>对手的针对性</h4>
+<div class="why">对手不是“反派”，是“与主角争夺同一个目标的人”。对手的恶必须有具体动作，直接造成主角的痛苦。对手可以复杂，但不能复杂到让读者觉得“他也不容易”。</div>
+<div class="tiers">
+  <div class="tier fail"><span class="tier-label">断环</span>反派是背景板，恶停留在形容词层面（“阴险”“残暴”）。读者只知道“有个坏人”，说不出他做过什么。</div>
+  <div class="tier pass"><span class="tier-label">勉强扣上</span>反派做了具体的坏事，但与主角的欲望没有直接关系。读者恨他，但不觉得主角非杀他不可。</div>
+  <div class="tier good"><span class="tier-label">扣紧</span>反派有具体的、针对主角的恶行，直接造成主角的痛苦。读者能说出“我恨不得看他被主角亲手了结”的具体场景。</div>
+</div>
+<div class="how">用一句话说出反派做过的、让读者最恨的那件事，禁用“杀人如麻”这类概括。说不出具体恶行，断环。</div>
+</div>
+
+<div class="check">
+<h4><span class="label">2.3</span>因果链而非事件堆叠</h4>
+<div class="why">这是最容易断、也最不容易发现的一条。故事最怕的是“然后发生了这件事”，而不是“因为上一件事，所以发生了这件事”。</div>
+<div class="tiers">
+  <div class="tier fail"><span class="tier-label">断环</span>去掉任何一个情节点，后面的情节依然成立。事件之间是时间顺序，不是因果顺序。</div>
+  <div class="tier pass"><span class="tier-label">勉强扣上</span>主干有因果，但支线是“顺便发生的”。读者感觉有些情节是为了凑数。</div>
+  <div class="tier good"><span class="tier-label">扣紧</span>去掉任何一个关键情节点，后面的链条会垮。每一个事件都是前一个事件的必然结果，同时是下一个事件的原因。</div>
+</div>
+<div class="how">在大纲中逐个删掉情节点，问：删掉这个，后面的情节还能成立吗？能，就是堆叠；不能，才是因果。</div>
+</div>
+
+<div class="ring-dependency">如果环二有任意一条断了，环三的“选择”就没有分量——因为读者不觉得主角真的被逼到了墙角。</div>
+</div>
+
+<!-- ============ 环三 ============ -->
+<div class="ring">
+<div class="ring-header">
+  <span class="big-num">环三</span>
+  <span class="ring-title">选择与代价</span>
+</div>
+<div class="ring-core-q">主角是否在岔路口上选了更难的那条，并且付出了读者能感受到的代价？</div>
+
+<div class="check">
+<h4><span class="label">3.1</span>岔路的存在</h4>
+<div class="why">选择之所以是选择，是因为有一条“她本可以不这么走”的路。如果只有一条路，那不叫选择，叫剧情安排。</div>
+<div class="tiers">
+  <div class="tier fail"><span class="tier-label">断环</span>主角全程被事件推着走，没有选择，只有反应。读者感觉“换谁都得这么干”。</div>
+  <div class="tier pass"><span class="tier-label">勉强扣上</span>有选择，但是“明牌二选一”：一边明显正确，一边明显错误。读者不纠结。</div>
+  <div class="tier good"><span class="tier-label">扣紧</span>两条路都有代价。她选了一条，放弃的那条在读者心里留下“如果她选另一条会怎样”的余味。</div>
+</div>
+<div class="how">列出主角的三到五个关键决定，逐个问：她当时有没有另一条更轻松、更安全、更符合常理的路？如果每个决定都只有一条路，断环。</div>
+</div>
+
+<div class="check">
+<h4><span class="label">3.2</span>代价的具体性</h4>
+<div class="why">代价不能是“她很难过”。代价必须是她失去了读者已经看见她拥有的东西。</div>
+<div class="tiers">
+  <div class="tier fail"><span class="tier-label">断环</span>代价是抽象的（“她失去了天真”“她背负了罪恶感”）。读者看不见她失去了什么具体的东西。</div>
+  <div class="tier pass"><span class="tier-label">勉强扣上</span>代价是具体的，但读者对那个东西没有感情积累。她失去了一件读者不在乎的东西。</div>
+  <div class="tier good"><span class="tier-label">扣紧</span>代价是读者在前文已经爱上的人、关系或物件。她失去的时候，读者也跟着疼。</div>
+</div>
+<div class="how">写出主角在关键选择中失去的具体东西。如果写出来的是一个抽象名词，断环；如果写出来的是一个具体的人或物，但读者在前文没见过它被珍视，也断环。</div>
+</div>
+
+<div class="ring-dependency">如果环三断了，环四的“改变”就没有说服力——读者不觉得她付出了什么，也就不觉得她“变成了另一个人”。</div>
+</div>
+
+<!-- ============ 环四 ============ -->
+<div class="ring">
+<div class="ring-header">
+  <span class="big-num">环四</span>
+  <span class="ring-title">改变与弧光</span>
+</div>
+<div class="ring-core-q">主角从开始到结束，是否变成了一个读者能看见的、不同的、且可信的人？</div>
+
+<div class="check">
+<h4><span class="label">4.1</span>改变的可见性</h4>
+<div class="why">改变不能靠旁白说“她长大了”。改变要有一个具体的、可对比的行为标记。</div>
+<div class="tiers">
+  <div class="tier fail"><span class="tier-label">断环</span>开头和结尾的主角，行为方式没有可对比的变化。或者变化靠台词宣布（“我变了”）。</div>
+  <div class="tier pass"><span class="tier-label">勉强扣上</span>有变化，但变化是线性的、可预测的（从弱到强、从怕到不怕）。读者不意外。</div>
+  <div class="tier good"><span class="tier-label">扣紧</span>开头和结尾各有一个具体行为，放在一起对比能看出“这是两个人”。变化不是线性的，中间有反复、有错步、有她自己也没想到的选择。</div>
+</div>
+<div class="how">写出主角在开头第一场和结尾最后一场各做的一个动作。如果这两个动作放在一起看不出区别，断环。</div>
+</div>
+
+<div class="check">
+<h4><span class="label">4.2</span>改变的意外性与可信性</h4>
+<div class="why">好的改变让读者意外，但回想起来觉得“对，她就是这样的人”。意外不可信是胡闹，可信不意外是平庸。</div>
+<div class="tiers">
+  <div class="tier fail"><span class="tier-label">断环</span>改变完全在读者预料之中，或者改变毫无铺垫、凭空发生。</div>
+  <div class="tier pass"><span class="tier-label">勉强扣上</span>改变有铺垫，但铺垫太明显，读者提前猜到了。意外性不足。</div>
+  <div class="tier good"><span class="tier-label">扣紧</span>读者在改变发生的那一刻感到意外，但往前翻，能找出三到五个伏笔支撑这个改变。改变是“意料之外，情理之中”。</div>
+</div>
+<div class="how">问一个读过的人：“主角最后的改变，你意外吗？”答“不意外”，意外性不足；答“意外但说不通”，可信性不足；答“意外但想想也对”，扣紧。</div>
+</div>
+
+<div class="ring-dependency">如果环四断了，环五的“余味”就落不了地——读者不觉得主角变成了另一个人，也就不觉得这个故事留下了什么。</div>
+</div>
+
+<!-- ============ 环五 ============ -->
+<div class="ring">
+<div class="ring-header">
+  <span class="big-num">环五</span>
+  <span class="ring-title">余味与思想</span>
+</div>
+<div class="ring-core-q">故事结束后，读者带走了什么？是一个让他回想的问题，还是一个转身就忘的结局？</div>
+
+<div class="check">
+<h4><span class="label">5.1</span>主题从情节中生长</h4>
+<div class="why">主题不是“这个故事讲的是XX”，是“读者看完之后自己说出来的那句话”。</div>
+<div class="tiers">
+  <div class="tier fail"><span class="tier-label">断环</span>主题靠角色在结尾说一句点题台词来宣布。删掉那句台词，读者说不出故事讲了什么。</div>
+  <div class="tier pass"><span class="tier-label">勉强扣上</span>主题能在情节中找到支撑，但支撑是分散的。读者需要被提醒才能意识到“原来在讲这个”。</div>
+  <div class="tier good"><span class="tier-label">扣紧</span>主题能在三到五个具体场景中被读者自己发现。删掉所有点题台词，读者仍能说出“这个故事在讲什么”。</div>
+</div>
+<div class="how">删掉故事中所有点题台词和旁白议论，只留情节。问没读过的人“你觉得这个故事在讲什么”。答得出，扣紧；答不出，断环。</div>
+</div>
+
+<div class="check">
+<h4><span class="label">5.2</span>选择的不可替代性（反宿命）</h4>
+<div class="why">读者要感到“她本可以不这么做”。如果结局是“她注定要牺牲”，那这个故事就没有选择的重量。</div>
+<div class="tiers">
+  <div class="tier fail"><span class="tier-label">断环</span>结局是宿命驱动的：“她注定”“她不得不”。读者感觉主角没有选择，是作者写死的。</div>
+  <div class="tier pass"><span class="tier-label">勉强扣上</span>有选择，但是“两害相权取其轻”。读者理解她为什么选，但不震撼。</div>
+  <div class="tier good"><span class="tier-label">扣紧</span>结局面前有一条“看起来很合理”的退路。她没走。读者在她做出选择的那一刻，同时感到“她真傻”和“她真了不起”。</div>
+</div>
+<div class="how">写出主角在结局面前的“另一条路”——一条读者会觉得“如果她选这条也说得通”的路。写不出来，断环。</div>
+</div>
+
+<div class="check">
+<h4><span class="label">5.3</span>思想原创性</h4>
+<div class="why">在“父女传承”“牺牲救世”“善恶有报”这些常见命题之外，这个故事是否提供了一个只属于它的具体洞察？</div>
+<div class="tiers">
+  <div class="tier fail"><span class="tier-label">断环</span>主题是常见命题的复述，读者读完不会产生“这个角度我没想过”的感觉。</div>
+  <div class="tier pass"><span class="tier-label">勉强扣上</span>主题有新鲜感，但新鲜感来自设定（“转世鹿身”），不是来自对人性的洞察。</div>
+  <div class="tier good"><span class="tier-label">扣紧</span>读者读完后能说出一个具体的、他之前没想过的关于人性/选择/爱的洞察。这个洞察是从情节里长出来的，不是作者塞进去的。</div>
+</div>
+<div class="how">问读过的人：“这个故事有没有哪句话或哪个场景，让你想到一件你以前没想过的事？”答得出具体内容，扣紧；答“挺感人的”，断环。</div>
+</div>
+
+<div class="ring-dependency">环五是最后一环。它不依赖前面的环是否“扣紧”，但它依赖前面的环是否“存在”。如果前面四环全断，环五写得再好也只是一篇散文。</div>
+</div>
+
+<!-- ============ 诊断流程 ============ -->
+<div class="diagnosis">
+<h2>诊断流程：怎么用这个体系</h2>
+<p>这个体系不要求你给每一环打分求和。它要求你做的是：<strong>从环一开始，逐环检查，找到第一个断掉的环，停在那里，先修它。</strong></p>
+
+<ol>
+<li><strong>先查环一。</strong>如果读者不在乎主角，后面的压力和选择都是空转。不要用“后面情节很精彩”来补前面的裂缝。</li>
+<li><strong>环一扣上后，查环二。</strong>压力是否升级？对手是否具体？事件之间是因果还是堆叠？三条里断一条，环二就断了。</li>
+<li><strong>环二扣上后，查环三。</strong>主角是否有岔路可走？代价是否具体？如果她只有一条路，或者代价是抽象词，环三断了。</li>
+<li><strong>环三扣上后，查环四。</strong>改变是否可见？是否意外且可信？如果开头和结尾的主角是同一个人，环四断了。</li>
+<li><strong>环四扣上后，查环五。</strong>主题是否从情节里长出来？结局是否是选择而非宿命？是否有只属于这个故事的思想洞察？</li>
+</ol>
+
+<table class="diag-table">
+<tr><th>断在哪一环</th><th>典型症状</th><th>优先修什么</th></tr>
+<tr><td>环一</td><td>读者说“我没什么感觉”“不知道她想要什么”</td><td>具体的不公场景 + 具体的外部目标 + 内在缺失</td></tr>
+<tr><td>环二</td><td>读者说“有点拖”“不知道反派想干嘛”“这段可以跳过”</td><td>风险升级链 + 对手的具体恶行 + 删掉非因果情节点</td></tr>
+<tr><td>环三</td><td>读者说“她只能这么干吧”“感觉是作者安排的”</td><td>给她一条更舒服的退路 + 让代价落到读者在乎的人或物上</td></tr>
+<tr><td>环四</td><td>读者说“她好像没什么变化”“最后转变有点突然”</td><td>开头结尾的行为对比 + 三到五个支撑改变的可信伏笔</td></tr>
+<tr><td>环五</td><td>读者说“挺好看的，但看完就忘了”</td><td>删掉点题台词 + 给结局一条假退路 + 找一个只属于这个故事的具体洞察</td></tr>
+</table>
+
+<p><strong>一个重要的提醒：</strong>不要因为环五不够好，就回头去修环一。环五的问题往往不是环五本身的问题，而是前面某一环没扣紧，导致最后的情感没有落脚点。诊断顺序永远是从环一到环五，修的顺序也是。</p>
+</div>
+
+<!-- ============ 与外部理论的关系 ============ -->
+<div class="manifesto" style="margin-top:48px;">
+<h2>这套体系与外部理论的关系</h2>
+<p>这套“五环因果链”不是凭空造的。它的每一环都能在经典叙事理论中找到对应：</p>
+<ul style="margin:10px 0;padding-left:28px;">
+<li><strong>环一（人物锚定）</strong>对应麦基的“欲望/需求”和Cron的“大脑需要意义建构才能投入”。</li>
+<li><strong>环二（压力升级）</strong>对应麦基的“鸿沟”和《救猫咪》的节拍表——压力必须一层层加码，不能停在同一个量级。</li>
+<li><strong>环三（选择与代价）</strong>对应麦基的“压力下的选择揭示人物真相”和福斯特的“情节是因果，不是时间顺序”。</li>
+<li><strong>环四（改变与弧光）</strong>对应特鲁比的“弱点×抗争=角色转变”和福斯特的“圆形人物=意外且可信”。</li>
+<li><strong>环五（余味与思想）</strong>对应麦基的“主控思想”、特鲁比的“道德论点”，以及王跃文的“第三层：原创性的思想积累”。</li>
+</ul>
+<p>但它不是这些理论的拼盘。它把“人物—压力—选择—改变—思想”串成一条有依赖关系的链，用“找到最先断掉的那一环”代替“逐项打分求和”。这是它跟清单式标准的根本区别。</p>
+</div>
+
+<p class="foot">好故事评价体系 · 五环因果链　|　逐环诊断 · 先修断环 · 不求和只求通</p>
+
+</div>
+</body>
+</html>

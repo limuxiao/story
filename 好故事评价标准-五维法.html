@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>好故事评价标准 · 工具文档</title>
+<style>
+  :root {
+    --ink: #2b2622;
+    --paper: #f6f1e7;
+    --accent: #8a5a2b;
+    --line: #d9cdb8;
+    --red: #b03a2e;
+    --green: #4a7c59;
+    --bg: #efe6d4;
+    --muted: #9a8c74;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Songti SC", "SimSun", "Noto Serif CJK SC", serif;
+    line-height: 1.9;
+    font-size: 16px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 56px 28px 96px; }
+  h1 {
+    font-size: 32px;
+    letter-spacing: 5px;
+    text-align: center;
+    margin: 0 0 6px;
+  }
+  .sub {
+    text-align: center;
+    color: var(--accent);
+    font-size: 14px;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+  .note {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    margin: 12px 0 36px;
+    border-bottom: 1px dashed var(--line);
+    padding-bottom: 22px;
+  }
+  .intro {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 22px 28px;
+    margin: 0 0 40px;
+  }
+  .intro h2 {
+    margin: 0 0 12px;
+    font-size: 20px;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+  .intro p { margin: 8px 0; text-indent: 2em; }
+  .intro ul { margin: 8px 0; padding-left: 28px; }
+  .intro li { margin: 4px 0; }
+
+  .dim {
+    margin: 48px 0 24px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--accent);
+  }
+  .dim h2 {
+    font-size: 23px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    margin: 0;
+  }
+  .dim .dim-desc {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 4px;
+    letter-spacing: 1px;
+  }
+
+  .std {
+    background: #fffaf1;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 20px 26px;
+    margin: 20px 0;
+  }
+  .std h3 {
+    margin: 0 0 6px;
+    font-size: 18px;
+    color: var(--ink);
+    letter-spacing: 1px;
+  }
+  .std h3 .num {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-size: 13px;
+    padding: 1px 9px;
+    border-radius: 10px;
+    margin-right: 8px;
+    letter-spacing: 1px;
+    vertical-align: middle;
+  }
+  .q {
+    color: var(--accent);
+    font-size: 15px;
+    margin: 6px 0 14px;
+    padding-left: 2em;
+  }
+  .q::before { content: "核心追问："; color: var(--red); }
+  .grades { margin: 12px 0; }
+  .grade {
+    display: flex;
+    align-items: flex-start;
+    margin: 6px 0;
+    font-size: 15px;
+  }
+  .grade .score {
+    flex: 0 0 68px;
+    font-weight: bold;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+  .grade.poor .score { color: var(--red); }
+  .grade.good .score { color: var(--green); }
+  .grade .txt { flex: 1; }
+  .how {
+    background: rgba(138, 90, 43, 0.06);
+    border-left: 3px solid var(--accent);
+    padding: 8px 16px;
+    margin-top: 14px;
+    font-size: 14px;
+  }
+  .how::before { content: "检验方法："; color: var(--accent); font-weight: bold; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 14px;
+  }
+  th, td {
+    border: 1px solid var(--line);
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: var(--accent); color: #fff; font-weight: normal; letter-spacing: 1px; }
+  tr:nth-child(even) { background: rgba(138, 90, 43, 0.05); }
+  td.center { text-align: center; }
+
+  .rating {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 22px 28px;
+    margin: 40px 0;
+  }
+  .rating h2 {
+    margin: 0 0 12px;
+    font-size: 20px;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+  .rating p { margin: 8px 0; text-indent: 2em; }
+  .rating .level {
+    margin: 8px 0;
+    padding: 6px 12px;
+    border-left: 3px solid var(--accent);
+  }
+  .level strong { color: var(--accent); }
+
+  .foot {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 60px;
+    border-top: 1px solid var(--line);
+    padding-top: 24px;
+  }
+  .muted { color: var(--muted); }
+  .red { color: var(--red); }
+  .green { color: var(--green); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>好故事评价标准</h1>
+<div class="sub">工具文档 · 用于大纲阶段自检 · 不依附于任何具体故事</div>
+<div class="note">
+本文件只定义标准，不评价任何具体作品。九条标准，五个维度，每条1—5分，总分45分。
+</div>
+
+<!-- ============ 使用说明 ============ -->
+<div class="intro">
+<h2>使用说明</h2>
+<p>这套标准用于故事进入正文之前，检验骨架是否立得住。它不是文学鉴赏的终极尺子，而是一套“写之前先问自己”的工具。每一条标准都配一个核心追问、三档评分描述和检验方法。</p>
+<ul>
+<li><strong>评分方式：</strong>每条1—5分。1—2分为不合格，3分为及格，4—5分为优秀。</li>
+<li><strong>使用时机：</strong>大纲完成后、动笔之前。也可以在大纲修改的每一轮用来对比。</li>
+<li><strong>使用方法：</strong>逐条打分，记录总分，并写下每条得分的最低理由。总分不是目的，找出“哪一条拖了后腿”才是目的。</li>
+<li><strong>重要提醒：</strong>一条标准满分，不代表故事好看；但一条标准不及格，故事一定有硬伤。先消灭不及格项，再追求高分项。</li>
+</ul>
+</div>
+
+<!-- ============ 维度一 ============ -->
+<div class="dim">
+<h2>维度一　主角共情力</h2>
+<div class="dim-desc">读者是否愿意跟着这个主角走 · 三条标准</div>
+</div>
+
+<div class="std">
+<h3><span class="num">1.1</span>不公遭遇与心疼点</h3>
+<div class="q">读者是否在故事前段就为这个主角感到“不该如此”，并因此希望她得到补偿？</div>
+<div class="grades">
+<div class="grade poor"><div class="score">1—2分</div><div class="txt">主角的苦难是“设定要求她苦”，读者看不出她“凭什么遭这个罪”。苦难来自她的愚蠢或作者的安排，不是来自她不该承受的处境。</div></div>
+<div class="grade"><div class="score">3分</div><div class="txt">主角遭遇了明显的不公，但这份不公停留在概念层面（比如“她是孤儿”“她被灭门”），读者知道她惨，但没被具体细节击中。</div></div>
+<div class="grade good"><div class="score">4—5分</div><div class="txt">主角遭遇的不公是具体的、有画面的、且明显超出她应得的。读者能说出“那一刻我替她难受”的具体场景。这份不公与主角的欲望、处境、后续选择有直接因果。</div></div>
+</div>
+<div class="how">让一个不了解故事的人读前三分之一，问他“你希望这个主角得到什么”。如果他答得出，且答的正是故事给她的方向，这条就立住了；如果他答“不知道”或“她活该”，这条就不及格。</div>
+</div>
+
+<div class="std">
+<h3><span class="num">1.2</span>具体欲望与目标</h3>
+<div class="q">主角想要的东西，是否具体到读者能在脑子里形成画面，并产生“我想看她能不能得到”的冲动？</div>
+<div class="grades">
+<div class="grade poor"><div class="score">1—2分</div><div class="txt">主角的目标是“拯救天下”“打败邪恶”“寻找自我”这类宏大词汇。读者无法在脑中形成画面，也无法判断她“得到”或“没得到”。</div></div>
+<div class="grade"><div class="score">3分</div><div class="txt">主角有一个具体目标，但这个目标是她“应该要”的，不是她“非要不可”的。读者理解她为什么想要，但不会为她的成败揪心。</div></div>
+<div class="grade good"><div class="score">4—5分</div><div class="txt">主角的目标小到可以一句话说清、具体到可以画出画面，同时与她的情感创伤直接挂钩。读者读完前段会想：“她能不能做到？”这个目标可能在中途升级，但起点必须是具体的。</div></div>
+</div>
+<div class="how">试着用一句话说出主角在故事前三分之一“最想要的东西”，不能使用“拯救”“改变”“成长”这类抽象词。如果说不出，或者只能说大词，这条就不及格。</div>
+</div>
+
+<div class="std">
+<h3><span class="num">1.3</span>主动选择与岔路代价</h3>
+<div class="q">主角在关键节点上，是否有一条“她本可以不这么做”的更舒服的路？她选了更难的那条，并且清楚代价？</div>
+<div class="grades">
+<div class="grade poor"><div class="score">1—2分</div><div class="txt">主角全程被事件推着走。她没有选择，只有反应。读者感觉“换谁都得这么干”，主角的意志不存在。</div></div>
+<div class="grade"><div class="score">3分</div><div class="txt">主角做出了选择，但选择是二选一的“明牌”：一边明显正确，一边明显错误。读者不会为她纠结，因为她选对了是应该的。</div></div>
+<div class="grade good"><div class="score">4—5分</div><div class="txt">主角在关键节点上面临两条都有代价的路。她选了一条，放弃的那条在读者心里留下“如果她选另一条会怎样”的余味。她的选择出于自己的逻辑，不是作者的安排。</div></div>
+</div>
+<div class="how">列出主角在故事中的三到五个关键决定，逐个问：她当时有没有另一条更轻松、更安全、更符合常理的路？如果有，她为什么没走？如果每个决定都只有一条路，这条就不及格。</div>
+</div>
+
+<!-- ============ 维度二 ============ -->
+<div class="dim">
+<h2>维度二　冲突压迫力</h2>
+<div class="dim-desc">读者是否感到紧张、是否想翻页 · 三条标准</div>
+</div>
+
+<div class="std">
+<h3><span class="num">2.1</span>生死危机与失败代价</h3>
+<div class="q">主角当下的处境是否有明确的生死危机？她是否主动行动？行动成功与失败的代价是否清晰，失败的代价是否大到读者替她捏一把汗？</div>
+<div class="grades">
+<div class="grade poor"><div class="score">1—2分</div><div class="txt">危机是“概念上的危险”，读者不觉得主角真的会死或真的会失去什么。失败没有具体代价，或者代价与主角的欲望无关。</div></div>
+<div class="grade"><div class="score">3分</div><div class="txt">有生死危机，但主角是被动挨打，没有主动行动。失败代价是“死”，但读者不觉得这个“死”会带走什么她珍视的东西。</div></div>
+<div class="grade good"><div class="score">4—5分</div><div class="txt">危机是具体的、当下的、有倒计时的。主角主动做出了行动。成功与失败的代价都被明确写出：成功了会得到什么，失败了会失去什么，而失去的东西是读者已经在前文爱上的。</div></div>
+</div>
+<div class="how">把主角在故事中段的处境写成一句话：“她必须在X时间内做到Y，否则Z会失去。”如果Z是读者已经在乎的人或东西，这条就立住了；如果Z是抽象概念（“否则天下大乱”），就不及格。</div>
+</div>
+
+<div class="std">
+<h3><span class="num">2.2</span>反派的具体恶意</h3>
+<div class="q">反派是否让读者产生具体的恨或具体的怕？他的恶是否有具体的动作，而不是抽象的“邪恶”？</div>
+<div class="grades">
+<div class="grade poor"><div class="score">1—2分</div><div class="txt">反派是“背景板”，读者只知道“有个坏人”。反派的恶停留在形容词层面（“阴险”“残暴”），没有具体行为让读者记住。</div></div>
+<div class="grade"><div class="score">3分</div><div class="txt">反派做了具体的坏事，但这些坏事与主角的欲望没有直接关系。读者恨他，但不觉得“主角非杀他不可”。</div></div>
+<div class="grade good"><div class="score">4—5分</div><div class="txt">反派有具体的、针对主角的恶行，这些恶行直接造成主角的痛苦，读者能说出“我恨不得看他被主角亲手了结”的具体场景。反派的动机可以复杂，但不能复杂到让读者觉得“他也不容易”。</div></div>
+</div>
+<div class="how">用一句话说出反派做过的、让读者最恨的那件事，不能使用“他杀人如麻”这类概括。如果说不出一件具体的、有针对性的恶行，这条就不及格。</div>
+</div>
+
+<div class="std">
+<h3><span class="num">2.3</span>当下行动的悬念钩子</h3>
+<div class="q">主角当下正在做的事，是否有足够的未知性让读者想知道“然后呢”？</div>
+<div class="grades">
+<div class="grade poor"><div class="score">1—2分</div><div class="txt">读者能预判主角下一步会做什么。每章结尾没有留下让读者追问的问题，或者留下的问题是“作者故意不说”而非“读者真的想知道”。</div></div>
+<div class="grade"><div class="score">3分</div><div class="txt">有悬念，但悬念是“结果悬念”（她能不能成功），不是“过程悬念”（她会怎么做）。读者想知道结局，但对过程不感兴趣。</div></div>
+<div class="grade good"><div class="score">4—5分</div><div class="txt">每到一个节点，读者脑子里都会同时冒出两个问题：“她接下来会怎么做？”和“她这么做会有什么后果？”悬念来自主角的主动行动，不是来自作者的隐瞒。</div></div>
+</div>
+<div class="how">逐章检查章节结尾，问自己：读者读完这一章，想知道的是“接下来会发生什么”（好），还是“作者到底在藏什么”（差）。如果悬念靠“作者不说”维持，这条就不及格。</div>
+</div>
+
+<!-- ============ 维度三 ============ -->
+<div class="dim">
+<h2>维度三　主题生长力</h2>
+<div class="dim-desc">主题是否从情节里长出来 · 两条标准</div>
+</div>
+
+<div class="std">
+<h3><span class="num">3.1</span>主题与情节的咬合</h3>
+<div class="q">主题是否从具体情节中自然长出，而不是靠角色台词或旁白“宣布”？</div>
+<div class="grades">
+<div class="grade poor"><div class="score">1—2分</div><div class="txt">主题靠角色在结尾说一句点题台词来“宣布”。删掉这句台词，读者说不出这个故事讲了什么。</div></div>
+<div class="grade"><div class="score">3分</div><div class="txt">主题能在情节中找到支撑，但支撑是分散的、零星的。读者需要被提醒才能意识到“原来这个故事在讲这个”。</div></div>
+<div class="grade good"><div class="score">4—5分</div><div class="txt">主题能在三到五个具体场景中被读者自己“发现”。即使删掉所有点题台词，读者看完故事也能说出“这个故事在讲什么”。主题的每一次推进，都对应一个情节事件。</div></div>
+</div>
+<div class="how">删掉故事中所有“点题台词”和旁白议论，只保留情节。问一个没读过故事的人：“你觉得这个故事在讲什么？”如果他能说出主题，这条就立住了。</div>
+</div>
+
+<div class="std">
+<h3><span class="num">3.2</span>选择感与反宿命</h3>
+<div class="q">主角的结局是她“选择”的，还是“命运安排”的？读者是否感到“她本可以不这么做”？</div>
+<div class="grades">
+<div class="grade poor"><div class="score">1—2分</div><div class="txt">主角的结局是宿命驱动的：“她注定要牺牲”“她不得不这么做”。读者感觉主角没有选择，结局是作者写死的。</div></div>
+<div class="grade"><div class="score">3分</div><div class="txt">主角有选择，但选择是“两害相权取其轻”。读者理解她为什么选，但不会为她的选择感到震撼。</div></div>
+<div class="grade good"><div class="score">4—5分</div><div class="txt">主角在结局面前有一条“看起来很合理”的退路。她没走那条路，选了更难的那条。读者在她做出选择的那一刻，能同时感到“她真傻”和“她真了不起”。</div></div>
+</div>
+<div class="how">写出主角在结局面前的“另一条路”——一条读者会觉得“如果她选这条也说得通”的路。如果写不出来，说明主角没得选，这条就不及格。</div>
+</div>
+
+<!-- ============ 维度四 ============ -->
+<div class="dim">
+<h2>维度四　群像生命力</h2>
+<div class="dim-desc">配角是否有自己的意志 · 一条标准</div>
+</div>
+
+<div class="std">
+<h3><span class="num">4.1</span>配角的独立意志</h3>
+<div class="q">配角在关键节点上，是否做出过让读者意外、但符合他自己逻辑的主动选择？</div>
+<div class="grades">
+<div class="grade poor"><div class="score">1—2分</div><div class="txt">配角的功能是“推动主角成长”或“提供信息”。他们只做主角需要他们做的事，没有自己的欲望、秘密或选择。</div></div>
+<div class="grade"><div class="score">3分</div><div class="txt">配角有背景故事，但这些背景只用来解释他们的行为，不用来推动情节。读者知道配角“有过去”，但不会因为配角的选择而惊讶。</div></div>
+<div class="grade good"><div class="score">4—5分</div><div class="txt">至少有一到两个配角，在关键节点做出了主角和读者都没想到的选择。这个选择让情节拐弯，但读者回想起来觉得“对，他就是这样的人”。</div></div>
+</div>
+<div class="how">列出故事中三个重要配角，逐个问：这个人在故事中做过哪一个决定，是主角没有预料到的？如果每个配角的所有行为都在主角的预料之内，这条就不及格。</div>
+</div>
+
+<!-- ============ 维度五 ============ -->
+<div class="dim">
+<h2>维度五　传播钩子</h2>
+<div class="dim-desc">一句话能否勾住人 · 一条标准</div>
+</div>
+
+<div class="std">
+<h3><span class="num">5.1</span>一句话梗概的吸引力</h3>
+<div class="q">用一句话概括这个故事，听的人是否会产生“然后呢？”的冲动？</div>
+<div class="grades">
+<div class="grade poor"><div class="score">1—2分</div><div class="txt">梗概信息完整，但听完就知道结局。没有留下让听众想追问的问题。梗概里全是设定名词，听的人记不住。</div></div>
+<div class="grade"><div class="score">3分</div><div class="txt">梗概有钩子，但钩子是“设定钩子”（比如“她发现自己其实是……”），不是“处境钩子”（比如“她必须在三天内……”）。听众好奇设定，但不一定想跟着主角走。</div></div>
+<div class="grade good"><div class="score">4—5分</div><div class="txt">梗概里有一个具体的处境、一个具体的欲望、一个具体的代价。听的人会追问“那她后来怎么办”。梗概不依赖设定名词也能让人听懂。</div></div>
+</div>
+<div class="how">把梗概说给一个不看这类故事的人听，观察他听完后的第一反应。如果他说“哦，挺好的”（然后没有下文），这条不及格；如果他说“然后呢？”或“她最后怎么样了？”，这条就立住了。</div>
+</div>
+
+<!-- ============ 评分汇总 ============ -->
+<div class="rating">
+<h2>评分汇总与使用建议</h2>
+<p>九条标准，每条1—5分，总分45分。建议在每一版大纲完成后逐条打分，重点不是总分，而是找出不及格的条目。</p>
+<table>
+<tr><th>维度</th><th>标准</th><th>分值</th></tr>
+<tr><td rowspan="3">主角共情力</td><td>1.1 不公遭遇与心疼点</td><td class="center">1—5</td></tr>
+<tr><td>1.2 具体欲望与目标</td><td class="center">1—5</td></tr>
+<tr><td>1.3 主动选择与岔路代价</td><td class="center">1—5</td></tr>
+<tr><td rowspan="3">冲突压迫力</td><td>2.1 生死危机与失败代价</td><td class="center">1—5</td></tr>
+<tr><td>2.2 反派的具体恶意</td><td class="center">1—5</td></tr>
+<tr><td>2.3 当下行动的悬念钩子</td><td class="center">1—5</td></tr>
+<tr><td rowspan="2">主题生长力</td><td>3.1 主题与情节的咬合</td><td class="center">1—5</td></tr>
+<tr><td>3.2 选择感与反宿命</td><td class="center">1—5</td></tr>
+<tr><td>群像生命力</td><td>4.1 配角的独立意志</td><td class="center">1—5</td></tr>
+<tr><td>传播钩子</td><td>5.1 一句话梗概的吸引力</td><td class="center">1—5</td></tr>
+<tr><th colspan="2">总分</th><th class="center">45</th></tr>
+</table>
+
+<p>总分参考（仅供参照，不是绝对标准）：</p>
+<div class="level"><strong>36—45分：</strong>骨架扎实，可以进入正文写作。重点转向文字执行。</div>
+<div class="level"><strong>27—35分：</strong>骨架基本立住，但有若干条拖后腿。先修不及格项，再动笔。</div>
+<div class="level"><strong>18—26分：</strong>骨架有明显硬伤。建议回到大纲阶段，逐条修补，不要急着写正文。</div>
+<div class="level"><strong>18分以下：</strong>故事的核心驱动力尚未建立。需要重新回答“主角想要什么、读者为什么要在乎”这两个问题。</div>
+</div>
+
+<!-- ============ 附：九条标准速查 ============ -->
+<div class="intro" style="margin-top:40px;">
+<h2>九条标准速查</h2>
+<ul>
+<li><strong>1.1</strong> 读者是否在故事前段就为这个主角感到“不该如此”？</li>
+<li><strong>1.2</strong> 主角想要的东西，是否具体到能形成画面、让读者想看她能不能得到？</li>
+<li><strong>1.3</strong> 主角在关键节点上，是否有一条“她本可以不这么做”的更舒服的路？</li>
+<li><strong>2.1</strong> 主角当下是否有明确的生死危机？她是否主动行动？失败代价是否足够大？</li>
+<li><strong>2.2</strong> 反派是否让读者产生具体的恨或怕？他的恶是否有具体动作？</li>
+<li><strong>2.3</strong> 主角当下正在做的事，是否有足够悬念让读者想知道“然后呢”？</li>
+<li><strong>3.1</strong> 主题是否从情节里长出来，而不是靠台词宣布？</li>
+<li><strong>3.2</strong> 主角的结局是她“选择”的，还是“命运安排”的？</li>
+<li><strong>4.1</strong> 配角是否在关键节点做出过让读者意外、但符合他自己逻辑的选择？</li>
+<li><strong>5.1</strong> 用一句话概括故事，听的人是否会产生“然后呢？”的冲动？</li>
+</ul>
+</div>
+
+<p class="foot">好故事评价标准 · 工具文档　|　九条标准 · 五个维度 · 总分45</p>
+
+</div>
+</body>
+</html>

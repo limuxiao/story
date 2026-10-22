@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>好故事综合评判体系 · 快速检查 + 三引擎诊断 + 理论透镜</title>
+<style>
+  :root {
+    --ink: #2b2622;
+    --paper: #f6f1e7;
+    --accent: #8a5a2b;
+    --line: #d9cdb8;
+    --red: #b03a2e;
+    --green: #4a7c59;
+    --bg: #efe6d4;
+    --muted: #9a8c74;
+    --gold: #b8860b;
+    --blue: #3d5a80;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Songti SC", "SimSun", "Noto Serif CJK SC", serif;
+    line-height: 1.9;
+    font-size: 16px;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 56px 28px 96px; }
+
+  h1 {
+    font-size: 34px;
+    letter-spacing: 6px;
+    text-align: center;
+    margin: 0 0 6px;
+  }
+  .sub {
+    text-align: center;
+    color: var(--accent);
+    font-size: 14px;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+  .note {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    margin: 12px 0 36px;
+    border-bottom: 1px dashed var(--line);
+    padding-bottom: 22px;
+  }
+
+  .core-philosophy {
+    background: #fffaf1;
+    border: 2px solid var(--accent);
+    border-radius: 10px;
+    padding: 28px 32px;
+    margin: 0 0 44px;
+  }
+  .core-philosophy h2 {
+    margin: 0 0 16px;
+    font-size: 21px;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+  .core-philosophy p { margin: 10px 0; text-indent: 2em; }
+  .core-philosophy .thesis {
+    font-size: 18px;
+    text-align: center;
+    color: var(--accent);
+    letter-spacing: 1px;
+    margin: 20px 0;
+    padding: 14px;
+    background: rgba(138,90,43,0.08);
+    border-radius: 6px;
+    text-indent: 0;
+  }
+
+  .overview {
+    margin: 0 0 48px;
+  }
+  .overview h2 {
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 8px;
+    margin: 0 0 20px;
+  }
+  .engine-flow {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 0;
+    margin: 24px 0;
+    flex-wrap: wrap;
+  }
+  .engine-box {
+    text-align: center;
+    padding: 18px 14px;
+    min-width: 160px;
+    background: #fffaf1;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin: 6px 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .engine-box .e-icon {
+    font-size: 24px;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .engine-box .e-name {
+    font-size: 15px;
+    letter-spacing: 1px;
+    color: var(--ink);
+    font-weight: bold;
+  }
+  .engine-box .e-desc {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .engine-arrow {
+    display: flex;
+    align-items: center;
+    font-size: 20px;
+    color: var(--accent);
+    padding: 0 4px;
+  }
+  .engine-loop {
+    text-align: center;
+    color: var(--accent);
+    font-size: 14px;
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+
+  .section-title {
+    font-size: 24px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    border-bottom: 3px solid var(--accent);
+    padding-bottom: 10px;
+    margin: 56px 0 24px;
+  }
+  .section-title .badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-size: 13px;
+    padding: 2px 12px;
+    border-radius: 12px;
+    margin-left: 12px;
+    letter-spacing: 1px;
+    vertical-align: middle;
+    font-weight: normal;
+  }
+
+  /* 快速检查 */
+  .quick-check {
+    background: #fffaf1;
+    border: 2px solid var(--gold);
+    border-radius: 10px;
+    padding: 24px 30px;
+    margin: 0 0 24px;
+  }
+  .quick-check > p {
+    margin: 0 0 18px;
+    font-size: 15px;
+    color: var(--muted);
+    text-indent: 0;
+  }
+  .qc-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  .qc-item:last-child { border-bottom: none; }
+  .qc-num {
+    flex: 0 0 32px;
+    height: 32px;
+    line-height: 32px;
+    text-align: center;
+    background: var(--gold);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 15px;
+    font-weight: bold;
+  }
+  .qc-body { flex: 1; }
+  .qc-body .qc-q {
+    font-size: 16px;
+    color: var(--ink);
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+  .qc-body .qc-desc {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .qc-body .qc-fail {
+    font-size: 14px;
+    color: var(--red);
+    background: rgba(176,58,46,0.06);
+    padding: 6px 12px;
+    border-radius: 4px;
+    border-left: 3px solid var(--red);
+  }
+  .qc-body .qc-fail::before {
+    content: "⚠ 危险信号：";
+    font-weight: bold;
+  }
+  .qc-verdict {
+    background: rgba(184,134,11,0.08);
+    border-radius: 6px;
+    padding: 14px 20px;
+    margin-top: 18px;
+    font-size: 14px;
+  }
+  .qc-verdict strong { color: var(--gold); }
+
+  /* 引擎 */
+  .engine-section {
+    margin: 40px 0 16px;
+  }
+  .engine-header {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 8px;
+  }
+  .engine-header .e-num {
+    font-size: 36px;
+    color: var(--accent);
+    font-weight: bold;
+    line-height: 1;
+  }
+  .engine-header .e-title {
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    font-weight: bold;
+  }
+  .engine-header .e-theory {
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+  .engine-question {
+    background: rgba(138,90,43,0.07);
+    border-left: 4px solid var(--accent);
+    padding: 10px 18px;
+    margin: 10px 0 20px;
+    font-size: 16px;
+  }
+  .engine-question::before {
+    content: "引擎追问：";
+    color: var(--red);
+    font-weight: bold;
+  }
+
+  .probe {
+    background: #fffaf1;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 18px 24px;
+    margin: 14px 0;
+  }
+  .probe h4 {
+    margin: 0 0 4px;
+    font-size: 16px;
+    color: var(--ink);
+    letter-spacing: 1px;
+  }
+  .probe h4 .tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 1px 8px;
+    border-radius: 8px;
+    margin-right: 8px;
+    vertical-align: middle;
+    letter-spacing: 1px;
+    color: #fff;
+    background: var(--accent);
+  }
+  .probe h4 .tag.red { background: var(--red); }
+  .probe h4 .tag.blue { background: var(--blue); }
+  .probe .p-why {
+    font-size: 14px;
+    color: var(--muted);
+    margin: 0 0 10px;
+  }
+  .probe .p-tier {
+    display: flex;
+    gap: 10px;
+    margin: 8px 0;
+  }
+  .probe .p-tier .t {
+    flex: 1;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 13.5px;
+  }
+  .t.fail { background: rgba(176,58,46,0.07); border: 1px solid rgba(176,58,46,0.2); }
+  .t.fail strong { color: var(--red); }
+  .t.pass { background: rgba(138,90,43,0.06); border: 1px solid rgba(138,90,43,0.18); }
+  .t.pass strong { color: var(--accent); }
+  .t.good { background: rgba(74,124,89,0.07); border: 1px solid rgba(74,124,89,0.22); }
+  .t.good strong { color: var(--green); }
+  .probe .p-how {
+    background: rgba(138,90,43,0.04);
+    border-left: 3px solid var(--line);
+    padding: 8px 14px;
+    margin-top: 10px;
+    font-size: 13.5px;
+  }
+  .probe .p-how::before {
+    content: "检验：";
+    color: var(--accent);
+    font-weight: bold;
+  }
+
+  .examples {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .example-box {
+    flex: 1;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13.5px;
+  }
+  .example-box.good-ex {
+    background: rgba(74,124,89,0.06);
+    border: 1px solid rgba(74,124,89,0.2);
+  }
+  .example-box.bad-ex {
+    background: rgba(176,58,46,0.05);
+    border: 1px solid rgba(176,58,46,0.15);
+  }
+  .example-box .ex-label {
+    font-weight: bold;
+    font-size: 12px;
+    letter-spacing: 1px;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .example-box.good-ex .ex-label { color: var(--green); }
+  .example-box.bad-ex .ex-label { color: var(--red); }
+  .example-box .ex-title {
+    font-weight: bold;
+    color: var(--ink);
+  }
+  .example-box .ex-desc {
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .engine-dependency {
+    background: var(--bg);
+    border: 1px dashed var(--accent);
+    border-radius: 6px;
+    padding: 12px 18px;
+    margin: 16px 0 8px;
+    font-size: 14px;
+  }
+  .engine-dependency::before {
+    content: "⚠ 前置依赖：";
+    color: var(--red);
+    font-weight: bold;
+  }
+
+  /* 综合诊断 */
+  .diagnosis-flow {
+    background: #fffaf1;
+    border: 2px solid var(--blue);
+    border-radius: 10px;
+    padding: 28px 32px;
+    margin: 56px 0 40px;
+  }
+  .diagnosis-flow h2 {
+    margin: 0 0 16px;
+    font-size: 22px;
+    color: var(--blue);
+    letter-spacing: 2px;
+  }
+  .diag-step {
+    display: flex;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .diag-step:last-child { border-bottom: none; }
+  .diag-step .ds-num {
+    flex: 0 0 40px;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    background: var(--blue);
+    color: #fff;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: bold;
+  }
+  .diag-step .ds-body { flex: 1; }
+  .diag-step .ds-body .ds-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .diag-step .ds-body .ds-desc {
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .diag-step .ds-body .ds-if {
+    font-size: 14px;
+    margin-top: 6px;
+    padding: 6px 12px;
+    background: rgba(61,90,128,0.06);
+    border-radius: 4px;
+    border-left: 3px solid var(--blue);
+  }
+  .diag-step .ds-body .ds-if::before {
+    content: "如果这一步就断了：";
+    color: var(--blue);
+    font-weight: bold;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 18px 0;
+    font-size: 14px;
+  }
+  th, td {
+    border: 1px solid var(--line);
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: var(--accent); color: #fff; font-weight: normal; letter-spacing: 1px; }
+  tr:nth-child(even) { background: rgba(138,90,43,0.04); }
+
+  .foot {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 60px;
+    border-top: 1px solid var(--line);
+    padding-top: 24px;
+  }
+
+  @media (max-width: 700px) {
+    .engine-flow { flex-direction: column; }
+    .engine-arrow { transform: rotate(90deg); }
+    .probe .p-tier { flex-direction: column; }
+    .examples { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>好故事综合评判体系</h1>
+<div class="sub">快速检查 · 三引擎诊断 · 理论透镜 · 每一条标准都配示例</div>
+<div class="note">
+本体系整合麦基、特鲁比、斯奈德、克龙、福斯特、哈蒙等叙事理论，形成三层诊断工具：快速检查（梗概阶段）、三引擎诊断（大纲阶段）、理论透镜（交叉验证）。每条标准均配好故事与差故事对照示例。
+</div>
+
+<!-- ============ 核心理念 ============ -->
+<div class="core-philosophy">
+<h2>为什么是“引擎 + 透镜”而不是清单</h2>
+<p>清单式标准把“共情”“冲突”“主题”“人物”并列成几十条，逐项打分。但故事不是并列的——<strong>读者先在乎一个人，才会关心她的冲突；读者先感到压力，才会在乎她的选择；读者先看见她改变，才会带走一个主题。</strong></p>
+<p>所以这个体系用“引擎”代替“维度”：故事至少需要三台引擎同时运转，一台负责<strong>抓人</strong>（人物与欲望），一台负责<strong>推人</strong>（压力与因果），一台负责<strong>留人</strong>（改变与余味）。任何一台熄火，故事就停在那台引擎对应的位置上。</p>
+<p>“透镜”则是诊断工具：同一个问题，用麦基的透镜看是“鸿沟够不够”，用克龙的透镜看是“错误信念有没有被挑战”，用福斯特的透镜看是“情节是因果还是编年”。多透镜交叉诊断，比单一口径的清单更能定位真问题。</p>
+<div class="thesis">先快速检查判断“值不值得写”，再用三台引擎逐级诊断“哪里断了”，最后用理论透镜交叉验证。</div>
+</div>
+
+<!-- ============ 引擎总览 ============ -->
+<div class="overview">
+<h2>三台引擎与诊断顺序</h2>
+<div class="engine-flow">
+  <div class="engine-box">
+    <div class="e-icon">◎</div>
+    <div class="e-name">引擎一：抓人</div>
+    <div class="e-desc">读者是否愿意跟着这个人走</div>
+  </div>
+  <div class="engine-arrow">→</div>
+  <div class="engine-box">
+    <div class="e-icon">⚡</div>
+    <div class="e-name">引擎二：推人</div>
+    <div class="e-desc">主角是否被一步步逼到墙角</div>
+  </div>
+  <div class="engine-arrow">→</div>
+  <div class="engine-box">
+    <div class="e-icon">◇</div>
+    <div class="e-name">引擎三：留人</div>
+    <div class="e-desc">读者带走的是问题还是遗忘</div>
+  </div>
+</div>
+<div class="engine-loop">诊断顺序：引擎一 → 引擎二 → 引擎三。前一引擎熄火，后一引擎的诊断无效。</div>
+</div>
+
+<!-- ============ 快速检查 ============ -->
+<div class="section-title">快速检查法 <span class="badge">6 个问题 · 梗概阶段快速判断</span></div>
+
+<div class="quick-check">
+<p>在投入大纲或正文之前，用六个问题快速扫描故事梗概。不需要打分，只需要判断“有没有危险信号”。任何一个亮红灯，先修它，不要往下写。</p>
+
+<div class="qc-item">
+<div class="qc-num">1</div>
+<div class="qc-body">
+<div class="qc-q">主角想要的东西，能不能用一句不带抽象词的话说出来？</div>
+<div class="qc-desc">克龙指出，大脑从第一页就在问：“谁的故事？发生了什么？赌注是什么？”如果主角的目标是“拯救天下”“寻找自我”“打败邪恶”，大脑无法把它转化为可追踪的叙事线索。</div>
+<div class="qc-fail">只能说“她想拯救百姓”，说不出她“具体想救谁、想得到什么、想保护什么”。</div>
+</div>
+</div>
+
+<div class="qc-item">
+<div class="qc-num">2</div>
+<div class="qc-body">
+<div class="qc-q">主角在故事前段有没有一个“她本可以不这么做”的岔路口？</div>
+<div class="qc-desc">麦基认为，人物真相只能通过压力下的选择来揭示。如果主角从第一页到最后一页都在被事件推着走，她就没有“人物”，只有“功能”。</div>
+<div class="qc-fail">主角的所有行为都是“换谁都得这么干”，读者感觉不到她的意志。</div>
+</div>
+</div>
+
+<div class="qc-item">
+<div class="qc-num">3</div>
+<div class="qc-body">
+<div class="qc-q">反派有没有做过一件具体的、让读者恨得起来的事？</div>
+<div class="qc-desc">特鲁比把“对手”定义为“与主角争夺同一个目标的人”，而不是单纯的“坏人”。对手的恶必须有具体动作，直接造成主角的痛苦，否则威胁感不成立。</div>
+<div class="qc-fail">只能说“反派很残暴”，说不出他具体做过哪件事让读者想看他被了结。</div>
+</div>
+</div>
+
+<div class="qc-item">
+<div class="qc-num">4</div>
+<div class="qc-body">
+<div class="qc-q">故事里的关键事件，是“因为上一件事所以发生了”，还是“然后发生了这件事”？</div>
+<div class="qc-desc">福斯特的经典区分：故事是“国王死了，王后也死了”；情节是“国王死了，王后死于心碎”。因果链断裂的故事，读者会在中途失去“必须知道接下来”的动力。</div>
+<div class="qc-fail">删掉任何一个关键情节，后面的故事依然能成立——说明它是堆叠，不是因果。</div>
+</div>
+</div>
+
+<div class="qc-item">
+<div class="qc-num">5</div>
+<div class="qc-body">
+<div class="qc-q">把梗概说给一个不看这类故事的人听，他会不会问“然后呢”？</div>
+<div class="qc-desc">克龙的核心论点：大脑从第一句开始就渴望“接下来会发生什么”的紧迫感。如果梗概听完，对方只是礼貌地说“挺好的”，没有追问的冲动，说明钩子没扎进去。</div>
+<div class="qc-fail">听众的反应是“哦，挺完整的”，而不是“那她后来怎么办”。</div>
+</div>
+</div>
+
+<div class="qc-item">
+<div class="qc-num">6</div>
+<div class="qc-body">
+<div class="qc-q">主角有没有做过一个让读者意外、但回想起来“对，她就是这样的人”的选择？</div>
+<div class="qc-desc">福斯特对圆形人物的定义：让人感到意外，而且是以令人信服的方式。如果主角的每一个决定都在读者预料之内，她就是扁平的。</div>
+<div class="qc-fail">读者读完梗概就能猜出主角在每一个节点会怎么选，没有任何一个决定让他们意外。</div>
+</div>
+</div>
+
+<div class="qc-verdict">
+<strong>快速检查的判定规则：</strong>六个问题中，如果红灯数量 ≥ 2，这个雏形还不具备写出来的条件，先回到梗概阶段修。如果红灯数量 = 1，可以进入三引擎诊断，但在诊断中重点盯住那台对应引擎。如果零红灯，直接进入引擎诊断，寻找“扣得还不够紧”的地方。
+</div>
+</div>
+
+<!-- ============ 引擎一 ============ -->
+<div class="section-title">引擎一：抓人 <span class="badge">读者是否愿意跟着这个人走</span></div>
+
+<div class="engine-section">
+<div class="engine-header">
+  <span class="e-num">◎</span>
+  <span class="e-title">人物锚定</span>
+  <span class="e-theory">透镜：麦基「观众纽带」· 克龙「错误信念」· 福斯特「圆形人物」</span>
+</div>
+<div class="engine-question">读者是否在故事前段就为这个人感到“不该如此”，并且知道她“非要不可”的东西是什么？</div>
+
+<div class="probe">
+<h4><span class="tag">1.1</span>不公与心疼：麦基的“观众纽带”</h4>
+<div class="p-why">麦基把“观众纽带”放在故事材质的第一步——读者必须先在主角身上找到某种值得投入的东西，之后的一切才有意义。克龙补充：这种投入不是“她好可怜”，而是“她本不该承受这个”。</div>
+<div class="p-tier">
+  <div class="t fail"><strong>熄火：</strong>苦难是设定要求的，读者看不出她凭什么遭罪。惨是概念上的，没有具体画面。</div>
+  <div class="t pass"><strong>怠速：</strong>有不公，但停留在“孤儿”“被灭门”这类概括。读者知道她惨，但没被具体场景击中。</div>
+  <div class="t good"><strong>点火：</strong>不公是具体的、有画面的、明显超出她应得的。读者能说出“那一刻我替她难受”的具体场景。</div>
+</div>
+<div class="p-how">让没读过的人看前三分之一，问他“你希望这个主角得到什么”。答得出且方向与故事一致，点火；答“不知道”或“她活该”，熄火。</div>
+<div class="examples">
+  <div class="example-box good-ex">
+    <span class="ex-label">✓ 好故事示例</span>
+    <div class="ex-title">《哈利·波特与魔法石》</div>
+    <div class="ex-desc">哈利住在楼梯下的储物间，穿着达力穿剩的旧衣服，生日时得到一个衣架和一句“不许问问题”。读者在第一章就替他不平——他不是“设定上是个孤儿”，他是一个具体的、被亏待的孩子。</div>
+  </div>
+  <div class="example-box bad-ex">
+    <span class="ex-label">✗ 差故事示例</span>
+    <div class="ex-title">一个典型的设定式开局</div>
+    <div class="ex-desc">“主角自幼父母双亡，由叔叔养大，叔叔对他不好。”——读者知道这个信息，但不知道“不好”具体什么样：是打他？骂他？还是只是冷落？没有画面，就没有心疼。</div>
+  </div>
+</div>
+</div>
+
+<div class="probe">
+<h4><span class="tag">1.2</span>具体欲望与错误信念：克龙的“故事Genius”</h4>
+<div class="p-why">克龙提出一个关键区分：主角有一个“深藏的欲望”（她以为能填补内心空洞的东西），但一个“根深蒂固的错误信念”阻挡她追求这个欲望。故事的本质是主角在压力下被迫质疑这个错误信念。</div>
+<div class="p-tier">
+  <div class="t fail"><strong>熄火：</strong>目标全是“拯救”“成长”“寻找自我”这类抽象词。没有可见的错误信念，主角的内心障碍不可见。</div>
+  <div class="t pass"><strong>怠速：</strong>有具体目标，但目标是“她应该要”的。错误信念存在，但只是标签（“她不相信自己”），没有具体的行为表现。</div>
+  <div class="t good"><strong>点火：</strong>外部目标小到一句说清、具体到能画出画面；错误信念在具体选择中反复起作用，读者能看见她“因为不信某件事而一次次选错”。</div>
+</div>
+<div class="p-how">用一句话说出主角前三分之一“最想要的东西”，禁用抽象词。再用一句话说出“她因为深信什么而一直得不到这个东西”。两句话都具体，才点火。</div>
+<div class="examples">
+  <div class="example-box good-ex">
+    <span class="ex-label">✓ 好故事示例</span>
+    <div class="ex-title">《狮子王》辛巴</div>
+    <div class="ex-desc">外部目标：回到荣耀岩、夺回王位。错误信念：“是我害死了父亲，我不配回去。”这个信念在具体场景中反复起作用——他不肯面对过去，逃避娜娜，用“Hakuna Matata”麻痹自己。直到拉飞奇让他看见父亲的幻影，他才被迫质疑这个信念。</div>
+  </div>
+  <div class="example-box bad-ex">
+    <span class="ex-label">✗ 差故事示例</span>
+    <div class="ex-title">“我要变强”型主角</div>
+    <div class="ex-desc">主角的目标是“成为最强的战士”，内心障碍是“我不够自信”。读者不知道“最强”具体长什么样——是打败某个人？是拿到某件武器？还是通过某个试炼？错误信念也没有具体的场景来证明它确实在阻挡她。</div>
+  </div>
+</div>
+</div>
+
+<div class="probe">
+<h4><span class="tag">1.3</span>岔路与主动选择：麦基的“压力下的选择”</h4>
+<div class="p-why">人物真相只能通过压力下的选择来揭示。如果主角在关键节点上只有一条路可走，那不叫选择，叫剧情安排。读者需要感到“她本可以不这么做”。</div>
+<div class="p-tier">
+  <div class="t fail"><strong>熄火：</strong>主角全程被事件推着走，没有选择，只有反应。读者感觉“换谁都得这么干”。</div>
+  <div class="t pass"><strong>怠速：</strong>有选择，但是“明牌二选一”：一边明显正确，一边明显错误。读者不纠结。</div>
+  <div class="t good"><strong>点火：</strong>两条路都有代价。她选了一条，放弃的那条在读者心里留下“如果她选另一条会怎样”的余味。</div>
+</div>
+<div class="p-how">列出主角在故事前中段的三到五个关键决定，逐个问：她当时有没有另一条更轻松、更安全、更符合常理的路？如果有，她为什么没走？如果每个决定都只有一条路，熄火。</div>
+<div class="examples">
+  <div class="example-box good-ex">
+    <span class="ex-label">✓ 好故事示例</span>
+    <div class="ex-title">《指环王》佛罗多</div>
+    <div class="ex-desc">瑞文戴尔会议上，埃尔隆德说“把戒指扔进海里，或者送回夏尔，让刚铎人自己处理”。佛罗多完全可以接受这个方案——他只是一个霍比特人，没有义务拯救中土。但他站起来说“我愿意带戒指去魔多”。这个选择之所以有力，是因为“不选”的路明确存在，而且很合理。</div>
+  </div>
+  <div class="example-box bad-ex">
+    <span class="ex-label">✗ 差故事示例</span>
+    <div class="ex-title">“只有她能拯救世界”型主角</div>
+    <div class="ex-desc">预言说只有主角能打败魔王，所以主角踏上了旅途。她没有选择——“不做”意味着世界毁灭，而这个代价是抽象的、读者感受不到的。读者感觉“换谁有这预言都得去”，主角的意志不存在。</div>
+  </div>
+</div>
+</div>
+
+<div class="probe">
+<h4><span class="tag">1.4</span>意外且可信：福斯特的“圆形人物”检验</h4>
+<div class="p-why">福斯特的检验标准极其锋利：圆形人物让人感到意外，而且是以令人信服的方式。主角如果从头到尾行为完全在读者预料之内，她就是扁平的。</div>
+<div class="p-tier">
+  <div class="t fail"><strong>熄火：</strong>主角的每一个决定都在读者预料之内。她的“成长”是线性的、可预测的。</div>
+  <div class="t pass"><strong>怠速：</strong>有意外，但意外缺乏可信的伏笔，读者觉得“这不是她会做的事”。</div>
+  <div class="t good"><strong>点火：</strong>主角在某个关键节点做了让读者意外、但回想起来“对，她就是这样的人”的选择。意外性和可信性同时成立。</div>
+</div>
+<div class="p-how">问读过的人：“主角有没有哪个决定让你意外？”答“没有”，扁平；答“意外但说不通”，可信性不足；答“意外但想想也对”，圆形。</div>
+<div class="examples">
+  <div class="example-box good-ex">
+    <span class="ex-label">✓ 好故事示例</span>
+    <div class="ex-title">《冰与火之歌》詹姆·兰尼斯特</div>
+    <div class="ex-desc">读者最初恨他——他把布兰推下塔，毫无愧疚。后来他失去右手，跟布蕾妮同行，读者逐渐看见他“弑君者”称号背后的真相：他杀死疯王是为了救全城百姓。到了卷三，他跳进熊坑救布蕾妮——这个选择让读者意外（那个自私的詹姆会做这种事？），但回想起来又完全可信（他从来就不是纯粹的恶人，只是从不解释）。</div>
+  </div>
+  <div class="example-box bad-ex">
+    <span class="ex-label">✗ 差故事示例</span>
+    <div class="ex-title">“善良主角突然黑化”型反转</div>
+    <div class="ex-desc">主角一直是道德楷模，到了结局突然为了力量背叛朋友。读者感到意外，但完全不觉得“对，她就是这样的人”——前文没有任何伏笔支撑这个转变，意外变成了胡闹。</div>
+  </div>
+</div>
+</div>
+
+<div class="engine-dependency">引擎一只要有任何一个探针熄火，不要进入引擎二。读者不锚定在主角身上，后面的压力和选择都落不到心里。</div>
+</div>
+
+<!-- ============ 引擎二 ============ -->
+<div class="section-title">引擎二：推人 <span class="badge">主角是否被一步步逼到墙角</span></div>
+
+<div class="engine-section">
+<div class="engine-header">
+  <span class="e-num">⚡</span>
+  <span class="e-title">压力与因果</span>
+  <span class="e-theory">透镜：麦基「鸿沟」· 福斯特「因果链」· 斯奈德「节拍升级」</span>
+</div>
+<div class="engine-question">主角是否被一步步逼到墙角，而且每一步都是上一步的必然结果？</div>
+
+<div class="probe">
+<h4><span class="tag blue">2.1</span>风险的升级：斯奈德的“节拍加码”</h4>
+<div class="p-why">《救猫咪》的节拍表本质上是一套节奏诊断工具：从“触发事件”到“中点”到“灵魂黑夜”，风险必须一层层加码，不能停在同一个量级。如果第一场和第十场的赌注一样大，读者会在第五场失去紧张感。</div>
+<div class="p-tier">
+  <div class="t fail"><strong>熄火：</strong>危机从头到尾一个量级。或者风险是抽象概念（“天下大乱”），读者不觉得主角真的会失去什么。</div>
+  <div class="t pass"><strong>怠速：</strong>危机在升级，但升级靠“敌人变强”，不是“主角在乎的东西被威胁”。</div>
+  <div class="t good"><strong>点火：</strong>每一次升级都威胁到读者已经在前文爱上的具体的人或东西。失败代价是具体的、有画面的、层层加码的。</div>
+</div>
+<div class="p-how">把主角在每一幕的处境写成“她必须在X时间内做到Y，否则Z会失去”。如果Z在每一幕都是同一个量级的抽象概念，节拍没有升级。</div>
+<div class="examples">
+  <div class="example-box good-ex">
+    <span class="ex-label">✓ 好故事示例</span>
+    <div class="ex-title">《饥饿游戏》凯特尼斯</div>
+    <div class="ex-desc">风险层层加码：第一层，她自愿代替妹妹参战（失去的是自己的命）；第二层，她在竞技场里必须杀人才能活（失去的是道德清白）；第三层，她和皮塔的“爱情”被国会区利用（失去的是真实情感）；第四层，她发现反抗的代价是十二区被毁（失去的是家人和家园）。每一层都比上一层更具体、更疼。</div>
+  </div>
+  <div class="example-box bad-ex">
+    <span class="ex-label">✗ 差故事示例</span>
+    <div class="ex-title">“反派越来越强”型升级</div>
+    <div class="ex-desc">第一幕反派是一个小队长，第二幕反派是一个将军，第三幕反派是魔王本人。敌人确实在变强，但主角在乎的东西从头到尾都是“活下去”——读者看不到她“具体会失去谁”的风险在加码，只看到打怪难度在提升。</div>
+  </div>
+</div>
+</div>
+
+<div class="probe">
+<h4><span class="tag blue">2.2</span>对手的针对性：特鲁比的“对手”概念</h4>
+<div class="p-why">特鲁比把“对手”定义为“与主角争夺同一个目标的人”，而不是单纯的“坏人”。对手的恶必须有具体动作，直接造成主角的痛苦。对手可以复杂，但不能复杂到让读者觉得“他也不容易”。</div>
+<div class="p-tier">
+  <div class="t fail"><strong>熄火：</strong>反派是背景板，恶停留在形容词层面（“阴险”“残暴”）。读者只知道“有个坏人”，说不出他做过什么。</div>
+  <div class="t pass"><strong>怠速：</strong>反派做了具体的坏事，但与主角的欲望没有直接关系。读者恨他，但不觉得主角非杀他不可。</div>
+  <div class="t good"><strong>点火：</strong>反派有具体的、针对主角的恶行，直接造成主角的痛苦。读者能说出“我恨不得看他被主角亲手了结”的具体场景。</div>
+</div>
+<div class="p-how">用一句话说出反派做过的、让读者最恨的那件事，禁用“杀人如麻”这类概括。说不出具体恶行，熄火。</div>
+<div class="examples">
+  <div class="example-box good-ex">
+    <span class="ex-label">✓ 好故事示例</span>
+    <div class="ex-title">《莫扎特传》萨列里</div>
+    <div class="ex-desc">萨列里的恶不是“杀人放火”，而是具体的、针对莫扎特的：他假装欣赏莫扎特，匿名向皇帝告密，切断莫扎特的收入来源，最后戴着面具向病中的莫扎特约稿《安魂曲》，加速了他的死亡。读者恨他，因为他的每一个动作都直接踩在莫扎特身上。</div>
+  </div>
+  <div class="example-box bad-ex">
+    <span class="ex-label">✗ 差故事示例</span>
+    <div class="ex-title">“他想毁灭世界”型反派</div>
+    <div class="ex-desc">反派的目标是“让世界陷入黑暗”，动机是“他天性邪恶”或“他小时候受过委屈”。读者说不出他具体对主角做过什么——他跟主角的冲突是“正义vs邪恶”的抽象对立，不是两个人之间的具体争夺。</div>
+  </div>
+</div>
+</div>
+
+<div class="probe">
+<h4><span class="tag blue">2.3</span>因果链而非编年史：福斯特的“情节”检验</h4>
+<div class="p-why">福斯特的区分极其锋利：故事按时间顺序排列，情节按因果逻辑排列。“国王死了，然后王后也死了”是故事；“国王死了，王后死于心碎”是情节。大纲中每一个关键事件，都必须是因为上一件事而发生的，不是“然后发生了这件事”。</div>
+<div class="p-tier">
+  <div class="t fail"><strong>熄火：</strong>去掉任何一个关键情节，后面的故事依然成立。事件之间是时间顺序，不是因果顺序。</div>
+  <div class="t pass"><strong>怠速：</strong>主干有因果，但支线是“顺便发生的”。读者感觉有些情节是为了凑数或展示世界观。</div>
+  <div class="t good"><strong>点火：</strong>去掉任何一个关键情节点，后面的链条会垮。每一个事件都是前一个事件的必然结果，同时是下一个事件的原因。</div>
+</div>
+<div class="p-how">在大纲中逐个删掉情节点，问：删掉这个，后面的情节还能成立吗？能，就是编年史；不能，才是因果链。</div>
+<div class="examples">
+  <div class="example-box good-ex">
+    <span class="ex-label">✓ 好故事示例</span>
+    <div class="ex-title">《绝命毒师》第一季</div>
+    <div class="ex-desc">老白得癌症 → 为了给家人留钱去制毒 → 找以前的差生杰西合伙 → 第一次制毒后遇到疯狂小八和图可 → 为了自保杀了小八 → 被迫成为图可的“员工” → 杀图可 → 走上不归路。每一步都是前一步的直接后果，删掉任何一环，后面的链条都会垮。</div>
+  </div>
+  <div class="example-box bad-ex">
+    <span class="ex-label">✗ 差故事示例</span>
+    <div class="ex-title">“路上顺便打了个怪”型情节</div>
+    <div class="ex-desc">主角在赶路途中遇到一群山贼，打了一架，赢了，继续赶路。这个情节删掉之后，后面的故事完全不受影响——它既不改变主角的认知，也不影响后续事件的走向。它是编年史，不是因果链。</div>
+  </div>
+</div>
+</div>
+
+<div class="engine-dependency">引擎二熄火，引擎三的“改变”就没有说服力——读者不觉得主角被逼到墙角，也就不觉得她“变成了另一个人”。</div>
+</div>
+
+<!-- ============ 引擎三 ============ -->
+<div class="section-title">引擎三：留人 <span class="badge">读者带走的是问题还是遗忘</span></div>
+
+<div class="engine-section">
+<div class="engine-header">
+  <span class="e-num">◇</span>
+  <span class="e-title">改变与余味</span>
+  <span class="e-theory">透镜：特鲁比「真实自我的揭露」· 哈蒙「故事圈」· 麦基「主控思想」</span>
+</div>
+<div class="engine-question">主角从开始到结束是否变成了一个读者能看见的、不同的、且可信的人？故事结束后，读者带走了什么？</div>
+
+<div class="probe">
+<h4><span class="tag red">3.1</span>改变的可见性：特鲁比的“真实自我揭露”</h4>
+<div class="p-why">特鲁比把“真实自我的揭露”放在故事结构的末端：主角在经历对决之后，必须获得一个关于自己的、之前不知道的真相。这个揭露不是“她变强了”，而是“她终于看清了自己一直信错的东西”。</div>
+<div class="p-tier">
+  <div class="t fail"><strong>熄火：</strong>开头和结尾的主角，行为方式没有可对比的变化。或者变化靠台词宣布（“我变了”）。</div>
+  <div class="t pass"><strong>怠速：</strong>有变化，但变化是线性的、可预测的（从弱到强、从怕到不怕）。没有“真实自我揭露”的瞬间。</div>
+  <div class="t good"><strong>点火：</strong>主角在结局处获得了一个关于自己的具体真相，这个真相动摇了她开篇时的错误信念。变化不是线性的，中间有反复、有错步。</div>
+</div>
+<div class="p-how">写出主角在开头第一场和结尾最后一场各做的一个动作。如果这两个动作放在一起看不出区别，熄火。再写出她在结局处“看清的关于自己的那一件事”——如果写不出来，真实自我揭露没有发生。</div>
+<div class="examples">
+  <div class="example-box good-ex">
+    <span class="ex-label">✓ 好故事示例</span>
+    <div class="ex-title">《疯狂动物城》朱迪</div>
+    <div class="ex-desc">开篇的朱迪：相信“在动物城，任何人都能成为任何东西”，带着天真和偏见（她对狐狸有刻板印象）。结局的朱迪：她看清了自己也有偏见——在记者会上说“食肉动物天性危险”伤害了尼克，她辞职回乡，后来在父母面前承认“我错了”。她最终抓回羊副市长靠的不是更大的拳头，而是承认自己也有偏见之后重新建立的关系。</div>
+  </div>
+  <div class="example-box bad-ex">
+    <span class="ex-label">✗ 差故事示例</span>
+    <div class="ex-title">“我学会了相信自己”型结尾</div>
+    <div class="ex-desc">主角在最后一场戏里对着反派说：“你错了，我学会了相信自己。”——这句话本身没有错，但读者没有在前面的情节中看见她“不信自己”的具体后果，也没有看见她“学会信自己”的具体过程。变化是宣布的，不是发生的。</div>
+  </div>
+</div>
+</div>
+
+<div class="probe">
+<h4><span class="tag red">3.2</span>代价的具体性：哈蒙的“故事圈”</h4>
+<div class="p-why">丹·哈蒙的故事圈把叙事压缩成八个步骤：舒适圈 → 渴望 → 进入陌生情境 → 适应 → 得到渴望的东西 → 付出沉重代价 → 回归 → 改变。其中“得到渴望的东西”和“付出沉重代价”是相邻的两步——主角往往在得到她以为想要的东西时，才发现代价是她真正在乎的东西。</div>
+<div class="p-tier">
+  <div class="t fail"><strong>熄火：</strong>主角得到目标的过程没有付出任何读者能感受到的代价。或者代价与目标无关，像是“作者为了让她惨而加的痛苦”。</div>
+  <div class="t pass"><strong>怠速：</strong>有代价，但代价是抽象的（“她失去了天真”），读者看不见她失去了什么具体的东西。</div>
+  <div class="t good"><strong>点火：</strong>代价是读者在前文已经爱上的人、关系或物件。她得到目标的同时，失去了一个读者也在乎的东西。改变因此有了重量。</div>
+</div>
+<div class="p-how">写出主角在结局处“得到了什么”和“失去了什么”。如果失去的东西是一个抽象名词，代价就是假的；如果失去的是一个具体的人或物，但读者在前文没见过它被珍视，代价也落不了地。</div>
+<div class="examples">
+  <div class="example-box good-ex">
+    <span class="ex-label">✓ 好故事示例</span>
+    <div class="ex-title">《绝命毒师》沃尔特·怀特</div>
+    <div class="ex-desc">老白最终得到了他想要的一切：帝国、金钱、权力、家人的经济保障。但他失去了汉克（因为他的贪婪间接害死了连襟）、失去了家庭（斯凯勒带着孩子离开）、失去了杰西（被他亲手交给新纳粹）。他得到帝国的那一天，也是他失去所有活着的亲密关系的那一天。</div>
+  </div>
+  <div class="example-box bad-ex">
+    <span class="ex-label">✗ 差故事示例</span>
+    <div class="ex-title">“她赢了，但失去了天真”型结尾</div>
+    <div class="ex-desc">主角打败了反派，坐上了王座。叙述者说：“她赢了，但失去了从前那个天真的自己。”读者不知道“天真的自己”具体是什么——前文没有一场戏展现过她的天真被珍视，也没有一个具体的人或关系因为她的胜利而永远消失。</div>
+  </div>
+</div>
+</div>
+
+<div class="probe">
+<h4><span class="tag red">3.3</span>反宿命的选择感：麦基的“主控思想”与选择</h4>
+<div class="p-why">麦基的“主控思想”不是故事的道理，而是故事在结尾处证明的那个价值判断。它必须从高潮的选择中生长出来，而不是靠台词宣布。同时，结局必须是主角“选择”的，而不是“命运安排”的——读者要感到“她本可以不这么做”。</div>
+<div class="p-tier">
+  <div class="t fail"><strong>熄火：</strong>主题靠角色在结尾说一句点题台词来宣布。删掉那句台词，读者说不出故事讲了什么。或者结局是宿命驱动的：“她注定”“她不得不”。</div>
+  <div class="t pass"><strong>怠速：</strong>主题能在情节中找到支撑，但支撑是分散的。结局有选择，但“两害相权取其轻”，读者不震撼。</div>
+  <div class="t good"><strong>点火：</strong>删掉所有点题台词，读者仍能说出“这个故事在讲什么”。结局面前有一条“看起来很合理”的退路，她没走。读者同时感到“她真傻”和“她真了不起”。</div>
+</div>
+<div class="p-how">删掉故事中所有点题台词和旁白议论，问没读过的人“你觉得这个故事在讲什么”。答得出，主控思想生长出来了。再写出主角在结局面前的“另一条路”——写不出来，选择感就是假的。</div>
+<div class="examples">
+  <div class="example-box good-ex">
+    <span class="ex-label">✓ 好故事示例</span>
+    <div class="ex-title">《指环王》佛罗多与山姆</div>
+    <div class="ex-desc">结局面前有一条“看起来很合理”的退路：佛罗多可以在末日火山口把戒指交给山姆，或者干脆自己留着——他走了那么远的路，戒指的力量已经完全控制了他。但他选择继续往前走。山姆也可以回家——他已经把佛罗多送到了终点，没有义务继续陪着——但他选择把佛罗多背起来。读者同时感到“这两个霍比特人真傻”和“他们真了不起”。</div>
+  </div>
+  <div class="example-box bad-ex">
+    <span class="ex-label">✗ 差故事示例</span>
+    <div class="ex-title">“她命中注定要牺牲”型结局</div>
+    <div class="ex-desc">预言说主角必须在结局处献出生命才能封印魔王。她照做了。读者读完的感觉是“她只能这么干”——没有一条“她本可以不这么做”的路，结局是作者安排好的宿命，不是主角的选择。删掉所有点题台词，读者只会说“一个女孩按预言牺牲了”，不会说“她选择了牺牲”。</div>
+  </div>
+</div>
+</div>
+
+<div class="engine-dependency">引擎三是最后一台。它不依赖前两台“扣得紧不紧”，但它依赖前两台“有没有在转”。前两台熄火，引擎三写得再好也只是漂亮的空转。</div>
+</div>
+
+<!-- ============ 综合诊断流程 ============ -->
+<div class="diagnosis-flow">
+<h2>综合诊断流程：怎么用这套体系</h2>
+<p>不要从引擎三倒着修，也不要同时修三台。诊断顺序永远是从引擎一到引擎三，修的顺序也是。</p>
+
+<div class="diag-step">
+<div class="ds-num">1</div>
+<div class="ds-body">
+<div class="ds-title">先跑快速检查（6 个问题）</div>
+<div class="ds-desc">红灯 ≥ 2：回到梗概阶段，先修红灯对应的问题。红灯 = 1：进入引擎诊断，但重点盯住那台对应引擎。红灯 = 0：进入引擎诊断，寻找“扣得还不够紧”的地方。</div>
+<div class="ds-if">如果快速检查就亮了两盏以上红灯，不要浪费时间做详细引擎诊断。雏形的核心驱动力还没建立。</div>
+</div>
+</div>
+
+<div class="diag-step">
+<div class="ds-num">2</div>
+<div class="ds-body">
+<div class="ds-title">诊断引擎一：读者是否在乎主角？</div>
+<div class="ds-desc">用四个探针（不公与心疼 / 具体欲望与错误信念 / 岔路与主动选择 / 意外且可信）逐一检查。任何一盏熄火，停在这里修。</div>
+<div class="ds-if">如果引擎一熄火，不要去看引擎二。主角没锚定，压力和选择都是空转。</div>
+</div>
+</div>
+
+<div class="diag-step">
+<div class="ds-num">3</div>
+<div class="ds-body">
+<div class="ds-title">诊断引擎二：压力是否在升级，因果是否成立？</div>
+<div class="ds-desc">用三个探针（风险升级 / 对手针对性 / 因果链）逐一检查。风险是否层层加码？反派是否在争夺同一个目标？事件之间是因果还是编年？</div>
+<div class="ds-if">如果引擎二熄火，不要去看引擎三。读者不觉得主角被逼到墙角，就不觉得她的改变有分量。</div>
+</div>
+</div>
+
+<div class="diag-step">
+<div class="ds-num">4</div>
+<div class="ds-body">
+<div class="ds-title">诊断引擎三：改变是否可信，余味是否落地？</div>
+<div class="ds-desc">用三个探针（真实自我揭露 / 代价的具体性 / 反宿命的选择感）逐一检查。主角是否看清了关于自己的真相？她得到目标时失去了什么读者在乎的东西？结局是她选的，还是命定的？</div>
+<div class="ds-if">如果引擎三熄火，问题往往不在引擎三本身，而在引擎一或引擎二的某一环没扣紧。回头检查，不要只在结尾加台词。</div>
+</div>
+</div>
+
+<table>
+<tr><th>熄火引擎</th><th>典型症状</th><th>优先修什么</th></tr>
+<tr><td>引擎一</td><td>读者说“我没什么感觉”“不知道她想要什么”</td><td>具体的不公场景 + 可见的错误信念 + 一个让读者意外的选择</td></tr>
+<tr><td>引擎二</td><td>读者说“有点拖”“不知道反派想干嘛”“这段可以跳过”</td><td>鸿沟链（预期 vs 结果的落差）+ 删掉非因果情节点 + 让风险落到具体的人或物上</td></tr>
+<tr><td>引擎三</td><td>读者说“挺好看的，但看完就忘了”</td><td>真实自我揭露的瞬间 + 具体的代价 + 一条“她本可以不走”的退路</td></tr>
+</table>
+
+<p><strong>一个重要的诊断原则：</strong>如果引擎三出了问题，先不要修引擎三。绝大多数“结尾没力量”的故事，病根在引擎一（读者不够在乎主角）或引擎二（压力没有真正逼到主角的信念上）。修引擎三之前，先回头确认前两台引擎是否真的在转。</p>
+</div>
+
+<!-- ============ 理论透镜速查 ============ -->
+<div class="core-philosophy" style="margin-top:48px;border-color:var(--blue);">
+<h2 style="color:var(--blue);">理论透镜速查</h2>
+<table>
+<tr><th>透镜</th><th>核心问题</th><th>在本体系中的位置</th></tr>
+<tr><td><strong>麦基</strong>：鸿沟 / 压力下的选择 / 主控思想</td><td>角色的预期与结果之间有没有落差？结局是她选的还是命定的？</td><td>引擎一的探针 1.3；引擎二的探针 2.3（隐性）；引擎三的探针 3.3</td></tr>
+<tr><td><strong>克龙</strong>：错误信念 / 大脑紧迫感 / 欲望与需求</td><td>主角因为深信什么而一直选错？第一页有没有让大脑想知道“然后呢”？</td><td>引擎一的探针 1.2；快速检查第 1、5 题</td></tr>
+<tr><td><strong>福斯特</strong>：因果 vs 编年 / 圆形人物</td><td>事件之间是“因为”还是“然后”？主角有没有让人意外且可信的选择？</td><td>引擎二的探针 2.3；引擎一的探针 1.4；快速检查第 4、6 题</td></tr>
+<tr><td><strong>特鲁比</strong>：弱点 / 对手 / 真实自我揭露</td><td>主角开篇有什么道德弱点？对手是不是在争夺同一个目标？结局她看清了什么？</td><td>引擎三的探针 3.1；引擎二的探针 2.2；快速检查第 3 题</td></tr>
+<tr><td><strong>斯奈德</strong>：节拍升级 / 风险加码</td><td>风险有没有一层层变大？赌注有没有从抽象变成具体？</td><td>引擎二的探针 2.1</td></tr>
+<tr><td><strong>哈蒙</strong>：故事圈 / 代价与回归</td><td>她得到想要的东西时，失去了什么读者在乎的东西？</td><td>引擎三的探针 3.2</td></tr>
+</table>
+<p>这些透镜不是互斥的，而是从不同角度照射同一个问题。一个故事可以在麦基的透镜下“鸿沟不够”，在克龙的透镜下表现为“错误信念没有被真正挑战”，在福斯特的透镜下表现为“中间事件是编年而非因果”。诊断时交叉使用，定位会更准。</p>
+</div>
+
+<p class="foot">好故事综合评判体系　|　快速检查 → 引擎一 → 引擎二 → 引擎三　|　整合麦基 · 特鲁比 · 斯奈德 · 克龙 · 福斯特 · 哈蒙</p>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>侠鹿 · 故事设计诊断报告</title>
+<style>
+  :root {
+    --ink: #2b2622;
+    --paper: #f6f1e7;
+    --accent: #8a5a2b;
+    --line: #d9cdb8;
+    --red: #b03a2e;
+    --green: #4a7c59;
+    --bg: #efe6d4;
+    --muted: #9a8c74;
+    --gold: #b8860b;
+    --blue: #3d5a80;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Songti SC", "SimSun", "Noto Serif CJK SC", serif;
+    line-height: 1.9;
+    font-size: 16px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 56px 28px 96px; }
+
+  h1 {
+    font-size: 32px;
+    letter-spacing: 5px;
+    text-align: center;
+    margin: 0 0 6px;
+  }
+  .sub {
+    text-align: center;
+    color: var(--accent);
+    font-size: 14px;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+  .note {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    margin: 12px 0 36px;
+    border-bottom: 1px dashed var(--line);
+    padding-bottom: 22px;
+  }
+
+  .story-recap {
+    background: #fffaf1;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 22px 28px;
+    margin: 0 0 40px;
+  }
+  .story-recap h2 {
+    margin: 0 0 12px;
+    font-size: 20px;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+  .story-recap .recap-line {
+    margin: 8px 0;
+    font-size: 15px;
+  }
+  .story-recap .recap-label {
+    display: inline-block;
+    font-weight: bold;
+    color: var(--accent);
+    min-width: 72px;
+  }
+
+  .section-title {
+    font-size: 24px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    border-bottom: 3px solid var(--accent);
+    padding-bottom: 10px;
+    margin: 56px 0 24px;
+  }
+  .section-title .badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-size: 13px;
+    padding: 2px 12px;
+    border-radius: 12px;
+    margin-left: 12px;
+    letter-spacing: 1px;
+    vertical-align: middle;
+    font-weight: normal;
+  }
+
+  .check-item {
+    background: #fffaf1;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 18px 24px;
+    margin: 14px 0;
+  }
+  .check-item h4 {
+    margin: 0 0 4px;
+    font-size: 16px;
+    color: var(--ink);
+    letter-spacing: 1px;
+  }
+  .check-item h4 .q-num {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-size: 12px;
+    padding: 1px 9px;
+    border-radius: 10px;
+    margin-right: 8px;
+    letter-spacing: 1px;
+    vertical-align: middle;
+  }
+  .check-item .the-q {
+    font-size: 15px;
+    color: var(--accent);
+    margin: 4px 0 10px;
+    padding-left: 2em;
+  }
+  .check-item .the-q::before {
+    content: "检验：";
+    color: var(--red);
+    font-weight: bold;
+  }
+  .check-item .the-judge {
+    font-size: 15px;
+    margin: 8px 0;
+    padding: 8px 14px;
+    border-radius: 6px;
+  }
+  .judge-red {
+    background: rgba(176,58,46,0.07);
+    border-left: 4px solid var(--red);
+  }
+  .judge-yellow {
+    background: rgba(184,134,11,0.08);
+    border-left: 4px solid var(--gold);
+  }
+  .judge-green {
+    background: rgba(74,124,89,0.07);
+    border-left: 4px solid var(--green);
+  }
+  .check-item .the-reason {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  .check-item .the-reason::before {
+    content: "理由：";
+    color: var(--accent);
+    font-weight: bold;
+  }
+
+  .result-badge {
+    display: inline-block;
+    font-size: 13px;
+    padding: 2px 12px;
+    border-radius: 10px;
+    letter-spacing: 1px;
+    font-weight: bold;
+    color: #fff;
+    margin-left: 6px;
+  }
+  .rb-red { background: var(--red); }
+  .rb-yellow { background: var(--gold); }
+  .rb-green { background: var(--green); }
+
+  .verdict-box {
+    border-radius: 10px;
+    padding: 22px 28px;
+    margin: 32px 0;
+    border: 2px solid;
+  }
+  .verdict-box.v-red { border-color: var(--red); background: rgba(176,58,46,0.04); }
+  .verdict-box.v-yellow { border-color: var(--gold); background: rgba(184,134,11,0.05); }
+  .verdict-box.v-green { border-color: var(--green); background: rgba(74,124,89,0.04); }
+  .verdict-box h3 {
+    margin: 0 0 8px;
+    font-size: 19px;
+    letter-spacing: 1px;
+  }
+  .verdict-box.v-red h3 { color: var(--red); }
+  .verdict-box.v-yellow h3 { color: var(--gold); }
+  .verdict-box.v-green h3 { color: var(--green); }
+  .verdict-box p { margin: 6px 0; text-indent: 2em; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 18px 0;
+    font-size: 14px;
+  }
+  th, td {
+    border: 1px solid var(--line);
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: var(--accent); color: #fff; font-weight: normal; letter-spacing: 1px; }
+  tr:nth-child(even) { background: rgba(138,90,43,0.04); }
+
+  .final-score {
+    background: #fffaf1;
+    border: 2px solid var(--accent);
+    border-radius: 10px;
+    padding: 28px 32px;
+    margin: 56px 0 40px;
+    text-align: center;
+  }
+  .final-score .big-num {
+    font-size: 56px;
+    color: var(--red);
+    font-weight: bold;
+    line-height: 1;
+    letter-spacing: 4px;
+  }
+  .final-score .big-label {
+    font-size: 16px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-top: 4px;
+  }
+  .final-score .big-summary {
+    font-size: 17px;
+    color: var(--ink);
+    margin-top: 16px;
+    text-align: left;
+    text-indent: 2em;
+  }
+
+  .foot {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 60px;
+    border-top: 1px solid var(--line);
+    padding-top: 24px;
+  }
+
+  @media (max-width: 700px) {
+    .check-item h4 .q-num { display: block; margin-bottom: 4px; }
+    .final-score .big-num { font-size: 40px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>侠鹿 · 故事设计诊断报告</h1>
+<div class="sub">基于《好故事综合评判体系》· 快速检查 + 三引擎诊断</div>
+<div class="note">
+诊断对象：当前讨论中的《侠鹿》故事主线（温情开场 → 父亲赴墨关 → 父亲战死 → 太爷爷带百姓撤 → 太爷爷替她死 → 看见父女 → 走出队伍 → 焚身）。
+诊断标准：快速检查 6 问 + 三引擎 10 探针。
+</div>
+
+<!-- ============ 故事回放 ============ -->
+<div class="story-recap">
+<h2>诊断对象：当前故事主线梗概</h2>
+<div class="recap-line"><span class="recap-label">主角：</span>端木七，城主之女，十七岁，彩发、青色胎记、总做怪梦。</div>
+<div class="recap-line"><span class="recap-label">主题：</span>从“阿爹你别去”到“阿爹，我替你挡着”——理解父亲为什么站在那儿，然后用自己的方式站到同一个位置上。</div>
+<div class="recap-line"><span class="recap-label">弧线：</span>不理解阿爹 → 怨他 → 读遗信开始懂 → 太爷爷死后被迫接担 → 看见父女后真正理解 → 焚身成为他那样的人。</div>
+<div class="recap-line"><span class="recap-label">主线：</span>温情开场 → 军情到、父亲赴墨关 → 父亲战死、头颅送回 → 太爷爷带全城百姓撤 → 太爷爷替她挡毒镖而死 → 她被迫接担 → 流亡途中看见父女分食 → 走出队伍引开追兵 → 天魔老开条件 → 焚身灭敌。</div>
+<div class="recap-line"><span class="recap-label">关键设定：</span>转世鹿身、体内魔心、书生从画中出来剥离魔心、三昧真火焚身。</div>
+</div>
+
+<!-- ============ 第一部分：快速检查 ============ -->
+<div class="section-title">第一部分：快速检查 <span class="badge">6 问 · 红灯数量决定是否继续</span></div>
+
+<div class="check-item">
+<h4><span class="q-num">Q1</span>主角想要的东西，能不能用一句不带抽象词的话说出来？ <span class="result-badge rb-yellow">黄灯</span></h4>
+<div class="the-q">故事前三分之一，端木七“最想要的东西”是什么？不能用“拯救”“成长”“保护”这类词。</div>
+<div class="the-judge judge-yellow">能说出一部分，但不贯穿：开篇是“想让阿爹别去/早点回来”（具体），父亲死后变成“想让阿娘和太爷爷平安”（比较具体），太爷爷死后变成“想带全城百姓活着走出去”（具体但偏宏大），最后变成“想打败天魔谷”（抽象）。目标一直在变，而且后期的目标太宏大。</div>
+<div class="the-reason">好的设计应该是：开篇就有一个具体的、可以画出画面的目标，这个目标可能在中途升级，但起点必须小到读者能抓住。当前设计的起点目标（让阿爹别去）太小、太孩子气，在父亲死后就失效了，后面没有一个同样具体的目标来接替它。</div>
+</div>
+
+<div class="check-item">
+<h4><span class="q-num">Q2</span>主角有没有一个“她本可以不这么做”的岔路口？ <span class="result-badge rb-green">绿灯</span></h4>
+<div class="the-q">在关键节点上，主角是否有一条更轻松、更安全、更符合常理的路？她选了更难的那条？</div>
+<div class="the-judge judge-green">有。父亲死后，她可以留在慕叶城等太爷爷安排，但她选择去找老祖逼问真相。太爷爷死后，她可以带着母亲继续逃命、不管百姓，但她选择接过担子。追兵甩不掉时，她可以留在队伍里（让百姓替她死），但她选择走出队伍引开追兵。天魔老开出“交魔心就能活”的条件时，她可以选择交魔心换命，但她选了焚身。</div>
+<div class="the-reason">这四个岔路口都是真实的——每一条“更容易的路”读者都能理解，她没走，读者能看见她的意志。这一条是当前设计中最扎实的部分。</div>
+</div>
+
+<div class="check-item">
+<h4><span class="q-num">Q3</span>反派有没有做过一件具体的、让读者恨得起来的事？ <span class="result-badge rb-green">绿灯</span></h4>
+<div class="the-q">反派是否有具体的、针对主角的恶行？读者能不能说出“我恨不得看他被主角亲手了结”的场景？</div>
+<div class="the-judge judge-green">有。天魔老把端木弛的头颅漆成黑色装进木匣送回慕叶城，匣内附纸条“骨珠换人头，三天为限”。他当面承认“魔心是我喂给你前世的”。他杀了端木明。这三件事都是具体的、针对端木七的。</div>
+<div class="the-reason">天魔老的恶行有画面、有针对性、直接造成主角的痛苦。这一条立住了。但有一个隐患：天魔老的动机如果被设计成“救孙女”，读者会从“恨他”变成“理解他”，威胁感会被稀释。当前设计没有明确天魔老的动机，这是一个需要警惕的地方。</div>
+</div>
+
+<div class="check-item">
+<h4><span class="q-num">Q4</span>关键事件是“因为上一件事所以发生了”，还是“然后发生了这件事”？ <span class="result-badge rb-yellow">黄灯</span></h4>
+<div class="the-q">删掉任何一个关键情节点，后面的故事还能成立吗？</div>
+<div class="the-judge judge-yellow">主干有因果，但有几处薄弱环节。父亲赴墨关 → 父亲战死 → 头颅送回 → 端木七逼问老祖 → 得知部分真相，这条链是紧的。但“得知部分真相”和“天魔谷围城”之间是“然后”而不是“因为”——她知道了真相，然后天魔谷来了。这两件事之间缺少因果桥接。“天魔谷围城”的触发条件是什么？是因为她知道了真相所以天魔谷才来？还是天魔谷本来就要来？如果是后者，那“得知真相”和“围城”就是两条平行线，被强行拧在一起。</div>
+<div class="the-reason">好的因果链应该让读者觉得“如果她不逼问老祖，就不会发生后面的事”。当前设计里，逼问老祖和天魔谷围城之间没有这个因果。需要给天魔谷围城一个“因为端木七做了某事所以提前了”的触发点。</div>
+</div>
+
+<div class="check-item">
+<h4><span class="q-num">Q5</span>把梗概说给一个不看这类故事的人听，他会不会问“然后呢”？ <span class="result-badge rb-yellow">黄灯</span></h4>
+<div class="the-q">梗概听完，对方的第一反应是“然后呢”还是“哦，挺好的”？</div>
+<div class="the-judge judge-yellow">当前梗概信息完整，但结局已经透了——“她焚身灭敌，护住百姓”。听众听完知道结局，不太会追问“然后呢”。钩子不够强，因为读者不需要翻页就知道她会牺牲、敌人会覆灭、百姓会活下来。</div>
+<div class="the-reason">好的梗概应该留一个“她到底能不能做到”或者“她做到之后会怎样”的悬念。当前梗概的问题是：结局太确定，代价太明确，读者没有“我必须读下去才知道结果”的冲动。</div>
+</div>
+
+<div class="check-item">
+<h4><span class="q-num">Q6</span>主角有没有做过一个让读者意外、但回想起来“对，她就是这样的人”的选择？ <span class="result-badge rb-red">红灯</span></h4>
+<div class="the-q">主角的哪一个决定让读者感到意外？这个意外有没有伏笔支撑？</div>
+<div class="the-judge judge-red">当前设计里，端木七的每一个选择都在读者预料之内：父亲死后追查身世（合理），太爷爷死后接过担子（合理），看见父女后走出队伍（合理），焚身灭敌（合理）。每一个选择都“应该这么做”，但没有一个让读者“没想到她会这么做”。</div>
+<div class="the-reason">这一条是当前设计中最严重的短板。主角是一个“一直做正确选择的人”，读者读她就像读一个“好学生答题”——每一步都对，但每一步都能猜到。福斯特的标准是“意外且可信”，当前设计只有“可信”，没有“意外”。需要至少一个节点，让她的选择既符合她的逻辑，又超出读者的预期。</div>
+</div>
+
+<div class="verdict-box v-red">
+<h3>快速检查结论：1 红灯 + 3 黄灯 + 2 绿灯</h3>
+<p>红灯数量 = 1，按规则可以进入三引擎诊断，但在诊断中要重点盯住 Q6 对应的引擎一（探针 1.4 意外且可信）和 Q1 对应的引擎一（探针 1.2 具体欲望）。</p>
+<p>整体判断：这个雏形的骨架基本立住，但有两个核心问题需要优先解决——<strong>主角缺乏真正的意外选择（Q6）</strong>，以及<strong>主角的目标不够具体、不够贯穿（Q1）</strong>。前者让主角扁平，后者让读者在前段不知道“该跟着她看什么”。</p>
+</div>
+
+<!-- ============ 第二部分：引擎一 ============ -->
+<div class="section-title">第二部分：引擎一 · 抓人 <span class="badge">读者是否愿意跟着这个人走</span></div>
+
+<div class="check-item">
+<h4><span class="q-num">1.1</span>不公与心疼 <span class="result-badge rb-yellow">怠速</span></h4>
+<div class="the-q">读者是否在故事前段就为端木七感到“不该如此”？</div>
+<div class="the-judge judge-yellow">有不公，但不在故事前段。故事开头是城主府的温情日常——父亲教她写字，母亲在旁边笑，一家人在桃园里吃饭。这段不公吗？不公。读者要等到父亲战死、头颅送回，才会开始替她难受。在那之前，读者看到的是一个被宠爱的小女孩。</div>
+<div class="the-reason">问题不在于“有没有不公”，而在于“不公出现得太晚”。引擎一的第一条标准是“读者在故事前段就感到不该如此”。如果前三分之一都在温情，读者对主角的投入会延迟。温情本身不是问题，问题是要在温情中埋下“她不欠这个结局”的细节——比如她做梦时惊醒，父亲眼神闪躲；比如老祖远远看她一眼就走。这些细节可以让读者提前感到“这个家庭有秘密，这个女孩可能要承受什么”，而不是等到第三章才开始心疼。</div>
+</div>
+
+<div class="check-item">
+<h4><span class="q-num">1.2</span>具体欲望与错误信念 <span class="result-badge rb-yellow">怠速</span></h4>
+<div class="the-q">端木七有没有一个具体的、可以画出画面的外部目标？她有没有一个阻挡自己的错误信念？</div>
+<div class="the-judge judge-yellow">外部目标：开篇是“想让阿爹别去/早点回来”（具体但太孩子气，父亲死后就失效了）。后面变成“想让阿娘和太爷爷平安”（比较具体），再变成“想带全城百姓活着走出去”（具体但宏大），最后“想打败天魔谷”（抽象）。没有一个贯穿始终的目标。错误信念：当前设计里端木七没有明确的错误信念。她一直在“被动理解”父亲的选择，而不是“因为深信某件事而一直选错”。她开篇时深信“阿爹什么都能解决”，但这个信念在父亲死后就被打破了，之后她没有带着一个新的错误信念继续行动。</div>
+<div class="the-reason">故事需要一个贯穿始终的外部目标，以及一个贯穿始终的错误信念。当前设计里，目标在变，错误信念缺失。一个好的设计可能是：外部目标——“把父亲的身体找回来，让他完整入土”（具体、有画面、贯穿前半段）；错误信念——“只要我找到真相、把该做的事做完，就能让阿爹回来/就能心安”（这个信念让她一直往前冲，直到她发现阿爹回不来了，才被迫面对“她到底为什么站在这里”）。</div>
+</div>
+
+<div class="check-item">
+<h4><span class="q-num">1.3</span>岔路与主动选择 <span class="result-badge rb-green">点火</span></h4>
+<div class="the-q">主角是否在关键节点上有一条“她本可以不这么做”的路？</div>
+<div class="the-judge judge-green">有，而且密度很高。逼问老祖、接过担子、走出队伍、选焚身——这四个节点上她都有“更舒服的路”可走。这个探针是当前设计中最好的部分，主角的意志在四个岔路口上都被看见了。</div>
+<div class="the-reason">这一条不需要改。但需要注意：岔路的存在不等于“选择让人意外”。她的每一个选择虽然都有另一条路，但读者能预判她会选更难的那条——因为她被设计成一个“善良、负责、勇敢”的人。岔路让主角不扁平，但选择本身的可预测性让主角不够意外（见 1.4）。</div>
+</div>
+
+<div class="check-item">
+<h4><span class="q-num">1.4</span>意外且可信 <span class="result-badge rb-red">熄火</span></h4>
+<div class="the-q">主角有没有做过一个让读者意外、但回想起来“对，她就是这样的人”的选择？</div>
+<div class="the-judge judge-red">没有。当前设计的每一个选择都在读者预料之内。读者读完梗概就能猜出：父亲死后她会去追查身世，太爷爷死后她会接过担子，看见父女后她会走出队伍，天魔老开条件后她会选焚身。每一个选择都“应该这么做”，但没有一个让读者“没想到她会这么做”。</div>
+<div class="the-reason">这一条是当前设计中最严重的短板。主角是一个“一直做正确选择的人”，读者读她就像读一个“好学生答题”——每一步都对，但每一步都能猜到。福斯特的标准是“意外且可信”，当前设计只有“可信”，没有“意外”。需要至少一个节点，让她的选择既符合她的逻辑，又超出读者的预期。例如：她可以在一开始拒绝接过担子（“我不行，你们找别人”），然后在某个具体场景的逼迫下才被迫接担——这个“拒绝”本身就是一个意外，因为读者以为她“应该”会接。或者，她在看见父女后不是“毅然走出队伍”，而是“先崩溃、想逃、被花千雅拦住、才想通”——这个反复的过程比“一步到位”更真实，也更意外。</div>
+</div>
+
+<div class="verdict-box v-red">
+<h3>引擎一诊断结论：1 熄火 + 2 怠速 + 1 点火</h3>
+<p>引擎一在“岔路与主动选择”上点火了，但在“意外且可信”上熄火，在“不公心疼”和“具体欲望”上怠速。按诊断规则，引擎一有熄火项，<strong>不应进入引擎二诊断</strong>，应先修引擎一。</p>
+<p>优先修什么：1.4（意外且可信）是最要命的短板，1.2（具体欲望）次之，1.1（不公心疼）最次但也需要调整节奏。建议先给端木七设计一个“让人意外的选择”——这个选择必须在情理之中，但不在读者的预判之内。然后再把外部目标和错误信念贯穿起来，让读者在前段就知道“她想要什么”。</p>
+</div>
+
+<!-- ============ 第三部分：引擎二（简化） ============ -->
+<div class="section-title">第三部分：引擎二 · 推人 <span class="badge">快速扫描（引擎一熄火，本部分仅供参照）</span></div>
+
+<div class="check-item">
+<h4><span class="q-num">2.1</span>风险升级 <span class="result-badge rb-yellow">怠速</span></h4>
+<div class="the-q">风险是否层层加码？失败的代价是否越来越具体、越来越疼？</div>
+<div class="the-judge judge-yellow">风险确实在升级：父亲战死 → 太爷爷战死 → 天魔老堵住她 → 焚身。但前半段（父亲赴墨关之前）几乎没有真正的风险。故事开头是温情日常，读者要等很久才能感受到威胁。而且，升级的“疼感”不够：父亲的死和太爷爷的死集中在故事中段，中间缺少让读者“喘一口气、然后再被掐住”的节奏。</div>
+</div>
+
+<div class="check-item">
+<h4><span class="q-num">2.2</span>对手针对性 <span class="result-badge rb-green">点火</span></h4>
+<div class="the-q">反派是否有具体的、针对主角的恶行？</div>
+<div class="the-judge judge-green">天魔老的恶行具体且针对性强（头颅、魔心、杀太爷爷）。这一条是引擎二里最扎实的部分。但要注意：如果给天魔老加上“救孙女”的动机，这一条会从点火变成怠速——读者一旦理解他，恨意就会被稀释。</div>
+</div>
+
+<div class="check-item">
+<h4><span class="q-num">2.3</span>因果链 <span class="result-badge rb-yellow">怠速</span></h4>
+<div class="the-q">事件之间是“因为”还是“然后”？</div>
+<div class="the-judge judge-yellow">主干有因果，但支线松散。“端木七做噩梦 → 问父亲 → 父亲含糊其辞”之后，噩梦这条线就断了，直到父亲死、头颅送回，她才重新捡起来去逼问老祖。噩梦是推动她行动的关键线索，但它在中间被“搁置”了。另外，“得知部分真相”和“天魔谷围城”之间缺少因果桥接——她知道了真相，然后天魔谷来了，这两件事的关系不够紧。</div>
+</div>
+
+<!-- ============ 第四部分：引擎三（简化） ============ -->
+<div class="section-title">第四部分：引擎三 · 留人 <span class="badge">快速扫描（引擎一熄火，本部分仅供参照）</span></div>
+
+<div class="check-item">
+<h4><span class="q-num">3.1</span>真实自我揭露 <span class="result-badge rb-yellow">怠速</span></h4>
+<div class="the-q">主角在结局处是否看清了一个关于自己的、之前不知道的真相？</div>
+<div class="the-judge judge-yellow">她在故事中段（看见父女）就已经获得了“阿爹当年为什么站在那儿”的真相。到了焚身的时候，她已经没有新的“自我真相”要揭露了。焚身变成了“执行一个已经想通的道理”，而不是“在最后一刻完成最后的成长”。</div>
+</div>
+
+<div class="check-item">
+<h4><span class="q-num">3.2</span>代价的具体性 <span class="result-badge rb-yellow">怠速</span></h4>
+<div class="the-q">主角失去了什么读者已经爱上、珍视的东西？</div>
+<div class="the-judge judge-yellow">她失去了生命。但“失去生命”在故事里没有被具体化——读者没有看见她“活着的时候珍视的东西”被拿走。她珍视的东西（阿爹、阿娘、太爷爷）在故事中段就已经被拿走了，到了焚身的时候，她手里已经没有读者能看见的“珍视之物”可以失去了。代价是“死”，但读者没有感到她“失去了什么具体的东西”。</div>
+</div>
+
+<div class="check-item">
+<h4><span class="q-num">3.3</span>反宿命的选择感 <span class="result-badge rb-yellow">怠速</span></h4>
+<div class="the-q">结局面前有没有一条“看起来很合理”的退路？她没走？</div>
+<div class="the-judge judge-yellow">天魔老给了她一个选择：交魔心（她活，百姓活，魔心害更多人）或焚身（她死，魔心毁，百姓活）。这是一个选择，但读者知道她一定会选焚身——因为故事一直在把她往这个方向推。这个选择是“两害相权取其轻”，读者不会震撼，只会觉得“果然如此”。</div>
+</div>
+
+<!-- ============ 综合评判 ============ -->
+<div class="section-title">综合评判</div>
+
+<div class="final-score">
+<div class="big-num">及格偏下</div>
+<div class="big-label">骨架立住了，但三台引擎都没有真正点火</div>
+<div class="big-summary">
+当前《侠鹿》的故事设计是一个“及格偏下”的故事。它的核心问题不是“逻辑不通”，而是“太顺了”——主角的每一个选择都合理，每一个事件都该发生，每一个转折都能猜到。读者读完梗概会说“这个故事挺完整的”，但不会说“我想马上读到它”。
+
+具体来说：
+<br/><br/>
+<strong>最扎实的部分：</strong>岔路密度高（1.3点火），反派恶行具体（2.2点火），主题与弧线咬合（虽然主题不在引擎诊断里，但“从阿爹你别去到阿爹我替你挡着”这条线是清晰的）。
+<br/><br/>
+<strong>最严重的短板：</strong>主角缺乏意外选择（1.4熄火）。她的每一个选择都在读者预料之内——她会追查身世、会接过担子、会走出队伍、会焚身。读者读她就像读一个“一直在做正确选择的人”，没有“没想到她会这么做”的瞬间。
+<br/><br/>
+<strong>次要但需要修的短板：</strong>主角的目标不够具体、不够贯穿（1.2怠速）；前半段缺少不公心疼的铺垫（1.1怠速）；噩梦线索中途断裂（2.3怠速）；代价不够具体（3.2怠速）。
+</div>
+</div>
+
+<div class="verdict-box v-yellow">
+<h3>如果要救这个故事，第一步应该做什么</h3>
+<p><strong>先修引擎一，不要修引擎三。</strong>当前设计最要命的问题是“主角不够意外”（1.4熄火）和“目标不够具体”（1.2怠速）。这两个问题不修，引擎二和引擎三写得再好也没有用——读者不会在乎一个“每一步都猜得到”的主角。</p>
+<p>具体的修法建议：给端木七设计一个“拒绝接担”的节点。当前设计里，太爷爷死后她“被迫接过担子”，这个“被迫”太顺了——她没有挣扎，没有拒绝，没有“我不行你们找别人”的时刻。如果让她在太爷爷刚死时拒绝接担（“我不行，我阿爹都做不到，我怎么行”），然后在具体的压力下（比如有人因她而死、或者花千雅打了她一巴掌）才被迫接受，这个“拒绝—挣扎—接受”的过程会让读者意外，同时仍然可信。</p>
+<p>另一个修法：给端木七一个贯穿前半段的“具体目标”，比如“把父亲的身体找回来，让他完整入土”。这个目标小、具体、有画面，读者能抓住。她在找父亲遗体的过程中被卷入更大的事，目标被迫升级。这样读者在前段就知道“她想干什么”，而不是等她“被迫接担”之后才知道。</p>
+</div>
+
+<p class="foot">侠鹿 · 故事设计诊断报告　|　基于《好故事综合评判体系》　|　快速检查：1红3黄2绿 · 引擎一：1熄火2怠速1点火 · 综合：及格偏下</p>
+
+</div>
+</body>
+</html>
