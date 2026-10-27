@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>灵感制造机 · DeepSeek 版</title>
+<style>
+  :root{
+    --bg:#16121d; --bg2:#221b2e; --card:#2a2238; --line:#3a3050;
+    --gold:#c9a227; --purple:#9b6cf0; --text:#e9e3f5; --muted:#9a8fb0;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh;
+    background:radial-gradient(1200px 600px at 70% -10%, #2c2140 0%, var(--bg) 60%);
+    color:var(--text);
+    font-family:"Songti SC","SimSun","Noto Serif CJK SC",serif;
+    display:flex; flex-direction:column; align-items:center;
+    padding:40px 18px 90px;
+  }
+  h1{ font-size:32px; letter-spacing:8px; margin:0 0 4px;
+    background:linear-gradient(90deg,var(--gold),var(--purple));
+    -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .sub{color:var(--muted); font-size:13px; letter-spacing:2px; margin-bottom:22px; text-align:center;}
+  .panel{ width:100%; max-width:980px; background:var(--bg2); border:1px solid var(--line);
+    border-radius:12px; padding:16px 18px; margin-bottom:22px; }
+  .panel label{font-size:12px; letter-spacing:2px; color:var(--muted);}
+  .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:8px;}
+  input[type=text],input[type=password]{
+    flex:1; min-width:200px; background:#1c1726; border:1px solid var(--line);
+    color:var(--text); border-radius:8px; padding:10px 12px; font-size:14px; font-family:inherit;
+  }
+  .hook{ max-width:980px; width:100%; background:linear-gradient(135deg,rgba(201,162,39,.12),rgba(155,108,240,.12));
+    border:1px solid var(--line); border-radius:12px; padding:16px 20px; margin-bottom:22px;
+    line-height:1.8; font-size:16px; text-align:center; min-height:54px; }
+  .hook b{color:var(--gold);} .hook i{color:var(--purple); font-style:normal;}
+  .grid{ width:100%; max-width:980px; display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+  @media(max-width:680px){ .grid{grid-template-columns:1fr;} }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:16px 18px; position:relative; min-height:140px; }
+  .card .tag{display:inline-block; font-size:12px; letter-spacing:2px; color:var(--muted);
+    border:1px solid var(--line); border-radius:999px; padding:2px 12px; margin-bottom:8px;}
+  .card h3{margin:0 0 6px; font-size:20px; color:var(--gold); letter-spacing:1px;}
+  .card .desc{font-size:12px; color:var(--muted); line-height:1.6; margin:4px 0;}
+  .card .tip{font-size:13px; line-height:1.65; color:var(--text);
+    border-left:2px solid var(--purple); padding-left:9px; margin-top:6px;}
+  .card .tip b{color:var(--purple);}
+  .card .re{position:absolute; top:12px; right:12px; cursor:pointer; background:transparent;
+    border:1px solid var(--line); color:var(--muted); border-radius:8px; width:28px; height:28px; font-size:14px;}
+  .card .re:hover{color:var(--gold); border-color:var(--gold);}
+  .actions{margin-top:26px; display:flex; gap:12px; flex-wrap:wrap; justify-content:center;}
+  button.gen{cursor:pointer; border:none; border-radius:10px; padding:13px 30px; font-size:15px;
+    letter-spacing:3px; color:#1a1422; font-weight:700;
+    background:linear-gradient(90deg,var(--gold),var(--purple)); box-shadow:0 6px 24px rgba(155,108,240,.3);}
+  button.gen:hover{transform:translateY(-2px);}
+  button.ghost{cursor:pointer; border:1px solid var(--line); color:var(--muted); background:transparent;
+    border-radius:10px; padding:13px 22px; font-size:14px; letter-spacing:2px;}
+  button.ghost:hover{color:var(--gold); border-color:var(--gold);}
+  button.ghost:disabled{opacity:.4; cursor:not-allowed;}
+  .result{ width:100%; max-width:980px; margin-top:26px; background:var(--card);
+    border:1px solid var(--line); border-radius:12px; padding:18px 20px; display:none;}
+  .result.show{display:block;}
+  .result .rhead{display:flex; align-items:center; gap:14px; margin-bottom:12px;}
+  .score{ font-size:30px; font-weight:700; color:var(--gold);
+    background:#1c1726; border:1px solid var(--gold); border-radius:10px; padding:4px 14px; }
+  .result .rhead span{color:var(--muted); font-size:13px; letter-spacing:2px;}
+  #ds-text{white-space:pre-wrap; line-height:1.85; font-size:15px; color:var(--text);}
+  .err{color:#e0707c;}
+</style>
+</head>
+<body>
+  <h1>灵 感 制 造 机</h1>
+  <div class="sub">四池各 50 条 · 随机抽取 · 交予 DeepSeek 生成微设定并量化评分</div>
+
+  <div class="panel">
+    <label>DeepSeek API Key（仅在本地浏览器内存中使用，不另存）</label>
+    <div class="row">
+      <input type="password" id="apikey" placeholder="sk-xxxxxxxxxxxxxxxx" autocomplete="off" />
+      <input type="text" id="model" value="deepseek-chat" style="max-width:200px" title="模型名，可改为 deepseek-reasoner" />
+    </div>
+  </div>
+
+  <div class="hook" id="hook">点击下方“生成灵感”开始。</div>
+
+  <div class="grid">
+    <div class="card">
+      <button class="re" data-k="w" title="换世界观">↻</button>
+      <span class="tag">世界观</span>
+      <h3 id="w-name">—</h3>
+      <div class="desc" id="w-desc"></div>
+      <div class="tip" id="w-tip"></div>
+    </div>
+    <div class="card">
+      <button class="re" data-k="c" title="换人物">↻</button>
+      <span class="tag">人物（职业）</span>
+      <h3 id="c-name">—</h3>
+      <div class="tip" id="c-tip"></div>
+    </div>
+    <div class="card">
+      <button class="re" data-k="p" title="换地点">↻</button>
+      <span class="tag">地点</span>
+      <h3 id="p-name">—</h3>
+    </div>
+    <div class="card">
+      <button class="re" data-k="e" title="换事件">↻</button>
+      <span class="tag">事件（要做什么）</span>
+      <h3 id="e-name">—</h3>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="gen" id="gen">生成灵感</button>
+    <button class="ghost" id="ask" disabled>交给 DeepSeek 生成微设定并评分</button>
+    <button class="ghost" id="copy">复制梗概</button>
+  </div>
+
+  <div class="result" id="result">
+    <div class="rhead">
+      <div class="score" id="score">—</div>
+      <span>DeepSeek 评分（0–10，越高越有故事潜力）</span>
+    </div>
+    <div id="ds-text"></div>
+  </div>
+
+<script>
+const worldviews = [
+ {name:"洪荒世界",desc:"天地初开，神魔并立，万族争锋的蛮荒纪元，法则粗粝未定。",tip:"写先天神祇的权柄之争、灵脉与气运的争夺、第一次文明火种。"},
+ {name:"西幻魔法世界",desc:"魔网与元素律令构筑的异界，王权与法师塔长期角力。",tip:"关注魔法体系的代价、血脉诅咒、被禁的第十系魔法。"},
+ {name:"现代都市",desc:"表象繁华的钢筋森林，暗面藏着不为人知的秩序与交易。",tip:"让都市传说真实化，写隐秘组织、科技与异能的交界线。"},
+ {name:"修仙界",desc:"灵气或枯竭或复苏的修真江湖，宗门如林，长生为瘾。",tip:"写境界壁垒的残酷、飞升之谜、长生的代价与畸变。"},
+ {name:"赛博朋克",desc:"巨企统治的霓虹废土，义体与网络即新神祇。",tip:"写记忆商品化、人机界限、被算法预定的命运。"},
+ {name:"废土末世",desc:"文明崩塌后的残响，幸存者在灰烬与辐射中挣扎求存。",tip:"旧时代遗物的力量、变异生态、人性最后的余烬。"},
+ {name:"蒸汽朋克",desc:"齿轮与黄铜驱动的类近代世界，发条与差分机主宰一切。",tip:"写机械飞升、阶级与发明的博弈、被禁的永动装置。"},
+ {name:"克苏鲁诡秘",desc:"理性之外存在不可名状的恐惧，sanity 是奢侈品。",tip:"写禁忌知识、缓慢侵蚀、看似正常的镇子底下的异状。"},
+ {name:"架空王朝",desc:"虚构的古代帝国，权谋与江湖在帝国阴影里交织。",tip:"写继承危机、边患、秘党对龙椅的觊觎。"},
+ {name:"星际殖民",desc:"人类散落于星辰之间，新旧世界割裂，舰船即故土。",tip:"写休眠舱里的世纪、AI 与人类的共生与对立、失落殖民地。"},
+ {name:"末日病毒灾变",desc:"一种改写生命的病毒让死者保持意识，文明在恐惧中重组。",tip:"写感染即觉醒的悖论、隔离区里的伪常态。"},
+ {name:"妖怪人间共存",desc:"妖物混迹市井，条例与偏见维持着脆弱的和平。",tip:"写妖的户籍、人妖通婚的暗流、被通缉的善良怪物。"},
+ {name:"时间循环牢笼",desc:"同一天被无限重播，少数人保留记忆，多数人沦为背景。",tip:"写循环中的权力结构、为打破循环犯下的罪行。"},
+ {name:"镜中倒影世界",desc:"镜子后是被本体遗弃的另一半人生，两界悄然渗透。",tip:"写镜像人格的复仇、照镜子时消失的人。"},
+ {name:"地心远古文明",desc:"地壳之下沉睡着一个比地表更先进的失落帝国。",tip:"写地心光源、被封存的史前科技、向上的入侵。"},
+ {name:"机械飞升神国",desc:"信徒将意识上传换取永生，神成了最大的服务器。",tip:"写信仰即算力、被删除的异端灵魂。"},
+ {name:"山海经异兽界",desc:"上古异兽并未灭绝，只是退入了人迹罕至的秘境。",tip:"写御兽者的契约、异兽血脉的诅咒与恩赐。"},
+ {name:"量子叠加都市",desc:"城市同时处于多种历史态，观测行为决定现实。",tip:"写平行态的坍缩、被两种记忆撕裂的人。"},
+ {name:"梦境共享网络",desc:"入睡即接入所有人的梦，梦贩子贩卖他人的噩梦。",tip:"写梦境审查、被篡改的集体潜意识。"},
+ {name:"灵魂期货交易所",desc:"灵魂可估价、可抵押、可被做空，死亡只是平仓。",tip:"写灵魂破产、被强制清算的穷人。"},
+ {name:"永生者禁区",desc:"少数人不死，却因此被新政权列为必须清除的异端。",tip:"写永生者的倦怠、猎杀长生的猎人。"},
+ {name:"深海失落大陆",desc:"海平面下藏着一座拒绝上浮的文明，光来自生物。",tip:"写深海压强下的社会、陆地人的贪婪触手。"},
+ {name:"浮空群岛联盟",desc:"大陆碎成万岛悬于天际，贸易靠风与缆绳维系。",tip:"写坠岛恐惧、空贼与云上封建。"},
+ {name:"冰封末世",desc:"突降的严寒将文明封进冰层，仅余少数暖窟。",tip:"写温暖的货币化、融冰时苏醒的旧敌。"},
+ {name:"虫族共生星域",desc:"人类与虫群达成不平等共生，意识彼此渗透。",tip:"写被虫群借走的自我、共生的背叛。"},
+ {name:"纸上书灵世界",desc:"写下的字会成精，禁书即禁物，文豪拥有实权。",tip:"写文字具象化的战斗、被焚稿镇压的叛逆。"},
+ {name:"黄昏永驻小镇",desc:"时间停在一个傍晚，镇民重复同一段人生。",tip:"写困在黄昏里的执念、想走出去的异数。"},
+ {name:"傀儡师之国",desc:"国民以丝线相连，王以牵线维持秩序与和平。",tip:"写被剪断线的人、自由与控制的代价。"},
+ {name:"亡灵合法化城邦",desc:"死亡不是终点，亡者仍享部分公民权。",tip:"写死人投票、活人与亡者的遗产官司。"},
+ {name:"星轨占卜帝国",desc:"国运由天体运行决定，占星官掌握废立之权。",tip:"写伪造星象、被流星改写的王储命运。"},
+ {name:"逆生长文明",desc:"人自老始、向婴终，衰老意味着纯洁与权力。",tip:"写越老越尊贵的社会、被惧怕的出生。"},
+ {name:"语言即魔法界",desc:"言灵为真，说出的诅咒会应验，哑者最安全。",tip:"写被禁的词汇、以沉默为武器的反抗。"},
+ {name:"图腾兽魂草原",desc:"每个氏族守护一头祖魂巨兽，兽死族灭。",tip:"写兽魂的衰弱、为存续发动的猎魂战。"},
+ {name:"玻璃花房穹顶城",desc:"人类蜗居于巨型温室，外界已不宜居。",tip:"写穹顶裂缝、温室政治的脆弱。"},
+ {name:"永夜极地王国",desc:"太阳千年前熄灭，王国靠地热与火信仰维系。",tip:"写伪日骗局、为光而战的狂信徒。"},
+ {name:"沙下千墓之国",desc:"整片沙漠之下是层层叠叠的古代陵寝。",tip:"写盗墓即考古、被亡者诅咒的王朝。"},
+ {name:"云端机械都市",desc:"全城由自律机械维持，人类退为被照料的对象。",tip:"写机器监护人的反叛、被圈养的人性。"},
+ {name:"血月狩猎场",desc:"每月血月，贵族可合法狩猎被标记者。",tip:"写标记制度的荒谬、猎物组织的反猎。"},
+ {name:"记忆黑市世界",desc:"记忆是硬通货，有人靠贩卖童年致富。",tip:"写被掏空的空壳人、记忆伪造师。"},
+ {name:"折叠时空迷宫",desc:"城市在午夜重组，昨日街道通往异度。",tip:"写迷路即穿越、被迷宫收藏的失踪者。"},
+ {name:"仙人牧民上古",desc:"上古仙人如同牧人，将凡间王朝视作羊群。",tip:"写牧人与羊的契约、被放牧者的觉醒。"},
+ {name:"瘟疫雕塑国度",desc:"一种让人僵成活雕塑的瘟疫被权贵当作艺术。",tip:"写被展览的病患者、以病为美的残酷。"},
+ {name:"星海游牧民族",desc:"族群生于舰、死于舰，星辰只是牧场。",tip:"写无根的身份、对一颗行星的执念。"},
+ {name:"齿轮与符文混合界",desc:"蒸汽机械与古老符文并行，二者互相抵触又依存。",tip:"写科技与魔法的派系战争。"},
+ {name:"诸神黄昏余烬",desc:"神已战死，世界靠神的尸骸运转。",tip:"写分食神躯的国家、伪神的崛起。"},
+ {name:"平行自我交汇带",desc:"不同选择的你在此相遇，多数想杀掉其他自己。",tip:"写自我之间的嫉妒与谋杀。"},
+ {name:"沉没文明博物馆",desc:"海底封存着所有覆灭的文明，馆长不许它们重见天日。",tip:"写被封存的希望、盗取文明的策展人。"},
+ {name:"默片默示录",desc:"世界失去声音，一切以字幕与手势交流。",tip:"写失声后的阴谋、用画面伪造的真相。"},
+ {name:"万界中转车站",desc:"所有世界的旅人于此换乘，规则由各势力共管。",tip:"写车站里的走私、被滞留的异界人。"},
+ {name:"末法废墟江湖",desc:"灵气将尽，最后的侠客在水泥与残碑间挣扎。",tip:"写绝技失传、以凡人之躯守道。"},
+ {name:"以太诗人国度",desc:"诗歌能改变现实，最伟大的诗人近乎神明。",tip:"写以韵文为武器的政变。"},
+ {name:"骨币经济体",desc:"通货由先祖遗骨打磨而成，花掉骨头即遗忘亲人。",tip:"写为交易掏空记忆的穷人。"},
+ {name:"雾中无界城",desc:"浓雾抹去一切边界，方向、身份、敌友皆不可辨。",tip:"写雾中的匿名暴行与救赎。"},
+ {name:"月背殖民地",desc:"人类迁居月球背面，永远背对地球。",tip:"写对蓝色故乡的乡愁、被隐瞒的地球真相。"},
+ {name:"万兽语者部落",desc:"能与动物交谈的人被视为异端或先知。",tip:"写动物透露的人性秘密。"},
+ {name:"时间当铺",desc:"可用时间交易，有人当掉余生换一夜辉煌。",tip:"写被典当的寿命、催债的死神。"},
+ {name:"镜面无人国",desc:"国土是巨大镜面，居民靠反射辨认彼此。",tip:"写镜中脸的错位、被照碎的身份。"},
+ {name:"永燃之火荒原",desc:"大地恒燃，文明只能在火线的边缘迁徙。",tip:"写追着安全区奔跑的流民。"},
+ {name:"虚空图书馆",desc:"收藏所有未被写出的书，管理员决定谁该读到。",tip:"写被扣押的潜在杰作、偷书者。"}
+];
+
+const characters = [
+ {name:"落魄炼金术士",tip:"债台高筑却仍固执于点石成金的旧梦，手里总差一味关键材料。"},
+ {name:"退役赏金猎人",tip:"金盆洗手后旧案找上门，身体里还嵌着任务留下的弹片。"},
+ {name:"宫廷占星师",tip:"从星图里读出了不该让君王知道的结局。"},
+ {name:"失忆刺客",tip:"醒来时刀已在手，目标却长着熟人的面孔。"},
+ {name:"流浪说书人",tip:"每到一个城镇就讲同一个被禁的故事，而有人在追杀这个故事。"},
+ {name:"被贬神官",tip:"神迹失灵那夜他被逐出圣殿，却仍听见神在低语。"},
+ {name:"地下拳手",tip:"擂台之下赌的不是钱，是记忆与寿命。"},
+ {name:"末代铸剑师",tip:"家族秘法随他一人绝迹，多方势力都想撬开他的手。"},
+ {name:"孤儿院院长",tip:"收留的每个孩子都带着不属于这个时代的胎记。"},
+ {name:"渡鸦信使",tip:"替死人送信，而收件人往往也早已死去。"},
+ {name:"疯癫发明家",tip:"造出的机器比造出它们的人更懂人心。"},
+ {name:"双面间谍",tip:"两边都在赌他先背叛谁，而他赌自己能活到结局。"},
+ {name:"法医",tip:"能读出尸体没说出口的真相，也读出了自己不愿信的。"},
+ {name:"档案管理员",tip:"看守着足以颠覆政权的旧卷，而有人想烧掉整座库房。"},
+ {name:"驯兽师",tip:"能与最凶的野兽交心，却驯不服自己心底的那头。"},
+ {name:"面具匠",tip:"他做的面具戴久了会吃掉佩戴者的脸。"},
+ {name:"摆渡人",tip:"只在无桥的河上接送亡魂，却接过一个活人。"},
+ {name:"守墓人",tip:"守的不是尸，是墓下封印的某样东西在夜里躁动。"},
+ {name:"赝品画师",tip:"仿得比真迹更真，真迹的主人反而成了冒牌。"},
+ {name:"记忆掮客",tip:"买卖别人的回忆，自己的童年却一片空白。"},
+ {name:"傀儡师",tip:"线下的木偶比线上的人更诚实。"},
+ {name:"司辰官",tip:"掌管一城的时间，擅自拨慢了钟以求挽留某人。"},
+ {name:"引魂灯师",tip:"以灯引路送魂，却把一盏灯留给了不该留的人。"},
+ {name:"赌坊荷官",tip:"能算出每一张牌，算不出自己为什么作弊。"},
+ {name:"虫师",tip:"与毒虫共语，身体早已是半虫之躯。"},
+ {name:"骨笛手",tip:"吹响骨笛能唤来亡者，亡者却不肯再走。"},
+ {name:"药人",tip:"自幼被当药引养大，血能医人亦能杀人。"},
+ {name:"观测者",tip:"奉命记录世界却从不介入，直到记录的对象是他自己。"},
+ {name:"拾荒王",tip:"在废墟里捡出一座地下王国，最怕被人发现宝藏。"},
+ {name:"镜匠",tip:"打磨的镜子会映出人最想见的那个已死之人。"},
+ {name:"讼师",tip:"专打翻案官司，靠推翻真相活着。"},
+ {name:"绣娘",tip:"她绣出的花鸟会在夜里活过来，替她去做不敢做的事。"},
+ {name:"更夫",tip:"敲梆报夜，却在某夜听见了本不该存在的第五更。"},
+ {name:"狱卒",tip:"看管最危险的囚犯，囚犯却掌握他的秘密。"},
+ {name:"风水先生",tip:"能挪动一座宅的运，挪不动自己的命。"},
+ {name:"戏班班主",tip:"台上演尽悲欢，台下藏着一场真的灭门。"},
+ {name:"盐贩",tip:"私运禁盐，盐里混着让人说真话的矿。"},
+ {name:"灯塔守",tip:"守着不再有船驶来的海，等一个永远不会靠岸的人。"},
+ {name:"拾遗者",tip:"专捡别人遗失之物，捡到了一枚不属任何人的心。"},
+ {name:"降灵师",tip:"召魂为生，却被某个不肯走的魂缠上了身。"},
+ {name:"抄经人",tip:"日夜抄写佛经，抄到自己也成了经里被救的人。"},
+ {name:"捕梦师",tip:"捕捉噩梦贩卖，自己却失眠了千年。"},
+ {name:"酿酒师",tip:"酿的酒能让人看见最想见的人，代价是遗忘。"},
+ {name:"问米婆",tip:"通阴阳传话，传着传着把自己也传了过去。"},
+ {name:"守界人",tip:"镇守两界之门，门后伸出的手是他旧识。"},
+ {name:"焚稿人",tip:"专替人烧毁不愿留世的文字，却偷偷藏下一页。"},
+ {name:"引路人",tip:"领迷途者走出绝境，自己却困在最深的那一层。"},
+ {name:"饲龙人",tip:"养着最后一条龙，龙饿时先吃的是他的记忆。"},
+ {name:"听风者",tip:"能听见百里外的私语，也因此听见了篡位的密谋。"},
+ {name:"收尸人",tip:"替无人认领的死者收殓，每具尸都欠他一句真话。"}
+];
+
+const places = [
+ "悬浮于云海之上的断桥","终年无光的地下城","被遗忘的钟楼","沉没港口的残骸",
+ "沙漠中的镜面绿洲","长满铁树的墓园","永不熄灭的孤灯塔","折叠的迷宫图书馆",
+ "空中列车的终点站","红雾笼罩的旧赌场","倒悬的神殿","盐湖之上的尸骸栈道",
+ "无镜的长廊","塌陷的戏台","永冻邮局","骨塔","悬空寺","无声剧场",
+ "熔金矿坑","枯井底城","雾中车站","镜湖渡口","齿轮巨树","血色礼拜堂",
+ "失重客栈","千棺窟","云上集市","锈河渡","空王座","断头台广场",
+ "墨色竹林","冰封剧场","黄铜迷宫","残月码头","无声书院","废置天文台",
+ "衔尾蛇廊","灰烬花园","双生井","幽光矿脉","沉钟楼","浮空坟场",
+ "镜界裂隙","枯骨长城","无名车站","碎镜回廊","黑曜祭坛","悬丝剧院",
+ "遗忘之井","旧日电报局","锈色马戏团","无光回廊"
+];
+
+const events = [
+ "盗取一件被诅咒的圣物","在一夜之间抹去某个家族的存在","替死者传递最后一句话",
+ "唤醒沉睡千年的守门人","在追捕者抵达前焚毁整座档案馆","与自己的复制体达成一笔交易",
+ "把一座城从地图上“盗走”","诱使一名神明堕入凡间","在死刑台上逆转审判",
+ "潜入敌人的梦境窃取秘密","让已经终结的战争重新打响","把一个灵魂从地狱赎回人间",
+ "伪造一场神迹","让亡国在地图上复活","把时间倒回凶案前一刻","策反敌方圣物",
+ "让整座城陷入长眠","偷走一个人的名字","在众神面前撕毁契约","把活人送进画里",
+ "让死人开口作证","引爆一场沉默的瘟疫","交换两个人的命运","让石碑说出真相",
+ "囚禁一位先知","把记忆卖给出价最高者","让两座城互换位置","唤醒地底的古老之物",
+ "在婚礼上宣告新娘是冒充","盗取敌人的影子","让历史被改写为从未发生","把灵魂装进瓶中拍卖",
+ "让钟楼倒转","诱捕一只传说中的兽","让整个族群忘记一种颜色","在审判日之前偷走天平",
+ "把一座山搬进海里","让亡灵军团重新列阵","从未来寄一封信回来","让神像流出真实的血",
+ "把一个人的寿命分给陌生人","在镜中世界杀死本体","让瘟疫只感染说谎者","盗取一整年的春天",
+ "让被遗忘的神重新被信仰","把噩梦实体化并贩卖","让两座陵墓交换尸体","在末日钟声里藏一个人",
+ "让地图长出新的国家","把一个人的影子卖给魔鬼"
+];
+
+const pick = a => a[Math.floor(Math.random()*a.length)];
+let cur = {w:null,c:null,p:null,e:null};
+
+function renderHook(){
+  if(!cur.w) return;
+  document.getElementById('hook').innerHTML =
+    `在<b>${cur.w.name}</b>的<i>${cur.p}</i>，一名<b>${cur.c.name}</b>必须<i>${cur.e}</i>。`;
+}
+function setW(){ const w=pick(worldviews); cur.w=w;
+  document.getElementById('w-name').textContent=w.name;
+  document.getElementById('w-desc').textContent=w.desc;
+  document.getElementById('w-tip').innerHTML='<b>灵感：</b>'+w.tip; }
+function setC(){ const c=pick(characters); cur.c=c;
+  document.getElementById('c-name').textContent=c.name;
+  document.getElementById('c-tip').innerHTML='<b>灵感：</b>'+c.tip; }
+function setP(){ const p=pick(places); cur.p=p; document.getElementById('p-name').textContent=p; }
+function setE(){ const e=pick(events); cur.e=e; document.getElementById('e-name').textContent=e; }
+
+function generate(){ setW(); setC(); setP(); setE(); renderHook();
+  document.getElementById('ask').disabled = false;
+  document.getElementById('result').classList.remove('show'); }
+
+function refresh(k){ if(k==='w')setW(); if(k==='c')setC(); if(k==='p')setP(); if(k==='e')setE(); renderHook(); }
+
+document.getElementById('gen').onclick = generate;
+document.querySelectorAll('.re').forEach(b=> b.onclick=()=>refresh(b.dataset.k));
+document.getElementById('copy').onclick = ()=>{
+  if(!cur.w) return;
+  const t = `在${cur.w.name}的${cur.p}，一名${cur.c.name}必须${cur.e}。`;
+  navigator.clipboard?.writeText(t);
+  const b=document.getElementById('copy'); const old=b.textContent;
+  b.textContent='已复制'; setTimeout(()=>b.textContent=old,1200);
+};
+
+function buildPrompt(){
+  return `请基于以下随机灵感组合进行创作：
+【世界观】${cur.w.name}——${cur.w.desc} 灵感方向：${cur.w.tip}
+【人物（职业）】${cur.c.name} 灵感方向：${cur.c.tip}
+【地点】${cur.p}
+【事件（要做什么）】${cur.e}
+
+要求：
+1）先写一段约200字的“微设定”，将这个组合扩写成可落笔的故事种子（要有画面感、有冲突雏形、有钩子）；
+2）再评估它是否构成一个好故事，输出单独一行“评分：X/10”（0–10，越高越有潜力）；
+3）列出 2–3 个亮点与 2–3 个风险（为何可能写崩）。`;
+}
+
+document.getElementById('ask').onclick = async ()=>{
+  const key = document.getElementById('apikey').value.trim();
+  if(!key){ alert('请先填入 DeepSeek API Key'); return; }
+  if(!cur.w){ alert('请先生成灵感'); return; }
+  const model = document.getElementById('model').value.trim() || 'deepseek-chat';
+  const btn = document.getElementById('ask');
+  btn.disabled = true; btn.textContent = 'DeepSeek 生成中…';
+  const result = document.getElementById('result');
+  result.classList.add('show');
+  const textEl = document.getElementById('ds-text');
+  const scoreEl = document.getElementById('score');
+  textEl.className = ''; textEl.textContent = '请求中…'; scoreEl.textContent='—';
+  try{
+    const res = await fetch('https://api.deepseek.com/chat/completions',{
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+key },
+      body: JSON.stringify({
+        model,
+        messages:[
+          {role:'system', content:'你是一位资深故事编辑与创意写作教练，语言凝练、有洞察，不啰嗦。'},
+          {role:'user', content: buildPrompt()}
+        ],
+        temperature:0.85, stream:false
+      })
+    });
+    if(!res.ok){
+      const t = await res.text().catch(()=> '');
+      throw new Error('HTTP '+res.status+(t? ' '+t.slice(0,200):''));
+    }
+    const data = await res.json();
+    const text = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '（空响应）';
+    textEl.textContent = text;
+    const m = text.match(/评分[：:]\s*([0-9]+(?:\.[0-9]+)?)\s*\/?\s*10/);
+    scoreEl.textContent = m ? parseFloat(m[1]).toFixed(1) : '—';
+  }catch(err){
+    textEl.className = 'err';
+    textEl.textContent = '调用失败：'+err.message+
+      '\n\n若提示跨域/CORS 或网络错误，通常是浏览器直接调用 API 被限制；可在允许跨域的环境，或通过本地代理/后端中转后使用。';
+  }finally{
+    btn.disabled = false; btn.textContent = '交给 DeepSeek 生成微设定并评分';
+  }
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>墨笔 · 网文创作</title>
+<style>
+  :root{
+    --bg:#ffffff; --bg-soft:#f5f6f8; --panel:#ffffff; --border:#e6e8eb;
+    --text:#1f2329; --text-soft:#646a73; --primary:#d97742; --primary-soft:#fbe9dd;
+    --accent:#c79a3a; --danger:#d9534f; --shadow:0 2px 12px rgba(0,0,0,.06);
+    --hover:#f0f1f3; --active:#fbe9dd;
+  }
+  [data-theme="eye"]{
+    --bg:#f5ecd9; --bg-soft:#efe3c8; --panel:#f7efdd; --border:#e3d4ad;
+    --text:#4a3f2a; --text-soft:#8a7a55; --primary:#c0742f; --primary-soft:#f0dcc0;
+    --accent:#a9822f; --danger:#b5483f; --shadow:0 2px 12px rgba(120,90,30,.08);
+    --hover:#ecdcbd; --active:#f0dcc0;
+  }
+  [data-theme="dark"]{
+    --bg:#1a1c1f; --bg-soft:#212427; --panel:#232629; --border:#33373c;
+    --text:#e8eaed; --text-soft:#9aa0a6; --primary:#e08b53; --primary-soft:#3a2c20;
+    --accent:#d4af5a; --danger:#e06b66; --shadow:0 2px 12px rgba(0,0,0,.3);
+    --hover:#2c2f33; --active:#3a2c20;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg); color:var(--text); display:flex; flex-direction:column; height:100vh;
+    overflow:hidden; font-size:14px; transition:background .25s,color .25s;
+  }
+  /* Header */
+  header{
+    display:flex; align-items:center; gap:14px; padding:0 18px; height:54px;
+    background:var(--panel); border-bottom:1px solid var(--border); flex-shrink:0; z-index:5;
+  }
+  .logo{font-size:18px; font-weight:700; color:var(--primary); letter-spacing:1px; white-space:nowrap}
+  .logo span{color:var(--text-soft); font-weight:400; font-size:12px; margin-left:6px}
+  .header-book{
+    flex:1; min-width:0; display:flex; align-items:center; gap:8px; cursor:pointer;
+    padding:6px 10px; border-radius:8px; transition:background .15s;
+  }
+  .header-book:hover{background:var(--hover)}
+  .header-book .name{font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .header-book .edit{color:var(--text-soft); font-size:12px}
+  .hbtns{display:flex; gap:8px; align-items:center; flex-shrink:0}
+  button, .btn{
+    font-family:inherit; font-size:13px; border:1px solid var(--border); background:var(--panel);
+    color:var(--text); padding:7px 13px; border-radius:8px; cursor:pointer; transition:all .15s;
+    display:inline-flex; align-items:center; gap:5px; white-space:nowrap;
+  }
+  button:hover, .btn:hover{background:var(--hover)}
+  button.primary{background:var(--primary); border-color:var(--primary); color:#fff}
+  button.primary:hover{filter:brightness(.94)}
+  button.ghost{border-color:transparent; background:transparent}
+  button.danger{color:var(--danger); border-color:transparent; background:transparent}
+  button.danger:hover{background:var(--danger); color:#fff}
+  .icon-btn{width:34px; height:34px; padding:0; justify-content:center; border-radius:8px}
+
+  /* Layout */
+  .layout{flex:1; display:flex; min-height:0}
+  aside{
+    width:268px; flex-shrink:0; background:var(--bg-soft); border-right:1px solid var(--border);
+    display:flex; flex-direction:column; min-height:0; transition:width .2s;
+  }
+  aside.collapsed{width:0; overflow:hidden; border-right:none}
+  .aside-head{padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:8px; border-bottom:1px solid var(--border)}
+  .aside-title{font-weight:600; font-size:13px; color:var(--text-soft); letter-spacing:.5px}
+  .search{padding:10px 14px; border-bottom:1px solid var(--border)}
+  .search input{
+    width:100%; padding:8px 11px; border:1px solid var(--border); border-radius:8px;
+    background:var(--panel); color:var(--text); font-family:inherit; font-size:13px; outline:none;
+  }
+  .search input:focus{border-color:var(--primary)}
+  .chapters{flex:1; overflow-y:auto; padding:8px}
+  .chap-item{
+    padding:10px 12px; border-radius:9px; cursor:pointer; margin-bottom:4px; display:flex;
+    flex-direction:column; gap:3px; transition:background .12s; position:relative;
+  }
+  .chap-item:hover{background:var(--hover)}
+  .chap-item.active{background:var(--active); box-shadow:inset 2px 0 0 var(--primary)}
+  .chap-item .ct{font-size:13.5px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .chap-item .cmeta{font-size:11px; color:var(--text-soft); display:flex; gap:8px}
+  .chap-item .cmeta .cnt{margin-left:auto}
+  .chap-ops{position:absolute; right:8px; top:8px; display:none; gap:2px}
+  .chap-item:hover .cmeta{opacity:0}
+  .chap-item:hover .chap-ops{display:flex}
+  .chap-ops button{width:22px; height:22px; padding:0; font-size:11px; border-radius:6px; justify-content:center}
+  .add-chap{padding:10px 14px; border-top:1px solid var(--border)}
+  .add-chap button{width:100%; justify-content:center}
+
+  /* Main */
+  main{flex:1; display:flex; flex-direction:column; min-width:0; min-height:0}
+  .editor-head{padding:14px 22px 8px; display:flex; gap:12px; align-items:center; flex-shrink:0}
+  .chap-title-input{
+    flex:1; font-size:20px; font-weight:600; border:none; background:transparent; color:var(--text);
+    outline:none; font-family:inherit; padding:4px 0; border-bottom:1px solid transparent;
+  }
+  .chap-title-input:focus{border-bottom-color:var(--primary)}
+  .nav-btns{display:flex; gap:6px; flex-shrink:0}
+  .editor-wrap{flex:1; padding:0 22px 8px; min-height:0; display:flex}
+  #content{
+    flex:1; width:100%; resize:none; border:none; outline:none; background:transparent; color:var(--text);
+    font-family:"PingFang SC","Microsoft YaHei",-apple-system,serif; font-size:17px; line-height:1.9;
+    padding:10px 4px; tab-size:2;
+  }
+  .statusbar{
+    flex-shrink:0; display:flex; align-items:center; gap:18px; padding:8px 22px;
+    border-top:1px solid var(--border); background:var(--panel); font-size:12px; color:var(--text-soft);
+  }
+  .statusbar .save-dot{width:8px; height:8px; border-radius:50%; background:#56b56a; display:inline-block; margin-right:6px}
+  .statusbar .save-dot.saving{background:var(--accent); animation:pulse 1s infinite}
+  @keyframes pulse{50%{opacity:.3}}
+  .statusbar .right{margin-left:auto; display:flex; gap:18px}
+
+  /* Modal */
+  .overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center;
+    justify-content:center; z-index:50; backdrop-filter:blur(2px);
+  }
+  .overlay.show{display:flex}
+  .modal{
+    background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:22px;
+    width:380px; max-width:90vw; box-shadow:var(--shadow);
+  }
+  .modal h3{margin-bottom:14px; font-size:16px}
+  .modal label{display:block; font-size:12px; color:var(--text-soft); margin-bottom:6px}
+  .modal input, .modal textarea{
+    width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:9px;
+    background:var(--bg); color:var(--text); font-family:inherit; font-size:14px; outline:none; margin-bottom:14px;
+  }
+  .modal input:focus, .modal textarea:focus{border-color:var(--primary)}
+  .modal textarea{resize:vertical; min-height:70px; font-size:13px}
+  .modal-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:4px}
+
+  /* Empty */
+  .empty{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; color:var(--text-soft)}
+  .empty .big{font-size:48px; opacity:.4}
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--text); color:var(--bg); padding:10px 18px; border-radius:10px; font-size:13px;
+    opacity:0; transition:all .25s; z-index:100; pointer-events:none;
+  }
+  .toast.show{opacity:.95; transform:translateX(-50%) translateY(0)}
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:var(--border); border-radius:6px}
+  ::-webkit-scrollbar-thumb:hover{background:var(--text-soft)}
+  @media(max-width:680px){
+    aside{position:absolute; z-index:20; height:100%; box-shadow:var(--shadow)}
+  }
+</style>
+</head>
+<body>
+  <header>
+    <button class="icon-btn ghost" id="toggleSide" title="折叠/展开目录">☰</button>
+    <div class="logo">墨笔<span>网文创作</span></div>
+    <div class="header-book" id="bookSwitch" title="切换作品">
+      <span class="name" id="curBookName">—</span>
+      <span class="edit">切换 ▾</span>
+    </div>
+    <div class="hbtns">
+      <button class="ghost" id="importBtn" title="导入txt">导入</button>
+      <button id="exportBtn" title="导出整本txt">⬇ 导出txt</button>
+      <button class="ghost icon-btn" id="themeBtn" title="切换主题">◐</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside id="sidebar">
+      <div class="aside-head">
+        <span class="aside-title">章节目录</span>
+        <span class="aside-title" id="chapCount" style="font-weight:400"></span>
+      </div>
+      <div class="search">
+        <input type="text" id="searchInput" placeholder="搜索章节…">
+      </div>
+      <div class="chapters" id="chapList"></div>
+      <div class="add-chap">
+        <button class="primary" id="addChapBtn">＋ 新建章节</button>
+      </div>
+    </aside>
+
+    <main>
+      <div class="editor-head">
+        <input class="chap-title-input" id="chapTitle" placeholder="章节标题…" maxlength="80">
+        <div class="nav-btns">
+          <button class="ghost" id="prevChap" title="上一章">↑</button>
+          <button class="ghost" id="nextChap" title="下一章">↓</button>
+        </div>
+      </div>
+      <div class="editor-wrap">
+        <textarea id="content" placeholder="在此开始你的创作…（内容会自动保存到浏览器本地）"></textarea>
+      </div>
+      <div class="statusbar">
+        <span><span class="save-dot" id="saveDot"></span><span id="saveStatus">已保存</span></span>
+        <div class="right">
+          <span id="statCn">汉字 0</span>
+          <span id="statTotal">字符 0</span>
+          <span id="lastSave"></span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 新建/编辑作品弹窗 -->
+  <div class="overlay" id="bookModal">
+    <div class="modal">
+      <h3 id="bookModalTitle">新建作品</h3>
+      <label>作品名称</label>
+      <input type="text" id="bookNameInput" placeholder="例如：都市伏妖录" maxlength="60">
+      <label>简介（可选）</label>
+      <textarea id="bookIntroInput" placeholder="一句话简介…"></textarea>
+      <div class="modal-actions">
+        <button class="ghost" data-close>取消</button>
+        <button class="primary" id="bookSaveBtn">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 切换作品弹窗 -->
+  <div class="overlay" id="switchModal">
+    <div class="modal">
+      <h3>选择作品</h3>
+      <div id="bookList" style="max-height:300px;overflow:auto;margin-bottom:14px"></div>
+      <div class="modal-actions">
+        <button class="ghost" data-close>关闭</button>
+        <button class="primary" id="newBookFromSwitch">＋ 新建作品</button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="fileInput" accept=".txt" style="display:none">
+  <div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ---------- IndexedDB 封装 ---------- */
+const DB_NAME = "MobiNovelDB", DB_VERSION = 1;
+let db;
+function openDB(){
+  return new Promise((res, rej)=>{
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e=>{
+      const d = e.target.result;
+      if(!d.objectStoreNames.contains("books")){
+        const s = d.createObjectStore("books", {keyPath:"id", autoIncrement:true});
+        s.createIndex("updatedAt","updatedAt");
+      }
+      if(!d.objectStoreNames.contains("chapters")){
+        const s = d.createObjectStore("chapters", {keyPath:"id", autoIncrement:true});
+        s.createIndex("bookId","bookId");
+      }
+    };
+    req.onsuccess = e=>{ db = e.target.result; res(db); };
+    req.onerror = e=> rej(e.target.error);
+  });
+}
+const store = (name, mode)=> db.transaction(name, mode).objectStore(name);
+const p = req=> new Promise((res, rej)=>{ req.onsuccess=()=>res(req.result); req.onerror=()=>rej(req.error); });
+const getAll = n=> p(store(n,"readonly").getAll());
+const getOne = (n,k)=> p(store(n,"readonly").get(k));
+const put = (n,v)=> p(store(n,"readwrite").put(v));
+const add = (n,v)=> p(store(n,"readwrite").add(v));
+const del = (n,k)=> p(store(n,"readwrite").delete(k));
+function getChapters(bookId){
+  return p(store("chapters","readonly").index("bookId").getAll(IDBKeyRange.only(bookId)));
+}
+
+/* ---------- 状态 ---------- */
+const state = { books:[], chapters:[], curBook:null, curChapter:null, search:"" };
+const $ = id=> document.getElementById(id);
+
+/* ---------- 工具 ---------- */
+function now(){ return Date.now(); }
+function fmtTime(ts){
+  if(!ts) return "";
+  const d = new Date(ts);
+  const p2 = n=> String(n).padStart(2,"0");
+  return `${d.getMonth()+1}-${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())}`;
+}
+function cnNum(n){
+  const d=["零","一","二","三","四","五","六","七","八","九"];
+  if(n<=10) return n===10?"十":d[n];
+  if(n<20) return "十"+(n%10?d[n%10]:"");
+  if(n<100){ const t=Math.floor(n/10), o=n%10; return d[t]+"十"+(o?d[o]:""); }
+  return String(n);
+}
+function toast(msg){
+  const t=$("toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),1800);
+}
+function esc(s){ const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+
+/* ---------- 初始化 ---------- */
+async function init(){
+  await openDB();
+  state.books = (await getAll("books")).sort((a,b)=>b.updatedAt-a.updatedAt);
+  if(state.books.length===0){
+    await createBook("我的第一部作品", "在这里写下你的故事开端。");
+  }
+  state.curBook = state.books[0];
+  await loadChapters();
+  if(state.chapters.length===0){
+    await addChapter(true);
+  }
+  state.curChapter = state.chapters[0];
+  bindEvents();
+  renderAll();
+  if(state.books.length<=1 && state.curChapter && !state.curChapter.content){
+    // 空状态提示
+  }
+}
+
+/* ---------- 作品操作 ---------- */
+async function createBook(name, intro){
+  const book = { title:name||"未命名作品", intro:intro||"", createdAt:now(), updatedAt:now() };
+  book.id = await add("books", book);
+  state.books.unshift(book);
+  state.curBook = book;
+  await loadChapters();
+  return book;
+}
+async function loadChapters(){
+  if(!state.curBook){ state.chapters=[]; return; }
+  const list = await getChapters(state.curBook.id);
+  list.sort((a,b)=>(a.sort||0)-(b.sort||0));
+  state.chapters = list;
+}
+async function addChapter(silent){
+  const sort = state.chapters.length ? Math.max(...state.chapters.map(c=>c.sort||0))+1 : 1;
+  const title = `第${cnNum(sort)}章`;
+  const chap = { bookId:state.curBook.id, title, content:"", sort, createdAt:now(), updatedAt:now() };
+  chap.id = await add("chapters", chap);
+  state.chapters.push(chap);
+  state.curChapter = chap;
+  touchBook();
+  if(!silent) renderAll();
+  return chap;
+}
+async function deleteChapter(chap){
+  await del("chapters", chap.id);
+  state.chapters = state.chapters.filter(c=>c.id!==chap.id);
+  if(state.curChapter && state.curChapter.id===chap.id){
+    state.curChapter = state.chapters[0] || null;
+  }
+  touchBook(); renderAll();
+}
+async function touchBook(){
+  if(!state.curBook) return;
+  state.curBook.updatedAt = now();
+  await put("books", state.curBook);
+  const i = state.books.findIndex(b=>b.id===state.curBook.id);
+  if(i>=0){ state.books.splice(i,1); state.books.unshift(state.curBook); }
+}
+async function switchBook(book){
+  state.curBook = book;
+  await loadChapters();
+  state.curChapter = state.chapters[0] || null;
+  renderAll();
+}
+async function deleteBook(book){
+  const chaps = await getChapters(book.id);
+  for(const c of chaps) await del("chapters", c.id);
+  await del("books", book.id);
+  state.books = state.books.filter(b=>b.id!==book.id);
+  if(state.curBook && state.curBook.id===book.id){
+    state.curBook = state.books[0] || null;
+    if(state.curBook){ await loadChapters(); }
+    else { await createBook("我的第一部作品",""); }
+    state.curChapter = state.chapters[0] || null;
+  }
+  renderAll();
+}
+
+/* ---------- 渲染 ---------- */
+function renderAll(){
+  renderBookName();
+  renderChapters();
+  renderEditor();
+}
+function renderBookName(){
+  $("curBookName").textContent = state.curBook ? state.curBook.title : "—";
+}
+function renderChapters(){
+  const list = $("chapList");
+  const q = state.search.trim().toLowerCase();
+  const filtered = state.chapters.filter(c=> !q || (c.title||"").toLowerCase().includes(q));
+  $("chapCount").textContent = `${state.chapters.length} 章`;
+  if(filtered.length===0){
+    list.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-soft);font-size:13px">
+      ${state.chapters.length===0?"暂无章节":"无匹配章节"}</div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(c=>{
+    const active = state.curChapter && c.id===state.curChapter.id ? " active":"";
+    const cn = (c.content||"").replace(/\s/g,"").length;
+    return `<div class="chap-item${active}" data-id="${c.id}">
+      <div class="ct">${esc(c.title||"未命名章节")}</div>
+      <div class="cmeta"><span>${fmtTime(c.updatedAt)}</span><span class="cnt">${cn}字</span></div>
+      <div class="chap-ops">
+        <button class="ghost" data-act="up" title="上移">↑</button>
+        <button class="ghost" data-act="down" title="下移">↓</button>
+        <button class="danger" data-act="del" title="删除">✕</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+function renderEditor(){
+  if(!state.curChapter){
+    $("chapTitle").value=""; $("content").value="";
+    $("chapTitle").disabled=true; $("content").disabled=true;
+    setSave("无章节","");
+    return;
+  }
+  $("chapTitle").disabled=false; $("content").disabled=false;
+  $("chapTitle").value = state.curChapter.title||"";
+  $("content").value = state.curChapter.content||"";
+  updateStats();
+  setSave("已保存","");
+}
+function updateStats(){
+  const txt = $("content").value || "";
+  const cn = (txt.match(/[一-龥]/g)||[]).length;
+  const total = txt.replace(/\s/g,"").length;
+  $("statCn").textContent = `汉字 ${cn}`;
+  $("statTotal").textContent = `字符 ${total}`;
+}
+let saveTimer=null;
+function setSave(status, time, saving){
+  $("saveStatus").textContent = status;
+  $("lastSave").textContent = time||"";
+  $("saveDot").className = "save-dot" + (saving?" saving":"");
+}
+
+/* ---------- 自动保存 ---------- */
+function scheduleSave(){
+  setSave("保存中…","",true);
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSave, 700);
+}
+async function doSave(){
+  if(!state.curChapter) return;
+  state.curChapter.title = $("chapTitle").value;
+  state.curChapter.content = $("content").value;
+  state.curChapter.updatedAt = now();
+  await put("chapters", state.curChapter);
+  await touchBook();
+  updateStats();
+  setSave("已保存", fmtTime(state.curChapter.updatedAt));
+  renderChapters();
+  renderBookName();
+}
+async function flushSave(){
+  clearTimeout(saveTimer);
+  if(state.curChapter && ($("content").value!==state.curChapter.content || $("chapTitle").value!==state.curChapter.title)){
+    await doSave();
+  }
+}
+
+/* ---------- 导出 ---------- */
+function download(filename, text){
+  const blob = new Blob(["\ufeff"+text], {type:"text/plain;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href=url; a.download=filename; document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+function exportBook(){
+  if(!state.curBook || state.chapters.length===0){ toast("没有可导出的内容"); return; }
+  let text = state.curBook.title + "\n\n";
+  if(state.curBook.intro) text += state.curBook.intro + "\n\n";
+  text += "================================\n\n";
+  for(const c of state.chapters){
+    text += (c.title||"未命名章节") + "\n\n";
+    text += (c.content||"") + "\n\n";
+  }
+  const name = (state.curBook.title||"小说").replace(/[\\/:*?"<>|]/g,"_");
+  download(name+".txt", text);
+  toast("已导出整本小说");
+}
+function exportChapter(){
+  if(!state.curChapter){ toast("请先选择章节"); return; }
+  const c = state.curChapter;
+  const name = (c.title||"章节").replace(/[\\/:*?"<>|]/g,"_");
+  download(name+".txt", (c.title||"")+"\n\n"+(c.content||""));
+  toast("已导出当前章节");
+}
+
+/* ---------- 导入 ---------- */
+function importTxt(file){
+  const reader = new FileReader();
+  reader.onload = async ()=>{
+    const text = reader.result.replace(/\r\n/g,"\n").replace(/\r/g,"\n");
+    const lines = text.split("\n");
+    const re = /^\s*(第[零一二三四五六七八九十百千0-9]+章|第[0-9]+章|Chapter\s*\d+|楔子|引子|尾声|番外[：: ]?.+)\s*$/;
+    const blocks = [];
+    let cur = {title:"正文", content:[]};
+    for(const line of lines){
+      if(re.test(line.trim())){
+        if(cur.content.join("").trim()!=="" || blocks.length>0) blocks.push(cur);
+        cur = {title:line.trim(), content:[]};
+      } else {
+        cur.content.push(line);
+      }
+    }
+    if(cur.content.join("").trim()!=="" || blocks.length===0) blocks.push(cur);
+    const name = file.name.replace(/\.txt$/i,"").replace(/[\\/:*?"<>|]/g,"_") || "导入作品";
+    const book = { title:name, intro:"", createdAt:now(), updatedAt:now() };
+    book.id = await add("books", book);
+    state.books.unshift(book);
+    for(let i=0;i<blocks.length;i++){
+      const ch = { bookId:book.id, title:blocks[i].title, content:blocks[i].content.join("\n").replace(/^\n+/,"").replace(/\n+$/,""), sort:i+1, createdAt:now(), updatedAt:now() };
+      ch.id = await add("chapters", ch);
+    }
+    await switchBook(book);
+    toast(`已导入《${name}》，共 ${blocks.length} 章`);
+  };
+  reader.readAsText(file, "utf-8");
+}
+
+/* ---------- 章节排序移动 ---------- */
+async function moveChapter(chap, dir){
+  const arr = [...state.chapters].sort((a,b)=>(a.sort||0)-(b.sort||0));
+  const i = arr.findIndex(c=>c.id===chap.id);
+  const j = i+dir;
+  if(j<0 || j>=arr.length) return;
+  const tmp = arr[i].sort; arr[i].sort = arr[j].sort; arr[j].sort = tmp;
+  await put("chapters", arr[i]); await put("chapters", arr[j]);
+  await loadChapters();
+  renderChapters();
+}
+
+/* ---------- 事件绑定 ---------- */
+function bindEvents(){
+  $("chapTitle").addEventListener("input", scheduleSave);
+  $("content").addEventListener("input", ()=>{ scheduleSave(); updateStats(); });
+
+  $("addChapBtn").addEventListener("click", async()=>{ await addChapter(); $("content").focus(); });
+  $("prevChap").addEventListener("click", ()=>gotoRelative(-1));
+  $("nextChap").addEventListener("click", ()=>gotoRelative(1));
+
+  $("chapList").addEventListener("click", async e=>{
+    const item = e.target.closest(".chap-item");
+    if(!item) return;
+    const id = Number(item.dataset.id);
+    const actBtn = e.target.closest("[data-act]");
+    if(actBtn){
+      const c = state.chapters.find(x=>x.id===id);
+      const act = actBtn.dataset.act;
+      if(act==="del"){ if(confirm(`确定删除《${c.title}》？此操作不可恢复。`)) await deleteChapter(c); }
+      else if(act==="up"){ await flushSave(); await moveChapter(c,-1); }
+      else if(act==="down"){ await flushSave(); await moveChapter(c,1); }
+      return;
+    }
+    if(state.curChapter && state.curChapter.id===id) return;
+    await flushSave();
+    state.curChapter = state.chapters.find(c=>c.id===id);
+    renderAll(); $("content").focus();
+  });
+
+  $("searchInput").addEventListener("input", e=>{ state.search=e.target.value; renderChapters(); });
+  $("toggleSide").addEventListener("click", ()=> $("sidebar").classList.toggle("collapsed"));
+
+  $("exportBtn").addEventListener("click", exportBook);
+  $("exportBtn").addEventListener("contextmenu", e=>{ e.preventDefault(); exportChapter(); });
+
+  // 作品弹窗
+  $("bookSwitch").addEventListener("click", openSwitchModal);
+  $("importBtn").addEventListener("click", ()=> $("fileInput").click());
+  $("fileInput").addEventListener("change", e=>{ if(e.target.files[0]) importTxt(e.target.files[0]); e.target.value=""; });
+
+  $("themeBtn").addEventListener("click", ()=>{
+    const order=["light","eye","dark"];
+    const cur = document.documentElement.getAttribute("data-theme");
+    const next = order[(order.indexOf(cur)+1)%order.length];
+    document.documentElement.setAttribute("data-theme", next);
+    localStorage.setItem("mobi-theme", next);
+  });
+
+  // 快捷键 Ctrl/Cmd+S 导出，Ctrl/Cmd+E 导出单章
+  document.addEventListener("keydown", e=>{
+    if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="s"){ e.preventDefault(); exportBook(); }
+    if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="e"){ e.preventDefault(); exportChapter(); }
+  });
+  window.addEventListener("beforeunload", flushSave);
+}
+
+function gotoRelative(dir){
+  const arr = [...state.chapters].sort((a,b)=>(a.sort||0)-(b.sort||0));
+  if(arr.length===0) return;
+  let idx = arr.findIndex(c=>state.curChapter && c.id===state.curChapter.id);
+  idx = Math.max(0, Math.min(arr.length-1, idx+dir));
+  const target = arr[idx];
+  if(state.curChapter && target.id===state.curChapter.id) return;
+  flushSave().then(()=>{ state.curChapter=target; renderAll(); $("content").focus(); });
+}
+
+/* 作品弹窗逻辑 */
+function openSwitchModal(){
+  const box = $("bookList");
+  box.innerHTML = state.books.map(b=>{
+    const cnt = state.curBook && b.id===state.curBook.id ? "（当前）":"";
+    return `<div class="chap-item" data-book="${b.id}" style="flex-direction:row;align-items:center;justify-content:space-between">
+      <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+        <span style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(b.title)}${cnt}</span>
+        <span style="font-size:11px;color:var(--text-soft)">${fmtTime(b.updatedAt)}</span>
+      </div>
+      <div style="display:flex;gap:2px">
+        <button class="ghost" data-bact="edit" title="重命名">✎</button>
+        <button class="danger" data-bact="del" title="删除">✕</button>
+      </div>
+    </div>`;
+  }).join("");
+  box.onclick = async e=>{
+    const item = e.target.closest("[data-book]");
+    if(!item) return;
+    const id = Number(item.dataset.book);
+    const book = state.books.find(b=>b.id===id);
+    const bact = e.target.closest("[data-bact]");
+    if(bact){
+      if(bact.dataset.bact==="del"){
+        if(confirm(`确定删除整本《${book.title}》及其所有章节？`)){ await deleteBook(book); closeModal("switchModal"); }
+      } else if(bact.dataset.bact==="edit"){
+        openBookModal(book);
+      }
+      return;
+    }
+    await flushSave();
+    await switchBook(book);
+    closeModal("switchModal");
+  };
+  openModal("switchModal");
+}
+
+function openBookModal(book){
+  const edit = !!book;
+  $("bookModalTitle").textContent = edit ? "编辑作品" : "新建作品";
+  $("bookNameInput").value = edit ? book.title : "";
+  $("bookIntroInput").value = edit ? (book.intro||"") : "";
+  openModal("bookModal");
+  $("bookSaveBtn").onclick = async ()=>{
+    const name = $("bookNameInput").value.trim();
+    if(!name){ toast("请输入作品名称"); return; }
+    if(edit){
+      book.title=name; book.intro=$("bookIntroInput").value.trim(); book.updatedAt=now();
+      await put("books", book);
+      const i = state.books.findIndex(b=>b.id===book.id); if(i>=0) state.books[i]=book;
+      if(state.curBook && state.curBook.id===book.id) state.curBook=book;
+    } else {
+      await createBook(name, $("bookIntroInput").value.trim());
+    }
+    closeModal("bookModal");
+    renderAll();
+  };
+}
+
+/* Modal 通用 */
+function openModal(id){ $(id).classList.add("show"); }
+function closeModal(id){ $(id).classList.remove("show"); }
+document.querySelectorAll("[data-close]").forEach(b=> b.addEventListener("click", e=> e.target.closest(".overlay").classList.remove("show")));
+document.querySelectorAll(".overlay").forEach(o=> o.addEventListener("click", e=>{ if(e.target===o) o.classList.remove("show"); }));
+$("newBookFromSwitch").addEventListener("click", ()=>{ closeModal("switchModal"); openBookModal(null); });
+
+/* ---------- 启动 ---------- */
+(async()=>{
+  const t = localStorage.getItem("mobi-theme");
+  if(t) document.documentElement.setAttribute("data-theme", t);
+  try { await init(); }
+  catch(err){ console.error(err); document.body.innerHTML = `<div style="padding:40px;color:#d9534f">初始化失败：${err.message}</div>`; }
+})();
+</script>
+</body>
+</html>

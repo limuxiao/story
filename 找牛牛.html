@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>找牛牛</title>
+<style>
+  :root{
+    --cell: 36px;
+    --n: 13;
+    --bg: #fbf7ef;
+    --ink: #4a3f35;
+    --accent: #e0853a;
+    --accent-d: #c86a22;
+  }
+  *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html,body{ margin:0; padding:0; }
+  body{
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: radial-gradient(1200px 600px at 50% -10%, #fff7e9, var(--bg));
+    color: var(--ink);
+    min-height: 100vh;
+    display:flex; flex-direction:column; align-items:center;
+    padding: 16px 10px 40px;
+  }
+  h1{
+    font-size: 26px; margin: 4px 0 2px; letter-spacing: 2px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .sub{ font-size: 13px; color:#9a8a78; margin-bottom: 12px; }
+  .panel{
+    width: 100%; max-width: 860px;
+    background:#fffdf8;
+    border:1px solid #efe6d6;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(180,140,90,.12);
+    padding: 14px;
+  }
+  .row{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:center; }
+  .row + .row{ margin-top: 10px; }
+  button{
+    font: inherit; cursor:pointer; border:none; border-radius: 10px;
+    padding: 8px 14px; background:#f1e7d6; color:var(--ink);
+    transition: transform .05s ease, background .15s ease, box-shadow .15s;
+    font-size: 14px;
+  }
+  button:hover{ background:#ece0cb; }
+  button:active{ transform: translateY(1px); }
+  button.primary{ background: linear-gradient(180deg,var(--accent),var(--accent-d)); color:#fff; box-shadow:0 4px 10px rgba(200,106,34,.35); }
+  button.active{ outline: 2px solid var(--accent); outline-offset:1px; }
+  button:disabled{ opacity:.5; cursor:default; }
+  .status{
+    font-size: 14px; color:#6b5d4d; text-align:center; margin-top: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .board-wrap{ display:flex; justify-content:center; margin: 12px 0; overflow:auto; }
+  #board{
+    display:grid;
+    grid-template-columns: repeat(var(--n), var(--cell));
+    grid-auto-rows: var(--cell);
+    border: 3px solid #d8c7ab;
+    border-radius: 8px;
+    overflow:hidden;
+    touch-action: manipulation;
+    user-select:none;
+  }
+  .cell{
+    width: var(--cell); height: var(--cell);
+    display:flex; align-items:center; justify-content:center;
+    font-size: calc(var(--cell) * .62);
+    border: 1px solid rgba(0,0,0,.10);
+    position:relative;
+    cursor:pointer;
+    transition: filter .1s;
+  }
+  .cell:active{ filter: brightness(.93); }
+  .cell .x{ color: rgba(120,90,60,.45); font-weight:700; font-size: calc(var(--cell)*.6); line-height:1; }
+  .cell.assist{ filter: brightness(.78) saturate(.8); }
+  .cell.correct{ box-shadow: inset 0 0 0 3px #2e9e57; }
+  .cell.wrong{ box-shadow: inset 0 0 0 3px #d8453b; }
+  .cell.miss::after{
+    content:"🐮"; position:absolute; opacity:.28; font-size: calc(var(--cell)*.55);
+  }
+  .cell.excluded-ok{ box-shadow: inset 0 0 0 2px rgba(46,158,87,.35); }
+  .cell.clue{ box-shadow: inset 0 0 0 3px rgba(40,30,20,.45); cursor: default; }
+  .cell.hint{ animation: pop .3s ease; }
+  @keyframes pop{ from{ transform: scale(.6);} to{ transform: scale(1);} }
+  .legend{ font-size:12px; color:#8a7a68; text-align:center; line-height:1.7; margin-top:6px; }
+  .rules{
+    font-size:13px; color:#6b5d4d; line-height:1.8; margin-top:10px;
+    background:#fbf3e6; border-radius:10px; padding:10px 14px;
+  }
+  .rules b{ color:var(--accent-d); }
+  /* overlay */
+  #overlay{
+    position: fixed; inset:0; background: rgba(40,30,20,.45);
+    display:none; align-items:center; justify-content:center; z-index:50;
+    backdrop-filter: blur(2px);
+  }
+  #overlay.show{ display:flex; }
+  .modal{
+    background:#fffdf8; border-radius:18px; padding:26px 30px; text-align:center;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3); max-width: 86vw;
+  }
+  .modal h2{ margin:0 0 6px; font-size:22px; }
+  .modal p{ margin:4px 0 16px; color:#6b5d4d; }
+  /* toast */
+  #toast{
+    position: fixed; left:50%; bottom: 30px; transform: translateX(-50%) translateY(20px);
+    background: rgba(40,30,20,.9); color:#fff; padding:10px 18px; border-radius: 999px;
+    font-size:14px; opacity:0; pointer-events:none; transition: all .25s; z-index:60;
+  }
+  #toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
+  .switch{ display:flex; align-items:center; gap:6px; font-size:13px; color:#6b5d4d; }
+</style>
+</head>
+<body>
+  <h1>🐮 找牛牛</h1>
+  <div class="sub">根据颜色区块 + 每行每列规则，找出每头牛的正确位置</div>
+
+  <div class="panel">
+    <div class="row" id="diffRow">
+      <button data-diff="easy" class="active">简单 7×7</button>
+      <button data-diff="medium">中等 9×9</button>
+      <button data-diff="hard">困难 11×11</button>
+      <button data-diff="hell">地狱 13×13</button>
+    </div>
+    <div class="row" id="modeRow">
+      <button class="tool active" id="markTool">🐮 标记牛</button>
+      <button class="tool" id="excludeTool">× 排除（无牛）</button>
+    </div>
+    <div class="row">
+      <button class="primary" id="nextBtn">下一关 ▶</button>
+      <button id="replayBtn">重玩本关</button>
+      <button id="checkBtn">检查</button>
+      <button id="hintBtn">提示</button>
+      <label class="switch"><input type="checkbox" id="assistChk" /> 辅助高亮</label>
+    </div>
+    <div class="status" id="status">—</div>
+    <div class="board-wrap">
+      <div id="board"></div>
+    </div>
+    <div class="legend">
+      模式：<b>🐮 标记牛</b>（点击格子放/撤牛，放牛后其<b>整行 / 整列 / 同颜色区域自动打叉</b>）　|　<b>× 排除</b>（点击格子标记该格无牛）　|　右键同样可操作
+    </div>
+    <div class="rules">
+      <b>规则：</b><br>
+      1. 网格被分成若干颜色区块，<b>每个颜色区块中恰好有一头同色的牛</b>。<br>
+      2. 每一行、每一列也都<b>恰好有一头牛</b>（因此一块颜色里只有唯一一格能放牛）。<br>
+      3. 从零开始推理，把每头牛都找出来即过关 —— <b>任意一种满足上述条件的摆放都算赢</b>。放牛后其整行 / 整列 / 同颜色区域会自动打叉辅助判断。
+    </div>
+  </div>
+
+  <div id="overlay">
+    <div class="modal">
+      <h2 id="ovTitle"></h2>
+      <p id="ovText"></p>
+      <button class="primary" id="ovBtn">下一关 ▶</button>
+    </div>
+  </div>
+  <div id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  const DIFFS = {
+    easy:   { label:'简单', size:7,  colors:7  },
+    medium: { label:'中等', size:9,  colors:9  },
+    hard:   { label:'困难', size:11, colors:11 },
+    hell:   { label:'地狱', size:13, colors:13 },
+  };
+
+  // ---------- 工具 ----------
+  function shuffle(a){
+    for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i];a[i]=a[j];a[j]=t; }
+    return a;
+  }
+  function range(n){ const a=[]; for(let i=0;i<n;i++)a.push(i); return a; }
+
+  // ---------- 生成：随机排列作为解，再用多源 BFS 生长出 N 个连通颜色区域 ----------
+  function genPerm(size){ const p = range(size); return shuffle(p); } // p[r] = 第 r 行牛所在列
+
+  // 从 N 头牛所在格同时向外 BFS，得到 N 个连通区域（每个区域恰好包含一头解牛）
+  function buildRegions(size, perm){
+    const N = size*size;
+    const region = new Array(N).fill(-1);
+    const q = [];
+    for(let r=0;r<size;r++){ const idx=r*size+perm[r]; region[idx]=r; q.push(idx); }
+    const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+    let head=0;
+    while(head<q.length){
+      const idx = q[head++];
+      const rid = region[idx];
+      const r = (idx/size)|0, c = idx%size;
+      shuffle(dirs);
+      for(const [dr,dc] of dirs){
+        const nr=r+dr, nc=c+dc;
+        if(nr<0||nr>=size||nc<0||nc>=size) continue;
+        const ni = nr*size+nc;
+        if(region[ni]===-1){ region[ni]=rid; q.push(ni); }
+      }
+    }
+    return region;
+  }
+
+  // ---------- 统计解的数量（每行/每列/每区域各一头，force[区域]=已锁定格），限制到 limit ----------
+  function countSolutions(region, size, n, limit, force){
+    force = force || new Array(n).fill(-1);
+    const todo = []; for(let rid=0; rid<n; rid++) if(force[rid]<0) todo.push(rid); // 仅未锁定的区域需要放置
+    const cands = []; for(let i=0;i<n;i++) cands.push([]);
+    for(let idx=0; idx<region.length; idx++){ const rid=region[idx]; if(rid>=0 && force[rid]<0) cands[rid].push(idx); }
+    const order = todo.slice().sort((a,b)=>cands[a].length - cands[b].length); // MRV 剪枝
+    const usedR = new Array(size).fill(false);
+    const usedC = new Array(size).fill(false);
+    for(let rid=0; rid<n; rid++) if(force[rid]>=0){ const cell=force[rid]; usedR[cell/size|0]=true; usedC[cell%size]=true; } // 锁定牛已占行列
+    let count = 0, budget = 200000;
+    function place(idx){
+      if(count>=limit) return;
+      if(budget-- <= 0){ count = limit; return; } // 超时按“非唯一”处理
+      if(idx===order.length){ count++; return; }
+      const rid = order[idx];
+      for(const cell of cands[rid]){
+        const r = (cell/size)|0, c = cell%size;
+        if(usedR[r] || usedC[c]) continue;
+        usedR[r]=true; usedC[c]=true;
+        place(idx+1);
+        usedR[r]=false; usedC[c]=false;
+        if(count>=limit) return;
+      }
+    }
+    place(0);
+    return count;
+  }
+
+  // 在给定已放置牛（force[区域]=已放格，可空）的前提下，找出一个合法完整解；无解返回 null
+  function findSolution(region, size, n, force){
+    force = force || new Array(n).fill(-1);
+    const todo = []; for(let rid=0; rid<n; rid++) if(force[rid]<0) todo.push(rid);
+    const cands = []; for(let i=0;i<n;i++) cands.push([]);
+    for(let idx=0; idx<region.length; idx++){ const rid=region[idx]; if(rid>=0 && force[rid]<0) cands[rid].push(idx); }
+    const order = todo.slice().sort((a,b)=>cands[a].length - cands[b].length);
+    const usedR = new Array(size).fill(false), usedC = new Array(size).fill(false);
+    for(let rid=0; rid<n; rid++) if(force[rid]>=0){ const cell=force[rid]; usedR[cell/size|0]=true; usedC[cell%size]=true; }
+    const ans = force.slice();
+    function place(idx){
+      if(idx===order.length) return true;
+      const rid = order[idx];
+      for(const cell of cands[rid]){
+        const r=(cell/size)|0, c=cell%size;
+        if(usedR[r] || usedC[c]) continue;
+        usedR[r]=true; usedC[c]=true; ans[rid]=cell;
+        if(place(idx+1)) return true;
+        usedR[r]=false; usedC[c]=false;
+      }
+      return false;
+    }
+    return place(0) ? ans : null;   // ans[区域] = 该区域牛所在格
+  }
+
+  // ---------- 主生成：随机解+区域，挑“解数最少”的一个（越接近唯一越好），开局不预放任何牛 ----------
+  function generatePuzzle(size, n){
+    const t0 = performance.now();
+    let best=null, bestCnt=Infinity;
+    for(let attempt=0; attempt<250; attempt++){
+      if(performance.now()-t0 > 3000) break;
+      const perm = genPerm(size);
+      const region = buildRegions(size, perm);
+      const cnt = countSolutions(region, size, n, 12); // 只关心“是否很少解”，12 足够区分
+      if(cnt>0 && cnt<bestCnt){
+        bestCnt = cnt; best = { region, cows: perm.map((c,r)=>({r,c})), unique: cnt===1 };
+        if(cnt<=2) break;                              // 已接近唯一，足够
+      }
+    }
+    return best;
+  }
+
+  // ---------- 调色板 ----------
+  function makePalette(n){
+    const cols = [];
+    const base = Math.random()*360;
+    for(let i=0;i<n;i++){
+      const hue = (base + i*360/n) % 360;
+      const light = 70 + (i%2?4:-2);
+      cols.push(`hsl(${hue.toFixed(1)}, 62%, ${light}%)`);
+    }
+    return cols;
+  }
+
+  // ---------- 游戏状态 ----------
+  const G = {
+    diff:'easy', level:1, size:13, n:7,
+    region:[], cows:new Set(), palette:[],
+    cowSet:new Set(), manualX:new Set(), clues:new Set(), hints:new Set(),
+    mode:'mark', assist:false, startTime:0, timer:null, solved:false,
+    _forbidden:new Set(),
+  };
+
+  const board = document.getElementById('board');
+  const statusEl = document.getElementById('status');
+
+  function computeCell(){
+    const maxW = Math.min(window.innerWidth*0.94, 820);
+    return Math.max(15, Math.min(44, Math.floor(maxW / G.size) - 1));
+  }
+
+  function render(){
+    const size = G.size;
+    const cell = computeCell();
+    document.documentElement.style.setProperty('--cell', cell+'px');
+    document.documentElement.style.setProperty('--n', size);
+    G._forbidden = forbiddenSet();
+    let html = '';
+    for(let idx=0; idx<size*size; idx++){
+      const rid = G.region[idx];
+      const bg = G.palette[rid];
+      const m = displayMark(idx);
+      let content = '';
+      if(m===1) content = '🐮';
+      else if(m===2) content = '<span class="x">×</span>';
+      html += `<div class="cell" data-idx="${idx}" style="background:${bg}">${content}</div>`;
+    }
+    board.innerHTML = html;
+    applyAssist();
+    updateStatus();
+  }
+
+  // 由已放置的牛推导出的“禁放区”（整行 / 整列 / 同颜色区域）——仅用作视觉辅助打叉
+  function forbiddenSet(){
+    const s = new Set(); const size=G.size;
+    G.cowSet.forEach(idx=>{
+      const r=(idx/size)|0, c=idx%size, rid=G.region[idx];
+      for(let i=0;i<size;i++){ s.add(r*size+i); s.add(i*size+c); }   // 整行 + 整列
+      for(let j=0;j<size*size;j++) if(G.region[j]===rid) s.add(j);  // 同区域
+    });
+    return s;
+  }
+
+  // 显示状态：1=牛, 2=叉(排除), 0=空
+  function displayMark(idx){
+    if(G.cowSet.has(idx)) return 1;
+    if(G.manualX.has(idx)) return 2;
+    if(G._forbidden.has(idx)) return 2;
+    return 0;
+  }
+
+  function applyAssist(){
+    board.querySelectorAll('.assist').forEach(e=>e.classList.remove('assist'));
+    if(!G.assist) return;
+    G._forbidden.forEach(idx=>{ const el=board.querySelector(`[data-idx="${idx}"]`); if(el) el.classList.add('assist'); });
+  }
+
+  function updateStatus(){
+    const placed = G.cowSet.size;
+    const left = G.n - placed;
+    const sec = G.startTime ? Math.floor((Date.now()-G.startTime)/1000) : 0;
+    statusEl.textContent =
+      `第 ${G.level} 关 · ${DIFFS[G.diff].label} · 已放牛 ${placed}/${G.n}（待找 ${left}）· 用时 ${fmtTime(sec)}`;
+  }
+
+  function fmtTime(s){ const m=(s/60)|0, ss=s%60; return `${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`; }
+
+  // ---------- 交互 ----------
+  // 判断在 idx 放牛是否与已有牛冲突（同行 / 同列 / 同区域）
+  function conflicts(idx){
+    const r=(idx/G.size)|0, c=idx%G.size, rid=G.region[idx];
+    for(const o of G.cowSet){
+      const rr=(o/G.size)|0, cc=o%G.size;
+      if(rr===r || cc===c || G.region[o]===rid) return true;
+    }
+    return false;
+  }
+
+  // 当前放置是否是一个合法解：恰好 n 头牛，且每行/每列/每区域各一头
+  function isValidPlacement(){
+    if(G.cowSet.size !== G.n) return false;
+    const size=G.size;
+    const usedR = new Array(size).fill(false);
+    const usedC = new Array(size).fill(false);
+    const usedReg = new Array(G.n).fill(false);
+    for(const idx of G.cowSet){
+      const r=(idx/size)|0, c=idx%size, rid=G.region[idx];
+      if(rid<0 || usedR[r] || usedC[c] || usedReg[rid]) return false;
+      usedR[r]=usedC[c]=usedReg[rid]=true;
+    }
+    return true;
+  }
+
+  function onCellClick(idx){
+    if(G.solved) return;
+    if(G.hints.has(idx)) return;            // 提示锁定的格子不可改
+    if(G.mode==='mark'){
+      if(G.cowSet.has(idx)){
+        G.cowSet.delete(idx);               // 撤牛
+      } else {
+        if(conflicts(idx)){ toast('与已有牛冲突（同行/同列/同区域）'); return; }
+        G.manualX.delete(idx);
+        G.cowSet.add(idx);                  // 放牛（渲染时其禁放区自动打叉）
+      }
+    } else { // exclude：标记/取消“该格无牛”
+      if(G.cowSet.has(idx)) return;         // 牛格不能被排除
+      if(G.manualX.has(idx)) G.manualX.delete(idx);
+      else G.manualX.add(idx);
+    }
+    render();
+    checkAutoWin();
+  }
+
+  board.addEventListener('click', e=>{
+    const cell = e.target.closest('.cell'); if(!cell) return;
+    onCellClick(+cell.dataset.idx);
+  });
+  board.addEventListener('contextmenu', e=>{
+    e.preventDefault();
+    const cell = e.target.closest('.cell'); if(!cell) return;
+    onCellClick(+cell.dataset.idx);
+  });
+
+  function checkAutoWin(){
+    if(isValidPlacement()) win();
+  }
+
+  // ---------- 按钮 ----------
+  document.getElementById('diffRow').addEventListener('click', e=>{
+    const b = e.target.closest('button'); if(!b) return;
+    document.querySelectorAll('#diffRow button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    G.diff = b.dataset.diff;
+    G.level = 1;
+    newPuzzle();
+  });
+
+  document.getElementById('nextBtn').addEventListener('click', ()=>{ G.level++; newPuzzle(); });
+  document.getElementById('replayBtn').addEventListener('click', ()=>{ resetMarks(); });
+  document.getElementById('checkBtn').addEventListener('click', doCheck);
+  document.getElementById('hintBtn').addEventListener('click', doHint);
+  document.getElementById('assistChk').addEventListener('change', e=>{ G.assist=e.target.checked; applyAssist(); });
+  document.getElementById('markTool').addEventListener('click', ()=> setMode('mark'));
+  document.getElementById('excludeTool').addEventListener('click', ()=> setMode('exclude'));
+  function setMode(m){
+    G.mode = m;
+    document.getElementById('markTool').classList.toggle('active', m==='mark');
+    document.getElementById('excludeTool').classList.toggle('active', m==='exclude');
+  }
+  document.getElementById('ovBtn').addEventListener('click', ()=>{ hideOverlay(); G.level++; newPuzzle(); });
+
+  function resetMarks(){
+    G.cowSet = new Set();
+    G.manualX = new Set();
+    G.hints = new Set();
+    G.solved = false;
+    render();
+  }
+
+  function doCheck(){
+    if(G.solved) return;
+    board.querySelectorAll('.wrong,.miss,.correct,.excluded-ok').forEach(e=>e.classList.remove('wrong','miss','correct','excluded-ok'));
+    // 找出相互冲突的牛（同行 / 同列 / 同区域）
+    const cows = [...G.cowSet];
+    const bad = new Set();
+    for(let i=0;i<cows.length;i++){
+      const a=cows[i], ra=(a/G.size)|0, ca=a%G.size, rida=G.region[a];
+      for(let j=i+1;j<cows.length;j++){
+        const b=cows[j], rb=(b/G.size)|0, cb=b%G.size;
+        if(ra===rb || ca===cb || G.region[b]===rida){ bad.add(a); bad.add(b); }
+      }
+    }
+    bad.forEach(idx=>{ const el=board.querySelector(`[data-idx="${idx}"]`); if(el) el.classList.add('wrong'); });
+    if(bad.size>0){ toast(`有 ${bad.size} 头牛互相冲突（同行/同列/同区域）`); return; }
+    const placed = G.cowSet.size;
+    if(placed < G.n){ toast(`还差 ${G.n - placed} 头牛没放`); return; }
+    if(isValidPlacement()){ win(); }
+    else { toast('还不行，再检查看看'); }
+  }
+
+  function doHint(){
+    if(G.solved) return;
+    // 以当前已放牛为约束，求一个合法完整解，再提示其中一头还没放的牛
+    const force = new Array(G.n).fill(-1);
+    G.cowSet.forEach(idx=>{ force[G.region[idx]] = idx; });
+    const sol = findSolution(G.region, G.size, G.n, force);
+    if(!sol){ toast('当前摆放可能无法完成，试试撤销几头牛'); return; }
+    const cands = [];
+    for(let rid=0; rid<G.n; rid++){ const cell=sol[rid]; if(!G.cowSet.has(cell)) cands.push(cell); }
+    if(cands.length===0){ toast('牛都已经放好啦'); return; }
+    const idx = cands[Math.floor(Math.random()*cands.length)];
+    G.cowSet.add(idx);
+    G.hints.add(idx);
+    render();
+    const el = board.querySelector(`[data-idx="${idx}"]`);
+    if(el){ el.classList.add('hint'); el.classList.add('correct'); }
+    checkAutoWin();
+  }
+
+  function win(){
+    if(G.solved) return;
+    G.solved = true;
+    stopTimer();
+    const sec = Math.floor((Date.now()-G.startTime)/1000);
+    showOverlay('🎉 通关！', `第 ${G.level} 关 · ${DIFFS[G.diff].label} · 用时 ${fmtTime(sec)}`, '下一关 ▶');
+  }
+
+  // ---------- 生成新谜题（异步，避免阻塞 UI）----------
+  function showOverlay(title, text, btn){
+    document.getElementById('ovTitle').textContent = title;
+    document.getElementById('ovText').textContent = text;
+    document.getElementById('ovBtn').textContent = btn || '确定';
+    document.getElementById('overlay').classList.add('show');
+  }
+  function hideOverlay(){ document.getElementById('overlay').classList.remove('show'); }
+
+  let toastTimer=null;
+  function toast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer=setTimeout(()=>t.classList.remove('show'), 1800);
+  }
+
+  function startTimer(){
+    stopTimer();
+    G.startTime = Date.now();
+    G.timer = setInterval(updateStatus, 1000);
+  }
+  function stopTimer(){ if(G.timer){ clearInterval(G.timer); G.timer=null; } }
+
+  async function newPuzzle(){
+    const ov = document.getElementById('overlay');
+    ov.classList.add('show');
+    document.getElementById('ovTitle').textContent = '生成中…';
+    document.getElementById('ovText').textContent = '正在生成谜题';
+    document.getElementById('ovBtn').style.display='none';
+    await new Promise(r=>setTimeout(r, 40)); // 让 UI 先绘制
+
+    const { size, colors } = DIFFS[G.diff];
+    const p = generatePuzzle(size, colors);
+    if(!p){ hideOverlay(); toast('生成失败，请重试'); return; }
+
+    G.size = size; G.n = colors;
+    G.region = p.region;
+    G.cows = new Set(p.cows.map(c=>c.r*size + c.c)); // 仅作参考，不参与判定
+    G.palette = makePalette(colors);
+    G.clues = new Set();        // 开局不预放任何牛/线索
+    G.cowSet = new Set();       // 玩家从零开始放牛
+    G.manualX = new Set();
+    G.hints = new Set();
+    G.solved = false;
+
+    document.getElementById('ovBtn').style.display='';
+    hideOverlay();
+    render();
+    startTimer();
+  }
+
+  window.addEventListener('resize', ()=>{ if(G.region.length) render(); });
+
+  // 启动
+  newPuzzle();
+})();
+</script>
+</body>
+</html>
