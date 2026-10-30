@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>残响魔网 | Residual Echo</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #08070a;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        overflow: hidden;
+        font-family: system-ui, serif;
+        color: #e2d8c8;
+      }
+      #game-container {
+        border: 2px solid #b8965c60;
+        box-shadow: 0 0 30px rgba(184, 150, 92, 0.2);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game-container"></div>
+    <script>
+      // ========== 存档系统 IndexedDB ==========
+      const DB_NAME = "ResidualEchoDB";
+      const DB_VERSION = 2;
+      const STORE = "save";
+      const ASSETS_CDN = "https://kenney.nl/assets/roguelike-packed/";
+      let saveData = {
+        team: ["karen", "liola", "selan"],
+        defenseTeam: ["karen", "borin"],
+        bag: { calmPotion: 3, memoryPage: 0, shard: 5 },
+        score: 0,
+        raidConsoleCount: 0,
+        arenaWinCount: 0,
+        achieve: [
+          {
+            id: "firstKill",
+            name: "初次镇压",
+            desc: "第一次击杀BOSS",
+            done: false,
+          },
+          {
+            id: "firstConsole",
+            name: "初次超度",
+            desc: "第一次超度BOSS",
+            done: false,
+          },
+          {
+            id: "raidConsole",
+            name: "团本超度",
+            desc: "团本模式超度BOSS",
+            done: false,
+          },
+          {
+            id: "arenaWin3",
+            name: "擂台三胜",
+            desc: "擂台累计胜利3次",
+            done: false,
+          },
+        ],
+      };
+      async function openDB() {
+        return new Promise((res, rej) => {
+          const req = indexedDB.open(DB_NAME, DB_VERSION);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE))
+              db.createObjectStore(STORE);
+          };
+          req.onsuccess = () => res(req.result);
+          req.onerror = () => rej(req.error);
+        });
+      }
+      async function loadSave() {
+        const db = await openDB();
+        const tx = db.transaction(STORE, "readonly");
+        const s = tx.objectStore(STORE);
+        const r = await new Promise((res) => {
+          const q = s.get("main");
+          q.onsuccess = () => res(q.result);
+        });
+        if (r) saveData = r;
+      }
+      async function writeSave() {
+        const db = await openDB();
+        const tx = db.transaction(STORE, "readwrite");
+        const s = tx.objectStore(STORE);
+        await new Promise((res) => {
+          const q = s.put(saveData, "main");
+          q.onsuccess = () => res();
+        });
+      }
+      // ========== 游戏数据定义 ==========
+      const CHAR_DEF = {
+        karen: {
+          name: "凯伦",
+          hp: 110,
+          maxHp: 110,
+          erosion: 0,
+          maxErosion: 100,
+          tex: "knight",
+          skills: [
+            { name: "符文打击", dmg: 18, erosion: 0, tag: "atk" },
+            { name: "净化", dmg: 0, healErosion: 20, tag: "healErosion" },
+          ],
+        },
+        liola: {
+          name: "莉奥拉",
+          hp: 85,
+          maxHp: 85,
+          erosion: 0,
+          maxErosion: 100,
+          tex: "mage",
+          skills: [
+            { name: "魔弹", dmg: 22, erosion: 8, tag: "atk" },
+            {
+              name: "残响爆发",
+              dmg: 45,
+              erosion: 22,
+              raidErosionSpread: 6,
+              tag: "atk",
+            },
+          ],
+        },
+        selan: {
+          name: "瑟兰",
+          hp: 75,
+          maxHp: 75,
+          erosion: 0,
+          maxErosion: 100,
+          tex: "ranger",
+          skills: [
+            { name: "灵矢", dmg: 16, erosion: 0, tag: "atk" },
+            {
+              name: "忆念安抚",
+              dmg: 0,
+              canConsole: true,
+              erosion: 5,
+              tag: "console",
+            },
+          ],
+        },
+        borin: {
+          name: "博林",
+          hp: 130,
+          maxHp: 130,
+          erosion: 0,
+          maxErosion: 100,
+          tex: "dwarf",
+          skills: [
+            { name: "重锤", dmg: 24, erosion: 0, tag: "atk" },
+            { name: "符文屏障", dmg: 0, shield: 25, tag: "shield" },
+          ],
+        },
+      };
+      const BOSS_DEF = {
+        boss1: {
+          name: "守馆残响",
+          hp: 180,
+          maxHp: 180,
+          consoleProgress: 0,
+          needConsole: 3,
+          tex: "demon",
+        },
+        boss2: {
+          name: "风啸残响",
+          hp: 220,
+          maxHp: 220,
+          consoleProgress: 0,
+          needConsole: 4,
+          tex: "ghost",
+        },
+        boss3: {
+          name: "熔铁残响",
+          hp: 260,
+          maxHp: 260,
+          consoleProgress: 0,
+          needConsole: 5,
+          tex: "golem",
+        },
+      };
+      // ========== Phaser 场景定义 ==========
+      class TitleScene extends Phaser.Scene {
+        constructor() {
+          super("title");
+        }
+        preload() {
+          this.load.setCORS("anonymous");
+          this.load.spritesheet("knight", ASSETS_CDN + "sheet.png", {
+            frameWidth: 16,
+            frameHeight: 16,
+          });
+          this.load.spritesheet("mage", ASSETS_CDN + "sheet.png", {
+            frameWidth: 16,
+            frameHeight: 16,
+          });
+          this.load.spritesheet("ranger", ASSETS_CDN + "sheet.png", {
+            frameWidth: 16,
+            frameHeight: 16,
+          });
+          this.load.spritesheet("dwarf", ASSETS_CDN + "sheet.png", {
+            frameWidth: 16,
+            frameHeight: 16,
+          });
+          this.load.spritesheet("demon", ASSETS_CDN + "sheet.png", {
+            frameWidth: 16,
+            frameHeight: 16,
+          });
+          this.load.spritesheet("ghost", ASSETS_CDN + "sheet.png", {
+            frameWidth: 16,
+            frameHeight: 16,
+          });
+          this.load.spritesheet("golem", ASSETS_CDN + "sheet.png", {
+            frameWidth: 16,
+            frameHeight: 16,
+          });
+          this.load.audio(
+            "click",
+            "https://kenney.nl/assets/interface-sounds/ogg/click.ogg",
+          );
+          this.load.audio(
+            "hit",
+            "https://kenney.nl/assets/impact-sounds/ogg/hit_heavy_01.ogg",
+          );
+        }
+        create() {
+          const c = this.cameras.main;
+          c.setBackgroundColor("#0b090d");
+          this.add
+            .text(400, 140, "残响魔网", { fontSize: "48px", color: "#d4b88c" })
+            .setOrigin(0.5);
+          this.add
+            .text(400, 200, "Residual Echo · 暗黑像素回合RPG", {
+              fontSize: "18px",
+              color: "#998870",
+            })
+            .setOrigin(0.5);
+          const btnStart = this.add
+            .text(400, 300, "【 开始游戏 】", {
+              fontSize: "24px",
+              color: "#b8965c",
+            })
+            .setOrigin(0.5)
+            .setInteractive();
+          const btnCont = this.add
+            .text(400, 360, "【 继续存档 】", {
+              fontSize: "24px",
+              color: "#b8965c",
+            })
+            .setOrigin(0.5)
+            .setInteractive();
+          btnStart.on("pointerdown", () => {
+            this.sound.play("click");
+            this.scene.start("hub");
+          });
+          btnCont.on("pointerdown", async () => {
+            this.sound.play("click");
+            await loadSave();
+            this.scene.start("hub");
+          });
+          [btnStart, btnCont].forEach((b) => {
+            b.on("pointerover", () => b.setColor("#ffe2aa"));
+            b.on("pointerout", () => b.setColor("#b8965c"));
+          });
+        }
+      }
+      class HubScene extends Phaser.Scene {
+        constructor() {
+          super("hub");
+        }
+        create() {
+          const c = this.cameras.main;
+          c.setBackgroundColor("#131017");
+          this.add
+            .text(400, 60, "幻境大厅", { fontSize: "32px", color: "#d4b88c" })
+            .setOrigin(0.5);
+          const btns = [
+            { y: 140, text: "幻境试炼", next: "battleSelect" },
+            { y: 190, text: "残响擂台", next: "arena" },
+            { y: 240, text: "团本讨伐", next: "raid" },
+            { y: 290, text: "编队管理", next: "team" },
+            { y: 340, text: "行囊图鉴", next: "codex" },
+          ];
+          btns.forEach((b) => {
+            const t = this.add
+              .text(400, b.y, `▸ ${b.text}`, {
+                fontSize: "22px",
+                color: "#b8965c",
+              })
+              .setOrigin(0.5)
+              .setInteractive();
+            t.on("pointerover", () => t.setColor("#ffe2aa"));
+            t.on("pointerout", () => t.setColor("#b8965c"));
+            t.on("pointerdown", () => {
+              this.sound.play("click");
+              this.scene.start(b.next);
+            });
+          });
+          this.add
+            .text(400, 420, "自动存档 | 侵蚀失控即阵亡", {
+              fontSize: "14px",
+              color: "#887766",
+            })
+            .setOrigin(0.5);
+        }
+      }
+      class BattleSelectScene extends Phaser.Scene {
+        constructor() {
+          super("battleSelect");
+        }
+        create() {
+          this.cameras.main.setBackgroundColor("#131017");
+          this.add
+            .text(400, 50, "幻境 · 选择目标", {
+              fontSize: "28px",
+              color: "#d4b88c",
+            })
+            .setOrigin(0.5);
+          let y = 120;
+          Object.values(BOSS_DEF).forEach((b) => {
+            const t = this.add
+              .text(400, y, `${b.name} | 超度需要安抚${b.needConsole}次`, {
+                fontSize: "18px",
+                color: "#b8965c",
+              })
+              .setOrigin(0.5)
+              .setInteractive();
+            t.on("pointerdown", () => {
+              this.sound.play("click");
+              this.scene.start("battle", { bossId: b.id, mode: "normal" });
+            });
+            y += 50;
+          });
+          const back = this.add
+            .text(400, 460, "← 返回大厅", {
+              fontSize: "18px",
+              color: "#998870",
+            })
+            .setOrigin(0.5)
+            .setInteractive();
+          back.on("pointerdown", () => {
+            this.sound.play("click");
+            this.scene.start("hub");
+          });
+        }
+      }
+      class BattleScene extends Phaser.Scene {
+        constructor() {
+          super("battle");
+        }
+        init(data) {
+          this.bossId = data.bossId;
+          this.mode = data.mode;
+          this.turn = 1;
+          this.actorIdx = 0;
+          this.playerUnits = [];
+          this.enemyUnits = [];
+          this.log = [];
+        }
+        create() {
+          const c = this.cameras.main;
+          c.setBackgroundColor("#0c0a10");
+          const boss = BOSS_DEF[this.bossId];
+          // 生成我方单位
+          saveData.team.forEach((id) => {
+            const def = CHAR_DEF[id];
+            this.playerUnits.push({ ...def, uid: Phaser.Math.RND.uuid(), id });
+          });
+          if (this.mode === "raid") {
+            const pool = Object.entries(CHAR_DEF).filter(
+              ([k]) => !saveData.team.includes(k),
+            );
+            while (this.playerUnits.length < 4 && pool.length > 0) {
+              const [k, def] = pool.shift();
+              this.playerUnits.push({
+                ...def,
+                uid: Phaser.Math.RND.uuid(),
+                id: k,
+              });
+            }
+          }
+          this.enemyUnits.push({ ...boss, uid: Phaser.Math.RND.uuid() });
+          this.add
+            .text(400, 30, `【${boss.name}】降临`, {
+              fontSize: "22px",
+              color: "#c86060",
+            })
+            .setOrigin(0.5);
+          this.drawBattleUI();
+          this.runTurn();
+        }
+        drawBattleUI() {
+          this.children.list.filter((x) => x.isUI).forEach((x) => x.destroy());
+          // 我方绘制
+          let px = 100;
+          this.playerUnits.forEach((u) => {
+            const s = this.add.sprite(px, 320, u.tex, 0).setScale(2);
+            s.isUI = true;
+            this.add
+              .text(px, 280, u.name, { fontSize: "14px", color: "#e2d8c8" })
+              .setOrigin(0.5).isUI = true;
+            this.add
+              .text(px, 360, `HP:${u.hp}/${u.maxHp}`, {
+                fontSize: "12px",
+                color: "#77dd88",
+              })
+              .setOrigin(0.5).isUI = true;
+            this.add
+              .text(px, 380, `侵蚀:${u.erosion}/${u.maxErosion}`, {
+                fontSize: "12px",
+                color: "#dd6666",
+              })
+              .setOrigin(0.5).isUI = true;
+            px += 120;
+          });
+          // 敌方
+          const e = this.enemyUnits[0];
+          const es = this.add.sprite(400, 140, e.tex, 0).setScale(2.5);
+          es.isUI = true;
+          this.add
+            .text(400, 90, e.name, { fontSize: "18px", color: "#e2d8c8" })
+            .setOrigin(0.5).isUI = true;
+          this.add
+            .text(
+              400,
+              180,
+              `HP:${e.hp}/${e.maxHp} 超度:${e.consoleProgress || 0}/${e.needConsole}`,
+              { fontSize: "14px", color: "#ffaa77" },
+            )
+            .setOrigin(0.5).isUI = true;
+          // 回合
+          this.add
+            .text(700, 30, `回合:${this.turn}`, {
+              fontSize: "16px",
+              color: "#b8965c",
+            })
+            .setOrigin(0.5).isUI = true;
+        }
+        runTurn() {
+          const aliveAllies = this.playerUnits.filter((u) => u.hp > 0);
+          const aliveEnemies = this.enemyUnits.filter((u) => u.hp > 0);
+          if (aliveAllies.length === 0 || aliveEnemies.length === 0) {
+            this.endBattle();
+            return;
+          }
+          const allAlive = [...aliveAllies, ...aliveEnemies];
+          if (this.actorIdx >= allAlive.length) {
+            this.actorIdx = 0;
+            this.turn++;
+            this.drawBattleUI();
+          }
+          const actor = allAlive[this.actorIdx];
+          const isPlayer = this.playerUnits.includes(actor);
+          if (!isPlayer) {
+            this.time.delayedCall(700, () => {
+              this.aiAction(actor);
+            });
+          } else {
+            const isMyChar = saveData.team.includes(actor.id);
+            if (!isMyChar && this.mode === "raid") {
+              this.time.delayedCall(700, () => {
+                this.aiAction(actor);
+              });
+            } else {
+              this.showSkillMenu(actor);
+            }
+          }
+        }
+        showSkillMenu(unit) {
+          this.children.list
+            .filter((x) => x.isSkillBtn)
+            .forEach((x) => x.destroy());
+          let sx = 120;
+          unit.skills.forEach((sk, si) => {
+            const t = (this.add
+              .text(sx, 440, sk.name, {
+                fontSize: "16px",
+                color: "#ffe2aa",
+                backgroundColor: "#221e28",
+                padding: { x: 10, y: 4 },
+              })
+              .setInteractive().isSkillBtn = true);
+            t.on("pointerdown", () => {
+              this.sound.play("click");
+              this.useSkill(unit, sk);
+              this.actorIdx++;
+              this.drawBattleUI();
+              this.runTurn();
+            });
+            sx += 110;
+          });
+        }
+        aiAction(actor) {
+          const sk =
+            actor.skills[Phaser.Math.Between(0, actor.skills.length - 1)];
+          this.useSkill(actor, sk);
+          this.actorIdx++;
+          this.drawBattleUI();
+          this.runTurn();
+        }
+        useSkill(unit, sk) {
+          const aliveEnemies = this.enemyUnits.filter((u) => u.hp > 0);
+          const aliveAllies = this.playerUnits.filter((u) => u.hp > 0);
+          if (sk.canConsole) {
+            const boss = aliveEnemies[0];
+            boss.consoleProgress += 1;
+            unit.erosion += sk.erosion;
+            if (unit.erosion >= unit.maxErosion) {
+              unit.hp = 0;
+            }
+            if (boss.consoleProgress >= boss.needConsole) {
+              boss.hp = 0;
+              boss.consoleSuccess = true;
+            }
+          } else if (sk.healErosion) {
+            const tar = aliveAllies[0];
+            tar.erosion = Math.max(0, tar.erosion - sk.healErosion);
+          } else if (sk.shield) {
+            //护盾逻辑
+          } else {
+            const tar = aliveEnemies[0];
+            tar.hp -= sk.dmg;
+            this.sound.play("hit");
+            unit.erosion += sk.erosion || 0;
+            if (this.mode === "raid" && sk.raidErosionSpread) {
+              this.playerUnits.forEach((p) => {
+                p.erosion += sk.raidErosionSpread;
+                if (p.erosion >= p.maxErosion) p.hp = 0;
+              });
+            }
+            if (unit.erosion >= unit.maxErosion) unit.hp = 0;
+          }
+        }
+        async endBattle() {
+          const aliveAllies = this.playerUnits.filter((u) => u.hp > 0);
+          const aliveEnemies = this.enemyUnits.filter((u) => u.hp > 0);
+          if (aliveEnemies.length === 0) {
+            const boss = this.enemyUnits[0];
+            if (boss.consoleSuccess) {
+              saveData.bag.memoryPage += 2;
+              saveData.bag.shard += 3;
+              this.markAchieve("firstConsole");
+              if (this.mode === "raid") {
+                saveData.raidConsoleCount++;
+                this.markAchieve("raidConsole");
+              }
+            } else {
+              saveData.bag.shard += 2;
+              this.markAchieve("firstKill");
+            }
+            if (this.mode === "arena") {
+              saveData.score += 100;
+              saveData.arenaWinCount++;
+              if (saveData.arenaWinCount >= 3) this.markAchieve("arenaWin3");
+            }
+          }
+          await writeSave();
+          this.time.delayedCall(1200, () => this.scene.start("hub"));
+        }
+        markAchieve(id) {
+          const a = saveData.achieve.find((x) => x.id === id);
+          if (a) a.done = true;
+        }
+      }
+      // 其余场景（擂台、团本、编队、图鉴）框架，你可以继续扩展
+      class ArenaScene extends Phaser.Scene {
+        constructor() {
+          super("arena");
+        }
+        create() {
+          this.cameras.main.setBackgroundColor("#131017");
+          this.add
+            .text(400, 100, "残响擂台", { fontSize: "28px", color: "#d4b88c" })
+            .setOrigin(0.5);
+          this.add
+            .text(400, 200, "点击开始对战", {
+              fontSize: "18px",
+              color: "#b8965c",
+            })
+            .setOrigin(0.5)
+            .setInteractive()
+            .on("pointerdown", () => {
+              this.sound.play("click");
+              this.scene.start("battle", { bossId: "boss1", mode: "arena" });
+            });
+          this.add
+            .text(400, 460, "← 返回大厅", {
+              fontSize: "18px",
+              color: "#998870",
+            })
+            .setOrigin(0.5)
+            .setInteractive()
+            .on("pointerdown", () => {
+              this.sound.play("click");
+              this.scene.start("hub");
+            });
+        }
+      }
+      class RaidScene extends Phaser.Scene {
+        constructor() {
+          super("raid");
+        }
+        create() {
+          this.cameras.main.setBackgroundColor("#131017");
+          this.add
+            .text(400, 100, "团本讨伐", { fontSize: "28px", color: "#d4b88c" })
+            .setOrigin(0.5);
+          this.add
+            .text(400, 200, "开启团本讨伐", {
+              fontSize: "18px",
+              color: "#b8965c",
+            })
+            .setOrigin(0.5)
+            .setInteractive()
+            .on("pointerdown", () => {
+              this.sound.play("click");
+              this.scene.start("battle", { bossId: "boss1", mode: "raid" });
+            });
+          this.add
+            .text(400, 460, "← 返回大厅", {
+              fontSize: "18px",
+              color: "#998870",
+            })
+            .setOrigin(0.5)
+            .setInteractive()
+            .on("pointerdown", () => {
+              this.sound.play("click");
+              this.scene.start("hub");
+            });
+        }
+      }
+      class TeamScene extends Phaser.Scene {
+        constructor() {
+          super("team");
+        }
+        create() {
+          this.cameras.main.setBackgroundColor("#131017");
+          this.add
+            .text(400, 80, "编队管理", { fontSize: "28px", color: "#d4b88c" })
+            .setOrigin(0.5);
+          this.add
+            .text(400, 460, "← 返回大厅", {
+              fontSize: "18px",
+              color: "#998870",
+            })
+            .setOrigin(0.5)
+            .setInteractive()
+            .on("pointerdown", () => {
+              this.sound.play("click");
+              this.scene.start("hub");
+            });
+        }
+      }
+      class CodexScene extends Phaser.Scene {
+        constructor() {
+          super("codex");
+        }
+        create() {
+          this.cameras.main.setBackgroundColor("#131017");
+          this.add
+            .text(400, 80, "行囊与契友名册", {
+              fontSize: "28px",
+              color: "#d4b88c",
+            })
+            .setOrigin(0.5);
+          this.add
+            .text(400, 460, "← 返回大厅", {
+              fontSize: "18px",
+              color: "#998870",
+            })
+            .setOrigin(0.5)
+            .setInteractive()
+            .on("pointerdown", () => {
+              this.sound.play("click");
+              this.scene.start("hub");
+            });
+        }
+      }
+      // ========== 游戏启动 ==========
+      const game = new Phaser.Game({
+        type: Phaser.AUTO,
+        width: 800,
+        height: 500,
+        parent: "game-container",
+        scene: [
+          TitleScene,
+          HubScene,
+          BattleSelectScene,
+          BattleScene,
+          ArenaScene,
+          RaidScene,
+          TeamScene,
+          CodexScene,
+        ],
+        pixelArt: true,
+        audio: { disableWebAudio: false },
+      });
+    </script>
+  </body>
+</html>

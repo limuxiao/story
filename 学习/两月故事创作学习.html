@@ -1,0 +1,2876 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      故事创作体系化学习与练习工具｜三栏版（含两个月计划表+第9章示例）
+    </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --accent: #2563eb;
+      }
+      * {
+        -webkit-tap-highlight-color: transparent;
+      }
+      body {
+        font-family:
+          "PingFang SC",
+          "Hiragino Sans GB",
+          "Microsoft YaHei",
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
+        letter-spacing: 0.01em;
+      }
+
+      /* 标签页：切换时柔和淡入 */
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+        animation: tabIn 0.28s ease;
+      }
+      @keyframes tabIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      /* 内容排版：统一层级与阅读节奏（不与已有尺寸类冲突） */
+      .tab-content h3 {
+        font-size: 1.08rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-top: 1.6rem;
+        margin-bottom: 0.5rem;
+      }
+      .tab-content h4 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-top: 1.1rem;
+      }
+      .tab-content p {
+        line-height: 1.85;
+        color: #334155;
+        margin-bottom: 1rem;
+      }
+      .tab-content ul,
+      .tab-content ol {
+        line-height: 1.85;
+        color: #334155;
+      }
+      .tab-content li {
+        margin-bottom: 0.4rem;
+      }
+      .tab-content strong {
+        color: #0f172a;
+        font-weight: 700;
+      }
+
+      .chapter-title {
+        border-left: 4px solid var(--accent);
+        padding-left: 0.75rem;
+      }
+
+      /* 卡片悬浮 */
+      .card-hover {
+        transition:
+          transform 0.25s ease,
+          box-shadow 0.25s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+      }
+
+      /* 文本域 / 输入框 聚焦态 */
+      textarea {
+        resize: vertical;
+      }
+      textarea,
+      input,
+      select {
+        transition:
+          border-color 0.2s ease,
+          box-shadow 0.2s ease;
+      }
+      textarea:focus,
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+      }
+
+      /* 加载动画 */
+      .loading {
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid #e5e7eb;
+        border-top-color: #3b82f6;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* 侧栏菜单 */
+      .menu-item {
+        transition:
+          background-color 0.15s ease,
+          color 0.15s ease,
+          padding-left 0.15s ease;
+      }
+      .menu-item:hover {
+        padding-left: 0.95rem;
+      }
+      .menu-item.active {
+        background: linear-gradient(
+          90deg,
+          rgba(37, 99, 235, 0.22),
+          rgba(37, 99, 235, 0.04)
+        );
+        color: #fff;
+        box-shadow: inset 3px 0 0 0 var(--accent);
+      }
+
+      /* 提示块：柔和边框 + 左侧色条 */
+      .note-block {
+        background: #f0f7ff;
+        border: 1px solid #d6e8ff;
+        border-left: 4px solid #3b82f6;
+        border-radius: 0.6rem;
+        padding: 0.85rem 1rem;
+        line-height: 1.75;
+      }
+      .warn-block {
+        background: #fff8f1;
+        border: 1px solid #ffe2c2;
+        border-left: 4px solid #f59e0b;
+        border-radius: 0.6rem;
+        padding: 0.85rem 1rem;
+        line-height: 1.75;
+      }
+      .exercise-block {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-left: 4px solid #22c55e;
+        border-radius: 0.6rem;
+        padding: 0.85rem 1rem;
+        line-height: 1.75;
+      }
+
+      /* 计划周卡片：蓝色左条 + 浅底（静态可见），悬浮微抬升 */
+      #plan .grid > div {
+        background: #f0f7ff;
+        border-left: 3px solid #3b82f6;
+        transition:
+          transform 0.2s ease,
+          box-shadow 0.2s ease,
+          background-color 0.2s ease;
+      }
+      #plan .grid > div:hover {
+        transform: translateY(-2px);
+        background: #e0edff;
+        box-shadow: 0 8px 22px rgba(37, 99, 235, 0.14);
+      }
+
+      /* 示例卡片 */
+      .example-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 0.6rem;
+        padding: 1rem;
+        background: #fafafa;
+        transition:
+          border-color 0.2s ease,
+          box-shadow 0.2s ease;
+      }
+      .example-card:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+      }
+      .example-title {
+        font-weight: 700;
+        color: #1e40af;
+        margin-bottom: 0.5rem;
+      }
+
+      /* 按钮通用动效（不影响已有配色类） */
+      button {
+        transition:
+          transform 0.12s ease,
+          filter 0.15s ease,
+          background-color 0.15s ease;
+      }
+      button:active {
+        transform: translateY(1px);
+      }
+      button:hover {
+        filter: brightness(1.04);
+      }
+
+      /* 滚动条 */
+      aside::-webkit-scrollbar,
+      main::-webkit-scrollbar,
+      .overflow-y-auto::-webkit-scrollbar {
+        width: 8px;
+      }
+      aside::-webkit-scrollbar-thumb,
+      main::-webkit-scrollbar-thumb,
+      .overflow-y-auto::-webkit-scrollbar-thumb {
+        background: rgba(100, 116, 139, 0.35);
+        border-radius: 8px;
+      }
+      aside::-webkit-scrollbar-thumb:hover,
+      main::-webkit-scrollbar-thumb:hover {
+        background: rgba(100, 116, 139, 0.55);
+      }
+
+      .middle-wapper::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+      }
+
+      .middle-wapper::-webkit-scrollbar-thumb {
+        width: 0;
+        height: 0;
+      }
+
+      /* 尊重减少动效偏好 */
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+
+      /* ===== 静态可见层美化 ===== */
+      main {
+        font-size: 1.02rem;
+      }
+      /* 章节大标题更突出（特异性高于 text-xl 工具类） */
+      .tab-content h2.text-xl {
+        font-size: 1.5rem;
+        line-height: 1.35;
+        color: #0f172a;
+      }
+      /* 小节标题加细分隔线，层次更清晰 */
+      .tab-content h3 {
+        border-bottom: 1px solid #eef2f7;
+        padding-bottom: 0.35rem;
+      }
+      /* 主卡片：更精致的边框与阴影 */
+      .tab-content.active > div {
+        border: 1px solid #eef2f7;
+        box-shadow:
+          0 1px 2px rgba(15, 23, 42, 0.04),
+          0 12px 30px -12px rgba(15, 23, 42, 0.18);
+      }
+
+      /* ===== 实战演练：表单卡片化与输入美化 ===== */
+      #practice section {
+        background: #f8fafc;
+        border: 1px solid #eef2f7;
+        border-radius: 14px;
+        padding: 18px 20px;
+      }
+      #practice section > h3 {
+        margin-top: 0;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0;
+        border-bottom: none;
+        border-left: 3px solid var(--accent);
+        padding-left: 0.6rem;
+        font-size: 1.05rem;
+        color: #0f172a;
+      }
+      #practice label {
+        font-size: 13px;
+        color: #475569;
+        margin-bottom: 6px;
+      }
+      #practice input,
+      #practice textarea {
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        background: #fff;
+        padding: 9px 12px;
+        font-size: 14px;
+        line-height: 1.5;
+        color: #1e293b;
+      }
+      #practice .border-l-4 {
+        border-radius: 10px;
+        background: #fff;
+        padding: 12px 14px;
+        border-top: 1px solid #eef2f7;
+        border-right: 1px solid #eef2f7;
+        border-bottom: 1px solid #eef2f7;
+      }
+
+      /* 本章练习输入框加高 */
+      .exercise-block textarea {
+        min-height: 280px;
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-800 h-screen overflow-hidden">
+    <div
+      class="grid grid-cols-[220px_1fr_420px] h-full lg:grid-cols-[220px_1fr_420px] md:grid-cols-1 md:overflow-auto">
+      <!-- 左侧 Aside 目录 -->
+      <aside
+        class="bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white p-4 overflow-y-auto">
+        <div class="mb-6 pb-4 border-b border-slate-700">
+          <div class="text-[12px] uppercase tracking-[.22em] text-slate-400">
+            Story Craft
+          </div>
+          <h2 class="text-lg font-bold mt-1">故事创作学习</h2>
+          <p class="text-xs text-slate-400 mt-1">体系化 · 两个月训练计划</p>
+        </div>
+        <nav class="space-y-1">
+          <button
+            onclick="switchTab('plan')"
+            class="menu-item w-full text-left px-3 py-2 rounded hover:bg-slate-700">
+            两个月训练计划表
+          </button>
+          <div class="my-2 border-t border-slate-600"></div>
+          <button
+            onclick="switchTab('chapter0')"
+            class="menu-item w-full text-left px-3 py-2 rounded hover:bg-slate-700">
+            导论：什么是好故事
+          </button>
+          <button
+            onclick="switchTab('chapter1')"
+            class="menu-item w-full text-left px-3 py-2 rounded hover:bg-slate-700">
+            第1章 欲望、目标与阻碍
+          </button>
+          <button
+            onclick="switchTab('chapter2')"
+            class="menu-item w-full text-left px-3 py-2 rounded hover:bg-slate-700">
+            第2章 冲突与悬念
+          </button>
+          <button
+            onclick="switchTab('chapter3')"
+            class="menu-item w-full text-left px-3 py-2 rounded hover:bg-slate-700">
+            第3章 人物塑造
+          </button>
+          <button
+            onclick="switchTab('chapter4')"
+            class="menu-item w-full text-left px-3 py-2 rounded hover:bg-slate-700">
+            第4章 主题与立意
+          </button>
+          <button
+            onclick="switchTab('chapter5')"
+            class="menu-item w-full text-left px-3 py-2 rounded hover:bg-slate-700">
+            第5章 情节结构
+          </button>
+          <button
+            onclick="switchTab('chapter6')"
+            class="menu-item w-full text-left px-3 py-2 rounded hover:bg-slate-700">
+            第6章 节奏、伏笔与反转
+          </button>
+          <button
+            onclick="switchTab('chapter7')"
+            class="menu-item w-full text-left px-3 py-2 rounded hover:bg-slate-700">
+            第7章 视角、对白与细节
+          </button>
+          <button
+            onclick="switchTab('chapter8')"
+            class="menu-item w-full text-left px-3 py-2 rounded hover:bg-slate-700">
+            第8章 打磨、自检与修改
+          </button>
+          <button
+            onclick="switchTab('chapter9')"
+            class="menu-item w-full text-left px-3 py-2 rounded hover:bg-slate-700">
+            第9章 故事练习示例
+          </button>
+          <div class="my-3 border-t border-slate-600"></div>
+          <button
+            onclick="switchTab('practice')"
+            class="menu-item w-full text-left px-3 py-2 rounded hover:bg-slate-700">
+            实战演练
+          </button>
+          <div class="my-3 border-t border-slate-600"></div>
+          <button
+            onclick="switchTab('history')"
+            class="menu-item w-full text-left px-3 py-2 rounded hover:bg-slate-700">
+            练习记录（本地）
+          </button>
+        </nav>
+
+        <div class="mt-6 border-t border-slate-600 pt-4">
+          <h3 class="font-medium mb-2">API 设置</h3>
+          <input
+            id="apiKeyInput"
+            type="password"
+            class="w-full rounded p-2 text-slate-900 text-sm"
+            placeholder="sk-xxx" />
+          <div class="flex gap-1 mt-2">
+            <button
+              onclick="saveApiKey()"
+              class="flex-1 bg-blue-600 text-white rounded py-1 text-sm">
+              保存
+            </button>
+            <button
+              onclick="clearApiKey()"
+              class="flex-1 bg-slate-500 text-white rounded py-1 text-sm">
+              清除
+            </button>
+          </div>
+          <p class="text-xs text-slate-400 mt-2">Key仅本地存储</p>
+          <p class="text-xs text-slate-400 mt-1">仅支持 DeepSeek</p>
+        </div>
+      </aside>
+
+      <!-- 中间：学习+练习主区域 -->
+      <main class="p-6 flex flex-col overflow-hidden">
+        <header
+          class="mb-5 pb-4 flex items-baseline justify-between flex-wrap gap-2 flex-none">
+          <div>
+            <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">
+              故事创作体系化学习手册
+            </h1>
+            <p class="text-sm text-slate-500 mt-1">
+              九大核心模块 · 八周训练计划 · 边学边练
+            </p>
+          </div>
+          <span
+            class="text-xs px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100"
+            >本地离线 · 数据仅存浏览器</span
+          >
+        </header>
+        <div class="middle-wapper flex-1 min-h-0 overflow-y-auto pr-1">
+          <!-- ========== 两个月计划表 ========== -->
+          <div id="plan" class="tab-content active">
+            <div class="bg-white rounded-xl p-6 shadow space-y-4">
+              <h2 class="text-xl font-bold chapter-title">
+                两个月（8周）故事创作训练计划
+              </h2>
+              <p>
+                下面把全书 9 章拆解进 8 周。每周固定节奏：读 1–2 章 +
+                完成对应练习块 + 写一点自己的东西；周日用右侧 AI
+                面板做一次复盘。所有练习点「保存」，可在左侧「练习记录」里看自己的成长曲线与总结。
+              </p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="border rounded-lg p-3 bg-slate-50">
+                  <div class="font-bold text-blue-700">第1周 · 地基</div>
+                  <p class="text-sm mt-1">
+                    导论 + 第1章（欲望/目标/阻碍）+
+                    第2章（冲突与悬念）。产出：一个故事种子（想要什么 / 卡住什么
+                    / 失败失去什么）+ 一条三级冲突升级链。
+                  </p>
+                </div>
+                <div class="border rounded-lg p-3 bg-slate-50">
+                  <div class="font-bold text-blue-700">第2周 · 人物与主题</div>
+                  <p class="text-sm mt-1">
+                    第3章（人物弧光）+
+                    第4章（主题/主控思想）。产出：人物小传（旧伤口 / 公开面貌 /
+                    秘密自我 / 弧光终点）+ 主控思想三角 + 埃格里前提。
+                  </p>
+                </div>
+                <div class="border rounded-lg p-3 bg-slate-50">
+                  <div class="font-bold text-blue-700">第3周 · 结构与节奏</div>
+                  <p class="text-sm mt-1">
+                    第5章（三幕结构）+ 第6章（节奏/伏笔/反转）。产出：三幕节拍表
+                    + 伏笔—回收表 + 一个公平反转设计。
+                  </p>
+                </div>
+                <div class="border rounded-lg p-3 bg-slate-50">
+                  <div class="font-bold text-blue-700">第4周 · 笔法</div>
+                  <p class="text-sm mt-1">
+                    第7章（视角/对白/展示）。产出：一段「告知→展示」改写 +
+                    视角体检（标出每段进的是谁的脑内）。
+                  </p>
+                </div>
+                <div class="border rounded-lg p-3 bg-slate-50">
+                  <div class="font-bold text-blue-700">第5周 · 修改</div>
+                  <p class="text-sm mt-1">
+                    第8章（修改与自检）。产出：对前4周草稿做两轮修改（先结构后文字）+
+                    完整自检清单打分。
+                  </p>
+                </div>
+                <div class="border rounded-lg p-3 bg-slate-50">
+                  <div class="font-bold text-blue-700">第6周 · 实战演练</div>
+                  <p class="text-sm mt-1">
+                    用「实战演练」页的角色表单 +
+                    大纲模板，把前5周零散素材整合为一份完整故事大纲。产出：可据此动笔的大纲。
+                  </p>
+                </div>
+                <div class="border rounded-lg p-3 bg-slate-50">
+                  <div class="font-bold text-blue-700">第7周 · 初稿</div>
+                  <p class="text-sm mt-1">
+                    按大纲写出一篇完整短篇初稿（允许粗糙，先写完再改）。产出：初稿全文。
+                  </p>
+                </div>
+                <div class="border rounded-lg p-3 bg-slate-50">
+                  <div class="font-bold text-blue-700">第8周 · 终稿与复盘</div>
+                  <p class="text-sm mt-1">
+                    用第8章方法打磨终稿；用右侧 AI
+                    面板做最终评审；导出练习记录看成长曲线。产出：终稿 +
+                    个人总结。
+                  </p>
+                </div>
+              </div>
+              <h3 class="font-bold">每周例行（每日 60–90 分钟）</h3>
+              <ul class="list-disc pl-6 text-sm space-y-1">
+                <li>
+                  阅读：当天对应章节，用「人物—目标—阻碍—主题」四句话概括。
+                </li>
+                <li>练习：完成该章练习块并保存到本地。</li>
+                <li>写作：往前推进自己的短篇/大纲，哪怕只写 200 字。</li>
+                <li>
+                  周末强化：每周从周六或周日中选一天，安排一次 3–5
+                  小时不间断的强化实战——把本周所学整合成一段完整故事片段或推进大纲，重产出、少切分。
+                </li>
+                <li>
+                  周日复盘：把本周练习丢进右侧 AI 面板，对照清单找 1
+                  个最该改的点。
+                </li>
+              </ul>
+              <h3 class="font-bold">阶段里程碑</h3>
+              <ul class="list-disc pl-6 text-sm space-y-1">
+                <li>
+                  第4周末：完成人物小传 + 主控思想三角 +
+                  三幕节拍表（相当于一份完整大纲）。
+                </li>
+                <li>第6周末：用「实战演练」落定主角的完整设定与故事骨架。</li>
+                <li>第7周末：写出一篇完整短篇初稿。</li>
+                <li>第8周末：按两轮修改法打磨出终稿，并导出练习记录做总结。</li>
+              </ul>
+              <div class="note-block">
+                进度不是线性的——很多人第2–3周会卡住，这很正常。卡住时就回到对应章节的「自检清单」逐条过，而不是硬写。计划表是地图，不是枷锁，可按自己的节奏微调。
+              </div>
+            </div>
+          </div>
+          <div id="chapter0" class="tab-content">
+            <div class="bg-white rounded-xl p-6 shadow space-y-4">
+              <h2 class="text-xl font-bold chapter-title">
+                导论：什么是好故事
+              </h2>
+              <h3 class="font-bold">一、核心知识点：好故事到底是什么</h3>
+              <p>
+                很多人以为"好故事"等于"情节精彩"或"文笔优美"，但那只是表层。一个真正能打动人的好故事，本质是一次<strong>被精心设计的情感体验</strong>：读者读完，心里既被触动（情感），又觉得"原来如此"（认知）。罗伯特·麦基在《故事》里说，故事是"生活的比喻"——它不是照搬现实，而是把现实提炼成一个能让读者瞬间领悟某种人生真相的模型。换句话说，好故事用一个虚构的具体案例，教会读者一条关于真实世界的抽象道理。
+              </p>
+              <p>
+                我们可以用一个极简公式来理解：<strong
+                  >好故事 = 一个值得关心的人 + 一个他必须解决的问题 +
+                  一个让读者屏息的"会不会成功"的疑问</strong
+                >。这三件套缺一个，故事就会塌。值得关心的人，靠的是欲望与缺陷；必须解决的问题，靠的是目标与阻碍；屏息的疑问，靠的是"目标可能失败"的真实风险。请记住：读者不是来"看事情发生"的，是来"替主角担惊受怕并等待答案"的。
+              </p>
+
+              <h3 class="font-bold">二、好故事的四项可操作标准</h3>
+              <p>
+                判断一个故事好不好，不要只靠"我感觉"，而用四个可打分的标准自查：
+              </p>
+              <ul class="list-disc pl-6 space-y-2">
+                <li>
+                  <strong>共鸣：</strong
+                  >读者能在人物身上看到自己，或至少能理解他为何这样选。没有共鸣，故事再精巧也像冷冰冰的谜题。
+                </li>
+                <li>
+                  <strong>悬念：</strong
+                  >每一章结尾都有"然后呢"的拉力，让读者舍不得放下。悬念来自"目标可能失败"的真实风险。
+                </li>
+                <li>
+                  <strong>意义：</strong
+                  >读完觉得说了点什么，而非空洞的感官刺激。意义不是口号，而是人物选择折射出的价值。
+                </li>
+                <li>
+                  <strong>意外：</strong
+                  >结局或转折超出预期，却又在回头看时合理。意外制造记忆点，合理保证不廉价。
+                </li>
+              </ul>
+              <div class="note-block">
+                <p>
+                  <strong>自查技巧：</strong>写完一章，给这四项各打 1–5
+                  分。若"悬念"长期低于
+                  3，说明你还没给主角足够的"会失去什么"的风险；若"意义"低，说明你只是在堆事件，没有让人物做有价值立场的选择。
+                </p>
+              </div>
+
+              <h3 class="font-bold">三、读者为什么"停不下来"：两种张力</h3>
+              <p>
+                读者持续阅读，靠两种张力交替维持：<strong>认知张力</strong>（我还不知道答案，想知道）与<strong>情感张力</strong>（我担心主角，希望他赢）。优秀的作者会在每一幕同时维持这两种张力。比如悬疑开头给认知张力（尸体是谁杀的），随剧情推进叠加情感张力（侦探自己也被卷入）。理解这一点，你就明白为什么"平淡但真实"的生活流水账很难好看——它既无认知张力也无情感张力，读者不知道该关心什么。
+              </p>
+
+              <h3 class="font-bold">四、类型与"读者预期契约"</h3>
+              <p>
+                不同类型对读者许下了不同的隐性契约：侦探小说许诺"真相会揭开"，爱情故事许诺"关系会经历考验"，恐怖故事许诺"安全感受到威胁"。好作者先认清自己签了什么契约，再决定在哪里守约、在哪里巧妙地背叛契约制造惊喜。违背契约却不给补偿（比如侦探到最后也没破案），读者会感到被欺骗；而在契约框架内给出意外（凶手是最意想不到的人），则是高级的惊喜。
+              </p>
+
+              <h3 class="font-bold">五、经典作品案例拆解：《肖申克的救赎》</h3>
+              <p>
+                为什么这部电影常年霸榜"最高评分"？因为它把上面的公式用到了极致。安迪（值得关心的人）被冤入狱（必须解决的问题），他要重获自由、洗清罪名（目标），而监狱体制、典狱长的恶、时间的消磨是层层阻碍。悬念来自"他到底能不能逃出去"——电影用近两小时让观众以为他已认命，却在结尾用一把小锤子和一张海报完成惊天反转。它的"意义"是希望："希望是好事，也许是人间至善"。注意，主题不是靠台词喊出来的，而是用安迪爬过五百码恶臭下水道、在雨中张开双臂的那个画面"演出"的——这正是后文"展示而非告诉"的范本。拆解任何一部好作品，你都能拆出"人物—目标—阻碍—主题"这四根骨架。
+              </p>
+
+              <h3 class="font-bold">六、微型案例：一个故事种子如何长大</h3>
+              <p>
+                假设种子只有一句："一个怕水的女人必须横渡一条河去救落水的女儿。"这已经蕴含四要素——人物（怕水的母亲）、目标（救女儿）、阻碍（怕水+河流+时间）、主题（母爱战胜恐惧）。接下来你只需不断地"让阻碍更狠、让代价更痛"：河水暴涨、桥被冲断、她想起自己当年因怯懦没救起弟弟的伤口……每一次加码，故事就从种子长成了树。可见好故事不一定靠复杂设定，而靠对核心冲突的纵深开挖。
+              </p>
+
+              <h3 class="font-bold">七、常见错误对照表</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="warn-block">
+                  <p>
+                    <strong>流水账：</strong
+                    >按时间罗列"起床、吃饭、上班、睡觉"，没有焦点，读者不知关心谁。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>有焦点：</strong
+                    >只保留推动人物与目标关系变化的事件，其余一笔带过或删除。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p>
+                    <strong>圆满但无聊：</strong
+                    >主角一路顺风，没有风险，读者懒得担心。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>有代价：</strong
+                    >每个想要的东西都附带着失去别的东西的风险，让成功变珍贵。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p>
+                    <strong>角色工具化：</strong
+                    >人物只是推动剧情的木偶，没有自己的欲望。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>人物有自我：</strong
+                    >配角也想要点什么，甚至会和主角对着干。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p>
+                    <strong>事件堆砌：</strong
+                    >一个刺激接一个刺激，但彼此无关，读者记不住。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>因果链条：</strong
+                    >每件事都是上一件事的后果，环环相扣。
+                  </p>
+                </div>
+              </div>
+
+              <h3 class="font-bold">八、给初学者的上手路径（动手引导）</h3>
+              <p>
+                别一上来就写长篇。先用"故事种子法"练手：找一个点子，用三句话分别写出①主角最想要什么；②是什么挡住了他；③如果失败会失去什么。能写清这三句，种子就活了。然后套用上面的四标准各打一次分，低于
+                3
+                分的那一项，就是你下一稿要补强的地方。本章最后的练习块会带你走完这一步，请务必动手写，而不是只在脑子里想——想和写是两种能力，很多人"想得挺好，一写就垮"，差的就是这层转换训练。
+              </p>
+
+              <h3 class="font-bold">九、如何训练自己的"故事感"</h3>
+              <p>
+                故事感不是天赋，而是可训练的肌肉。日常可做三件小事：第一，<strong>逆向拆解</strong>——看完一部电影或小说，逼自己用"人物—目标—阻碍—主题"四句话概括，久而久之你会自动看穿任何作品的骨架；第二，<strong>新闻改写</strong>——把一条社会新闻改成故事种子，问"这里面谁最想改变现状？是什么卡住了他？"；第三，<strong>限字练习</strong>——用一百字讲清一个让人揪心的瞬间，逼自己删掉所有形容词，只留动作和选择。坚持一个月，你会明显感到"知道什么好看、什么无聊"的直觉变敏锐了。本章的底层目的，就是帮你建立这套判断标准，而不是背一堆术语。
+              </p>
+
+              <h3 class="font-bold">十、好故事的"复利效应"</h3>
+              <p>
+                最后提醒一个常被忽视的真相：好故事的各要素会互相放大，像复利一样。一个立得住的人物，会让冲突更痛；更痛的冲突，会逼出更深的弧光；更深的弧光，又让主题落地；而清晰的主题，反过来让前面所有元素都有了方向。反过来，任何一环塌掉，其它环节再好也救不回来——人物扁平，冲突就成了闹剧；冲突软，弧光就无处附着。所以学故事不要指望"某一章秘籍"点石成金，而要理解这些要素是同一台机器的齿轮。本书后续各章，正是依次把每个齿轮拆开给你看。
+              </p>
+              <div class="exercise-block">
+                <p class="font-medium">【本章练习】</p>
+                <p>
+                  找一个你熟悉的短片/小说片段，回答3个问题：主角想要什么？阻挡他的是什么？故事结束后他有什么变化？
+                </p>
+                <textarea
+                  id="ex0"
+                  class="w-full border rounded p-2 mt-2"
+                  rows="3"
+                  placeholder="在这里写下你的练习"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div id="chapter1" class="tab-content">
+            <div class="bg-white rounded-xl p-6 shadow space-y-4">
+              <h2 class="text-xl font-bold chapter-title">
+                第1章 欲望、目标与阻碍
+              </h2>
+              <h3 class="font-bold">一、核心知识点：欲望、目标与阻碍</h3>
+              <p>
+                这三样是故事的发动机，但很多人把它们混为一谈。<strong>欲望（Desire）</strong>是人物内心真正渴求的东西，常常是情感层面的，比如"想被爱""想证明自己不是废物"。<strong>目标（Goal）</strong>是欲望落到一个具体、可行动、可验证的结果上，比如"在比赛中夺冠""攒够钱救妹妹"。欲望是为什么，目标是做什么——没有欲望的目标空洞，没有目标的欲望飘忽。
+              </p>
+              <p>
+                <strong>阻碍（Obstacle）</strong
+                >则是挡在目标前面的东西，它必须真实到让读者相信"主角可能真的输"。阻碍分三类：①<strong>外部阻碍</strong>（敌人、环境、规则、时间）；②<strong>人际阻碍</strong>（盟友反目、亲人反对）；③<strong>内部阻碍</strong>（自己的恐惧、偏见、坏习惯）。最有力量的故事，往往是内部阻碍最终卡住主角——因为他最大的敌人是自己。
+              </p>
+              <p>
+                还有两个关键概念：<strong>目标的可失败性</strong>（如果目标几乎注定成功，读者就不会紧张，好目标要"输了也很合理"）与<strong>目标的代价</strong>（主角越可能失去珍贵之物，读者越揪心）。一个设计良好的目标，应当同时具备"明确可验证"和"失败很痛"两个特征。
+              </p>
+
+              <h3 class="font-bold">二、欲望如何驱动整本书</h3>
+              <p>
+                欲望不是开场说一次就完了，它应该像一根线串起全文。开场时人物被欲望推动行动；中段欲望受挫，人物被迫调整手段；高潮时人物必须在"欲望"和"更珍贵的代价"之间二选一。读者追的，正是这条欲望线如何被现实反复拉扯。写作时有个实用检查：翻到任意一章，问"这一章主角想要什么？"如果答不上来，这章多半是注水。
+              </p>
+              <div class="note-block">
+                <p>
+                  <strong>检查清单：</strong
+                  >主角有没有一个"不达成就会痛"的欲望？目标能不能在书里被明确验证（赢了/输了）？阻碍里是否至少包含一条"他自己造成的"？三者都答"是"，发动机才转得起来。
+                </p>
+              </div>
+
+              <h3 class="font-bold">三、经典作品案例拆解：《千与千寻》</h3>
+              <p>
+                千寻的表层目标是"救出被变成猪的父母并回到人类世界"（具体、可验证）。但更深层的欲望是"不想失去自我、不想遗忘我是谁"。阻碍设计得极其精妙：外部有汤婆婆的契约与魔法，环境有汤屋的诡异规则，人际有无脸男的纠缠，而最核心的内部阻碍是千寻一开始的懦弱、贪吃与胆怯。她每克服一点内部弱点，就离目标近一步。这部片子的教科书意义在于：<strong>它让内部阻碍和外部目标严丝合缝地绑在一起</strong>——你不强壮起来，就救不了父母。欲望、目标、阻碍在这里不是三张独立的纸条，而是一股拧死的绳。
+              </p>
+
+              <h3 class="font-bold">四、再把"代价"讲透一点</h3>
+              <p>
+                新手常把目标写得"得到了就好"，却忘了给"得不到"留足分量。代价分有形与无形：有形的是金钱、生命、机会；无形的是尊严、信任、自我认同。最高级的代价往往是无形的——主角赢了比赛，却永远失去了那个陪他练球、却在决赛前离世的父亲。读者记住的从不是奖杯，而是那份空荡荡的看台。设计代价时，请让你的主角"赢得战场，输掉些什么更私人的东西"。
+              </p>
+
+              <h3 class="font-bold">五、常见错误对照表</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="warn-block">
+                  <p>
+                    <strong>模糊目标：</strong
+                    >"他想变得更好"——好到什么程度？怎么算达成？读者无法追踪。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>可验证目标：</strong
+                    >"他要在三个月内还清十万债务，否则房子被收走"——成败一目了然。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p>
+                    <strong>无代价：</strong>主角想要啥就有啥，读者毫无紧张感。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>有代价：</strong
+                    >每次行动都押上点什么（时间、关系、尊严），输了很疼。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p>
+                    <strong>被动反应：</strong
+                    >主角总被事件推着走，从不主动争取。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>主动出击：</strong
+                    >即使判断错误，主角也在用自己的意志推动事情。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p>
+                    <strong>欲望与目标脱节：</strong
+                    >嘴上说爱，行动却毫无代价地退让。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>言行一致：</strong
+                    >人物的每个选择都在为欲望买单或还债。
+                  </p>
+                </div>
+              </div>
+
+              <h3 class="font-bold">六、动手引导</h3>
+              <p>
+                本章练习块会让你为主要角色填一张"欲望—目标—阻碍"卡。填写时请遵循一个原则：外部阻碍写一件"别人造成的"，内部阻碍写一件"自己造成的"，两者都要具体到能拍成一场戏。写完读一遍，问自己："如果这三条都成立，我作为读者会替他担心吗？"若不会，就把阻碍调得更狠一点，把代价写得再痛一点。记住，读者冷漠不是因为你的文笔，而是因为你的主角"输了也无所谓"。
+              </p>
+
+              <h3 class="font-bold">七、欲望与恐惧：人物的双轴</h3>
+              <p>
+                想让人物的动机立得住，最有效的方法是给他装上<strong>两条互相垂直的轴</strong>：一条是"他拼命想要的东西"（欲望），另一条是"他拼命想躲开的东西"（恐惧）。欲望推他向前，恐惧拉他后退，两股力撕扯，人物就活了。比如一个渴望上台表演的歌手，同时恐惧被注视（童年曾被嘲笑）——他每靠近舞台一步都在克服恐惧，这比"单纯想红"动人十倍。写作时请务必给主角写明恐惧，没有恐惧的欲望是扁平的，因为"毫无负担地追求"无法制造冲突。
+              </p>
+
+              <h3 class="font-bold">八、把大目标拆成"阶段小目标"</h3>
+              <p>
+                新手常把一个宏大目标（"打败魔王""找到真爱"）直接铺满全书，结果中间空荡荡。正确做法是把大目标拆成若干<strong>小目标里程碑</strong>，每个小目标都是一场可赢可输的微型战役：想打败魔王，先得拿到神剑、集结盟友、潜入敌营——每步都是一个独立的目标—阻碍单元。这样做有两个好处：一是天然生成了章节节奏，二是让主角在通往大目标的过程中不断"小赢小输"，读者的情绪被持续牵动。请记住，读者追的是"下一步能不能成"，而不是"结局会不会成"。
+              </p>
+
+              <h3 class="font-bold">九、欲望的"伪装"与"转化"</h3>
+              <p>
+                高手的角色，常常<strong>嘴上要的和心里要的不是同一个东西</strong>。一个说自己"只想安静生活"的人，其实渴望被需要却不敢承认——这种伪装本身就是冲突来源（他想掩饰，世界偏要揭穿他）。还有一种常见手法叫<strong>欲望转化</strong>：主角出发时想要
+                A，经历一番后发现自己真正想要的是
+                B。比如《一代宗师》里叶问，起初想的是武林争雄，终了才懂"见自己、见天地、见众生"。欲望的转化，往往就是弧光发生的时刻。设计人物时，不妨问：他自以为想要什么？他真正需要什么？这两者之间的落差，就是戏。
+              </p>
+
+              <h3 class="font-bold">十、目标与主题的暗线</h3>
+              <p>
+                最后点明一条贯穿全书的线：<strong>人物的目标，往往是主题的反面镜像</strong>。想写"贪婪使人孤独"这个主题，就给主角一个"靠掠夺获得连接"的目标，让他在一次次得手后越来越孤立——目标越推进，主题越被印证。当你觉得"故事散、不知道在讲什么"时，回头检查：主角的目标是否在用行动"演绎"你想表达的主题？如果是，读者不用你明说也能感受到；如果不是，你多半只是堆了一堆事件。
+              </p>
+              <p>
+                一句话收束本章：欲望让人物"想动"，目标让他"动得可被看见"，阻碍让他"动得艰难"，而代价让他"动得牵动人心"。这四样齐了，故事的发动机才算真正点火。
+              </p>
+              <div class="exercise-block">
+                <p class="font-medium">【本章练习】</p>
+                <p>
+                  构思一个角色，写出他的主动目标、被动目标，标注二者属于哪一种关系。
+                </p>
+                <textarea
+                  id="ex1"
+                  class="w-full border rounded p-2 mt-2"
+                  rows="4"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div id="chapter2" class="tab-content">
+            <div class="bg-white rounded-xl p-6 shadow space-y-4">
+              <h2 class="text-xl font-bold chapter-title">第2章 冲突与悬念</h2>
+              <h3 class="font-bold">一、核心知识点：冲突到底是什么</h3>
+              <p>
+                冲突常被误解为"吵架"或"打架"。在故事学里，<strong
+                  >冲突 = 目标 × 阻碍 的对抗</strong
+                >。只要有人想要 A，而有东西不让他得到
+                A，冲突就产生了。它的本质是"两股不可调和的力量相撞"。没有冲突，就没有故事——因为没有了"会不会成功"的悬念。一个没有冲突的章节，无论描写多美，读者都会走神。
+              </p>
+              <p>
+                冲突有三个层级，越往下越深刻：①<strong>人际冲突</strong>（我和你争同一个东西）；②<strong>内在冲突</strong>（我想要的和我该做的打架）；③<strong>哲学/价值冲突</strong>（两种世界观的碰撞，如自由
+                vs
+                安全）。好故事往往三层同时存在：主角和外部反派斗（人际），和自己恐惧斗（内在），而故事最终在探讨某种价值选择（哲学）。
+              </p>
+
+              <h3 class="font-bold">二、悬念：让读者放不下书的隐形之手</h3>
+              <p>
+                如果说冲突是故事的"发动机"，悬念就是让读者"不愿松手"的黏合剂。悬念的本质是<strong>一种被精心维持的不安</strong>：读者心里同时悬着两个问题——"结果会怎样？"与"我担心的人会不会出事？"。希区柯克有个著名比喻：两个人坐在桌边闲聊，如果突然"砰"一声炸弹爆炸，那只是<strong>惊吓（surprise）</strong>；但如果观众早就看见桌下有个定时炸弹、而角色们还在若无其事地聊天，那每一秒都是<strong>悬念（suspense）</strong>。<strong>悬念不等于惊喜</strong>——惊喜是一瞬的"没想到"，悬念是持续的"揪着心等"。一部让人熬夜读完的书，靠的不是一次次惊吓，而是从头到尾那根绷着的弦。
+              </p>
+              <p>
+                制造悬念有五种可操作手法：①<strong>信息控制</strong>——决定读者比角色多知道还是少知道（见下条）；②<strong>倒计时</strong>——给事件一个逼近的死线，时间压力天然制造硬悬念；③<strong>提高赌注</strong>——让读者清楚"失败会失去什么最珍贵的东西"，赌注越大越揪心；④<strong>戏剧反讽</strong>——把关键情报只透露给观众，角色越天真无辜，张力越锋利；⑤<strong>章末未爆弹</strong>——每章结尾扔一颗"刚做的选择带来了更大麻烦"的雷，读者为了看它炸开，自然翻向下一页。悬念最怕"全都摊开"，藏住该藏的，读者才会伸长脖子。
+              </p>
+              <p>
+                关于信息控制，有三种常见权限：<strong>幕后</strong>（读者比角色知道得多，看他在雷区蹦跳我们干着急）、<strong>同幕</strong>（读者与角色同步发现，共享惊喜）、<strong>盲点</strong>（读者和角色一样蒙在鼓里，靠悬念吊胃口）。切换信息权限，就能调节张弛——悬疑类常用"幕后+盲点"交替，让观众既紧张又好奇。悬念与冲突的关系则是互相喂养：冲突制造出"他会不会赢"的疑问，悬念又让读者更紧地盯着下一场冲突。
+              </p>
+              <div class="note-block">
+                <p>
+                  <strong>一句话区别：</strong
+                  >冲突让人"对抗"，悬念让人"等待"。好故事既要有东西撞，也要有东西悬着——撞得越狠，等得越急。
+                </p>
+              </div>
+
+              <h3 class="font-bold">三、让冲突"看得见、感受得到"</h3>
+              <p>
+                冲突最忌"软"——双方其实都能退一步，那就不是真正冲突。有效冲突要具备<strong>不可退让性</strong>：两人要的是同一间房、同一个爱人、同一个真相，没法平分。其次，冲突要<strong>升级与变奏</strong>：不能从头吵到尾一个调子，而要像爬楼梯，一关比一关难，且每次换种玩法（从斗嘴到斗智到赌上性命）。
+              </p>
+              <p>
+                常见冲突类型包括：<strong>目标冲突</strong>（都想要同物）、<strong>手段冲突</strong>（目标一致但方法相反）、<strong>信息不对称</strong>（我知道的你不知）、<strong>时间压力</strong>（倒计时制造硬冲突）。掌握这几类，你就不会"不知道下一幕写什么"了。当一章发平，优先想到的应是"加一级冲突"，而不是"加一个新设定"。
+              </p>
+              <div class="note-block">
+                <p>
+                  <strong>心法：</strong
+                  >每当你觉得"这一章有点平"，先别加新设定，而是问"主角现在和谁的冲突可以再升级一步？"
+                </p>
+              </div>
+
+              <h3 class="font-bold">
+                四、经典作品案例拆解：《罗密欧与朱丽叶》
+              </h3>
+              <p>
+                这出悲剧把<strong>冲突</strong>建在单一核心上：两个相爱的年轻人分属世仇家族，要在一起而仇恨不允许，且仇恨世代相传、不是道歉能解决——这是典型的"目标冲突
+                +
+                不可退让"。更妙的是层级叠加：人际层两家族互杀，内在层罗密欧在"忠于爱情"与"忠于家族荣誉"间撕裂，哲学层则追问"仇恨究竟毁掉了什么"。而它同时也是<strong>悬念</strong>的教科书：朱丽叶服假毒的计划，观众心知肚明，罗密欧却毫不知情——这种<strong>戏剧反讽</strong>让每一场他俩的甜蜜对话都带着催命的倒计时，观众眼睁睁看他走向误会。冲突与悬念在这里合流：正因为对抗不可解，等待结局的过程才令人窒息。它的悲剧性来自冲突的"不可解"，而非角色愚蠢。
+              </p>
+
+              <h3 class="font-bold">五、冲突的"升级链"设计</h3>
+              <p>
+                单个冲突容易写完就泄气，真正吊住读者的是一条<strong>升级链</strong>。设计方法：第一级让主角小败，暴露弱点；第二级让他损失重要之物，被迫改变策略；第三级逼他在"目标"和"所爱"之间二选一，无法两全。三级的难度必须递增，且最好每层换个冲突类型（如先信息不对称，再时间压力，最后价值抉择），避免单调。升级链同时也是人物弧光的推进器——冲突越狠，人物被迫暴露和改变得越多。每升一级，别忘了同步"拧紧悬念的发条"：让倒计时更近、赌注更重。
+              </p>
+
+              <h3 class="font-bold">六、常见错误对照表</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="warn-block">
+                  <p>
+                    <strong>软冲突：</strong
+                    >双方其实都能各退一步，冲突一哄而散，读者觉得"至于吗"。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>硬冲突：</strong
+                    >两人要的是同一个不可平分的东西，必须有人输。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p><strong>一次性冲突：</strong>吵完就完，没有后续波澜。</p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>升级冲突：</strong
+                    >冲突像螺旋，每轮更狠，逼出人物底线。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p>
+                    <strong>说明冲突：</strong
+                    >用旁白告诉读者"他们矛盾很深"，却没演出来。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>演出冲突：</strong
+                    >让人物在行动中互相撞，读者自己看出张力。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p>
+                    <strong>谜底早揭：</strong
+                    >开篇就把关键真相说清，后面再无悬念。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>信息节制：</strong
+                    >该藏的藏住，只在恰当时机泄露，让读者续命式追读。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p>
+                    <strong>只有惊吓：</strong
+                    >靠突然跳出来吓人，没有持续的不安。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>持续悬念：</strong
+                    >用倒计时与赌注，让读者长时间揪心。
+                  </p>
+                </div>
+              </div>
+
+              <h3 class="font-bold">七、动手引导</h3>
+              <p>
+                本章练习块会让你为故事设计一条"三级冲突升级链"。设计时请记住：第一级冲突让主角小败，第二级让他损失重要之物，第三级逼他在"目标"和"所爱"之间二选一。三级的难度必须递增，且最好每层换个冲突类型。与此同时，请<strong>同步设计一条悬念线索</strong>：在第三章结尾埋一颗"未爆弹"（比如主角刚信任的人其实另有身份），并写明读者此时比角色多知道什么。写完后自问：翻到第三级时是否"倒吸一口凉气"？章末是否让读者忍不住翻页？若没有，说明冲突还不够"不可退让"，或悬念的"发条"没拧紧。
+              </p>
+
+              <h3 class="font-bold">八、冲突写不出时，用悬念破局</h3>
+              <p>
+                有时你卡在"这一章不知道让谁和谁冲突"。这时换个思路：先制造<strong>悬念</strong>，冲突往往随之而来。具体做法是在章末扔一颗未爆弹——主角刚做出一个选择，立刻揭示这个选择带来了新的、更大的麻烦。悬念像钩子，把下一章的冲突自动钓出来：读者想看麻烦如何炸开，你只需让相关人物被迫入场对抗即可。所以冲突与悬念是互为因果的：冲突生悬念，悬念逼出下一场冲突。别把它们当成两件事分别硬写，而要让它们像齿轮一样咬着转。
+              </p>
+
+              <h3 class="font-bold">九、反派与对手：冲突的另一半</h3>
+              <p>
+                冲突需要旗鼓相当的对手。新手的反派往往"为坏而坏"，动机站不住脚，冲突就软了。好的对手应满足三点：第一，<strong>他也有自己的目标与正当理由</strong>，甚至让读者偶尔认同（如《蝙蝠侠》里的小丑，要用混乱揭示秩序虚伪）；第二，<strong>他与主角要的是同一件不可平分的东西</strong>，或代表主角必须战胜的那一面；第三，<strong>他逼主角成长</strong>——没有他，主角永远不会变。记住：最强的对手，是主角内心弱点的外部化身。当你写不出冲突时，先去把对手写得更合理、更想要点什么。
+              </p>
+
+              <h3 class="font-bold">十、冲突的微观单位：场景</h3>
+              <p>
+                宏观的冲突升级链，要落地到每个<strong>场景</strong>。一个好场景通常包含"意图—行动—阻碍—结果"四拍：人物带着意图进场景，采取行动，被某种阻碍拦截，得到一个改变局势的结果（最好和进来时不同）。如果一场戏看完，人物的处境、关系或认知没有任何变化，这场戏就可能是多余的。新手常写"信息交代场"——两个角色站着交换读者需要知道的背景，却没有冲突、没有变化，读起来像说明书。解决办法：给每场戏一个微型冲突，哪怕只是观点不和，也能让场景活起来；再在场景结尾留一道悬念的小钩子。
+              </p>
+
+              <h3 class="font-bold">十一、冲突与悬念自检清单</h3>
+              <p>
+                写完一章，用五句话快速体检：①这一章里，谁和谁在对抗？（答不出=没有冲突）②他们的对抗是否"不可退让"？（能各退一步=软冲突）③冲突结束后，人物的处境或关系变了吗？（没变=这场戏白写）④章末有没有"未爆弹"让读者想翻页？（没有=悬念断了）⑤读者是否清楚"失败会失去什么"？（赌注模糊=不揪心）。五句话里只要有一句答不顺，这一章就需要回炉。记住，冲突不是"加戏"，而是"让已有的人物更狠地撞在一起"；悬念不是"藏秘密"，而是"让读者替人物担惊受怕"。两者兼备，故事才既扎实又让人停不下来。本章与第1章是孪生：第1章给了人物"想撞"的理由（欲望与目标），本章给了他们"撞起来"的力学（冲突的层级、升级与类型）与"吊住人"的钩子（悬念）。两章合起来，你就掌握了让故事"动起来、且让人追下去"的核心引擎。
+              </p>
+              <div class="exercise-block">
+                <p class="font-medium">【本章练习】</p>
+                <p>给你上一章的角色设计四层冲突：外部、人际、内在、理念。</p>
+                <textarea
+                  id="ex2"
+                  class="w-full border rounded p-2 mt-2"
+                  rows="4"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div id="chapter3" class="tab-content">
+            <div class="bg-white rounded-xl p-6 shadow space-y-4">
+              <h2 class="text-xl font-bold chapter-title">第3章 人物塑造</h2>
+              <h3 class="font-bold">一、核心知识点：人物不是标签</h3>
+              <p>
+                新手最容易犯的错，是把人物写成标签集合——"高冷御姐""热血少年"几个词就完事。一个活人
+                =
+                <strong>稳定特质 + 核心执念 + 隐藏弱点 + 会变化的信念</strong
+                >。标签只给了第一层，后面三层才是人物"立住"的关键。读者记住的从来不是"她很高冷"，而是"她在深夜偷偷哭，因为怕被人看见软弱"。
+              </p>
+
+              <h3 class="font-bold">二、人物弧光三类型</h3>
+              <ul class="list-disc pl-6 space-y-2">
+                <li>
+                  <strong>正向弧光（成长弧）：</strong
+                  >角色带着缺陷出发，经历考验，学会新的认知，克服弱点。最常见，也最容易被读者共情。例：《飞屋环游记》的卡尔从孤僻守旧，到学会爱与冒险。
+                </li>
+                <li>
+                  <strong>负向弧光（堕落弧）：</strong
+                  >原本的信念被击碎，一步步选择妥协、黑化，走向毁灭。例：《出租车司机》的特拉维斯从迷茫退伍军人滑向暴力"义警"。结构上每一次挫败都推他更极端。
+                </li>
+                <li>
+                  <strong>静态弧（坚守弧）：</strong
+                  >外部世界疯狂变化，但角色守住自己的底线，不被同化。重点不在"他变了"，而在"坚守的代价"。例：阿甘式人物，世界因他而改变，他始终如一。
+                </li>
+              </ul>
+              <p>
+                还有"平向弧"（人物没变，但读者通过他看清了世界），可按需使用。选哪种弧，取决于你想让故事回答什么问题。
+              </p>
+
+              <h3 class="font-bold">三、弧光的阶段模板（可直接套）</h3>
+              <p>
+                无论哪种弧，都可以按这条链来填（融合了坎贝尔"英雄之旅"与
+                K.M.Weiland 的弧光理论）：
+              </p>
+              <ul class="list-disc pl-6 text-sm space-y-1">
+                <li>
+                  <strong>初始状态：</strong
+                  >身份与核心缺陷（如自卑、自私）、世界观（如"世界充满危险"）、隐藏渴望（如渴望被认可）。
+                </li>
+                <li>
+                  <strong>激励事件：</strong
+                  >打破平衡的外部/内部冲击（村庄被毁、父亲战死却不敢反抗）。
+                </li>
+                <li>
+                  <strong>挑战与挫折：</strong
+                  >首次尝试失败、导师出现、虚假胜利。坎贝尔称之为"跨越边界、遭遇试炼与盟友"。
+                </li>
+                <li><strong>中点：</strong>核心信念第一次被撼动。</li>
+                <li>
+                  <strong>高潮选择：</strong
+                  >在旧信念与新认知之间，做出定义性抉择。
+                </li>
+              </ul>
+
+              <h3 class="font-bold">四、"伤口"法填人物（方法）</h3>
+              <p>
+                让人物有厚度的最实用技巧是<strong>设定一道"旧伤口"</strong>：过去某件事在他心里留下未愈的疤，它解释了今天的恐惧与执念。比如"曾被背叛的人，此后无法信任亲密关系"。伤口驱动行为，行为制造冲突，冲突推进情节——人物和剧情就绑在了一起。此外，给人物设计<strong>三个自我</strong>：公众面前的我、私下独处时的我、连自己都不敢承认的秘密我。三者之间有缝隙，人物就立体了。
+              </p>
+              <div class="note-block">
+                <p>
+                  <strong>配角功能提示：</strong
+                  >导师负责教主角新认知，对照者（foil）用相反选择映照主角，催化剂负责在关键时刻推主角一把。别让配角只是背景板，每个常驻配角都该有"自己的欲望"。
+                </p>
+              </div>
+
+              <h3 class="font-bold">五、经典作品案例拆解：《甄嬛传》甄嬛</h3>
+              <p>
+                甄嬛是教科书级的正向弧光。初始状态：一个不争不抢、相信真心与公正的闺阁少女（核心缺陷：天真、理想主义）。入宫后连续受挫——被华妃打压、被皇上当作纯元的替身、失子之痛，道道伤口堆叠。中点：她终于明白"在这宫里，天真等于死亡"，旧信念崩塌。此后她主动黑化、借力打力，完成从"不愿争"到"不得不争"再到"精通权谋"的转变。最妙的是高潮选择：她赢了地位，却永远失去了当初那个单纯的自己。弧光之所以动人，正是因为<strong>成长伴随着不可挽回的失去</strong>——她得到的权力，恰好是她曾经最不屑的东西。
+              </p>
+
+              <h3 class="font-bold">六、常见错误对照表</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="warn-block">
+                  <p>
+                    <strong>标签化：</strong
+                    >"她很冷酷"一句话带过，没有任何行为支撑。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>多维：</strong
+                    >冷酷的人也会偷偷喂流浪猫，矛盾才真实。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p>
+                    <strong>完美无缺：</strong
+                    >主角没缺点，读者无法共情，也没有成长空间。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>有缺陷：</strong>一个致命弱点，既是笑点也是泪点。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p>
+                    <strong>全程不变：</strong
+                    >经历再多，结尾和开头一模一样，读者觉得白读。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>有弧光：</strong
+                    >结尾的信念或处境，因经历而不可逆地改变。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p>
+                    <strong>配角工具化：</strong
+                    >配角只为衬托主角存在，没有自我。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>配角有欲：</strong
+                    >常驻配角也有自己的目标，甚至会和主角冲突。
+                  </p>
+                </div>
+              </div>
+
+              <h3 class="font-bold">七、动手引导</h3>
+              <p>
+                本章练习块提供一份人物小传模板。请为主角填出：一道旧伤口、一个公开面貌、一个秘密自我、以及弧光终点（他最终信了什么/失去了什么）。填完后读给朋友听，如果对方能说出"我大概懂他为什么这样做了"，人物就立住了。若不能，多半是伤口或缺陷写得不够具体——把它换成一件"发生过的、有画面感的坏事"，而不是一个抽象形容词。
+              </p>
+
+              <h3 class="font-bold">八、欲望与恐惧双轴填人物</h3>
+              <p>
+                把前几章的方法收拢到人物上：给每个核心人物同时写下"他想要什么"和"他害怕什么"。这两条轴决定了他在关键时刻会怎么选。甄嬛想要保全家人、害怕失去自我；这两条轴在宫斗里反复撕扯，才写出那些令人窒息的抉择。一个检验标准：当你的情节卡住不知人物下一步做什么时，回到这两条轴——答案几乎总是"选那条最能暴露他恐惧、又最贴近他欲望的路"。人物不是被你推着走，而是被自己的轴推着走。
+              </p>
+
+              <h3 class="font-bold">九、用对话揭示性格（为第7章预热）</h3>
+              <p>
+                人物立不立得住，对话是试金石。新手常让所有角色说话一个调子，或借角色之口大段说教。好的对话有<strong>潜台词</strong>：角色说的和他真正想的不是一回事，读者要自己咂摸。比如一个吃醋的人不会说"我吃醋了"，而会说"你今天挺忙啊"——用陈述句藏情绪。此外，让不同角色有不同"语言指纹"（用词、语速、口头禅），读者闭眼听也能分辨谁在说话。这部分会在第7章系统展开，这里先记住一句：<strong
+                  >对话不是用来传递信息的，是用来暴露性格和制造冲突的。</strong
+                >
+              </p>
+
+              <h3 class="font-bold">十、配角弧光与群像</h3>
+              <p>
+                别只把弧光留给主角。一条有用的经验是：给最重要的两三个配角也设计<strong>小型弧光或清晰的功能性转变</strong>。导师类配角常走"静态弧"——他用一句话点醒主角，自己并不变，却映出主角的变；对照者（foil）则通过"他若处在主角位置会怎么选"来反衬主角；而反派如果能写出"他本来也是个好人，是被境遇推向对面"的来路，冲突会顿时有了重量。群像戏的诀窍是：每个人进场都带着自己的欲望，离场时至少一人的处境因主角而改变。这样读者会觉得这个世界是"活"的，而不只是为主角一人搭的布景。
+              </p>
+
+              <h3 class="font-bold">十一、人物自检清单</h3>
+              <p>
+                动笔前，用五问给主角做个体检：①他最想要什么？②他最怕什么？③他过去受过什么伤，至今没好？④他公开的一面和秘密的一面分别是什么？⑤故事结尾，他信了什么以前不信的，又失去了什么？五问都能答出具体画面，人物就立住了；哪一问答成"他很坚强"这类形容词，就把它换成一件具体往事。这套清单和本章练习块的小传模板是同一套逻辑，建议配合使用——清单用来想，模板用来写，想清楚再写，人物才不会写着写着"人设崩了"。
+              </p>
+              <div class="exercise-block">
+                <p class="font-medium">【本章练习】</p>
+                <p>
+                  给你的角色设定：核心执念、致命弱点、弧光类型，以及他最不愿意面对的一件往事。
+                </p>
+                <textarea
+                  id="ex3"
+                  class="w-full border rounded p-2 mt-2"
+                  rows="4"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div id="chapter4" class="tab-content">
+            <div class="bg-white rounded-xl p-6 shadow space-y-4">
+              <h2 class="text-xl font-bold chapter-title">第4章 主题与立意</h2>
+              <h3 class="font-bold">一、核心知识点：主题不是"话题"</h3>
+              <p>
+                新手最容易把主题和话题混为一谈。"爱情""复仇""成长"只是话题，是素材；而<strong>主题是对话题的"主张"</strong>——你对它持什么看法。同样是爱情，主题可以是"真爱能超越阶级"（主张），也可以是"浪漫是另一种束缚"（主张）。读者记住的从来不是话题，而是你借故事抛出的那个关于人生的判断。所以动笔前先问自己：如果有人问我"你这篇到底想说啥"，我能用一句话给出一个"有立场的观点"吗？给不出，主题就还是空的。
+              </p>
+
+              <h3 class="font-bold">
+                二、麦基的"主控思想"（Controlling Idea）
+              </h3>
+              <p>
+                罗伯特·麦基给出一个极好用的工具：<strong
+                  >主控思想 = 正面价值 + 负面价值 + 反题（原因/代价）</strong
+                >。用公式写就是："[某种正面价值]，源于[某种原因]；反之，[负面价值]源于[相反原因]。"例如《肖申克》可提炼为："<em>希望与自由，源于在体制化中守住自我；反之，绝望与囚禁，源于向环境彻底妥协。</em>"注意它的三角结构：它同时给出了"好结局长什么样""坏结局长什么样""两者之间的分水岭是什么"。一个清晰的主控思想，能反过来指导你每一场戏该怎么拍——凡是推动主角靠近"守住自我"的，就是对的戏。
+              </p>
+
+              <h3 class="font-bold">三、埃格里的"前提"（Premise）</h3>
+              <p>
+                剧作家拉约什·埃格里在《戏剧创作艺术》里提出<strong
+                  >前提 = 人物 + 情境 + 预设（结论）</strong
+                >。例如他的经典例子："<em>极端自私的人（人物），在……（情境）下，终将众叛亲离（预设/结论）。</em>"与麦基不同的是，埃格里更强调"人物性格是前提的发动机"——一个自私的人，放在任何情境都会走向孤立，因为他的性格注定了结局。这给写作者的启示是：<strong>先立住人物，再让情境逼出前提</strong>，而不是先想个道理再硬塞人物。麦基管方向，埃格里管地基，两者结合最稳。
+              </p>
+
+              <h3 class="font-bold">四、主题如何通过"选择"呈现，而非"说教"</h3>
+              <p>
+                最致命的主题错误，是让角色站上台子念旁白："这个故事告诉我们……"。读者会瞬间出戏。正确的方法是<strong>让主题从人物的关键选择里自己长出来</strong>：人物在压力下做了一个艰难的抉择，他选了哪边，就暴露了他信什么——而这一连串选择的总和，就是主题。比如要表达"贪婪使人孤独"，别写角色说"我好孤独"，而写他一次次为了利益背叛伙伴，最后除夕夜独自对着满桌佳肴。主题是被"演"出来的，不是被"讲"出来的。
+              </p>
+              <div class="note-block">
+                <p>
+                  <strong>检验法：</strong
+                  >把你想表达的主题写成一句话，然后检查：我的主角在高潮做出的那个选择，是否恰好"实践"了这句话？如果不是，主题就飘了。
+                </p>
+              </div>
+
+              <h3 class="font-bold">五、经典作品案例拆解：《活着》</h3>
+              <p>
+                余华的《活着》主题极沉：人在巨大的时代洪流里，能做的只是"活着本身"。它的前提可以提炼为："一个本分的人（人物），在苦难接连降临的境遇里（情境），终将懂得活着无需附加意义（结论）。"注意，福贵不是靠"战胜命运"来证明主题，恰恰相反，他是靠"不被命运击垮地继续活"来证明——主题成立的方式反直觉，却更有力。书中每一次失去（家产、儿女、妻子），都不是为了煽情，而是为主角"活着"这个选择层层加码，让读者最终和他一起信了那个朴素的结论。这就是埃格里前提与麦基主控思想的完美合奏。
+              </p>
+
+              <h3 class="font-bold">六、常见错误对照表</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="warn-block">
+                  <p>
+                    <strong>只有话题：</strong
+                    >写了"爱情"却没立场，读者看完不知你态度。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>给出主张：</strong
+                    >明确"爱情在此故事里究竟意味着什么"。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p>
+                    <strong>结尾点题：</strong
+                    >用旁白或角色之口直接喊出道理，像上课。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>行动呈现：</strong
+                    >用高潮的选择与代价让道理自己显形。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p>
+                    <strong>主题飘移：</strong
+                    >前半讲自由，后半讲亲情，读者抓不住。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>主题统一：</strong
+                    >每个关键选择都指向同一句底层判断。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p>
+                    <strong>人物为空：</strong
+                    >先想道理再塞木偶人物，前提立不住。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>人物驱动：</strong
+                    >性格注定结局，主题从人性里长出来。
+                  </p>
+                </div>
+              </div>
+
+              <h3 class="font-bold">七、动手引导</h3>
+              <p>
+                本章练习块会带你写出自己的"主控思想三角"与"埃格里前提"。操作时请先填人物（一个带鲜明性格的人）、再填情境（把他推进去的压力）、最后填结论（这种人会走向什么结局）。填完后做一件事：翻到你故事的高潮，确认主角那一
+                choice
+                恰好"演示"了你的结论。若演示不了，要么改主题，要么改高潮——两者必须咬合，主题才算真正落地，而不是飘在空中的漂亮话。
+              </p>
+
+              <h3 class="font-bold">八、主题的层次：显性与隐性</h3>
+              <p>
+                成熟的作品往往有<strong>两层主题</strong>。显性主题是读者一眼能说的（"这是讲复仇的"），隐性主题才是作者真正想戳的（"复仇会反过来吞噬复仇者"）。隐性主题通常不直接点破，而是藏在副线、配角的命运和结尾的余味里。写作者要学会"明修栈道，暗度陈仓"：用显性的类型外壳（如悬疑、爱情）把读者接进来，再用隐性的那一层真正打动他。练习方法：写完初稿后问自己"如果删掉所有明说道理的台词，读者还能感受到我想讲的那层吗？"若不能，说明隐性主题还没织进情节。
+              </p>
+
+              <h3 class="font-bold">九、主题与类型、读者的契约</h3>
+              <p>
+                不同题材对主题有不同的"容许度"。喜剧往往需要一个温暖的结论（否则观众觉得白笑一场），悲剧则允许主题更冷峻（"命运无常，人无力回天"），而科幻常常借极端设定拷问"何以为人"。选错主题基调会违背读者契约：比如在一个合家欢冒险里强行塞入"努力毫无意义"的虚无主题，读者会感到被背叛。所以定主题时，先看自己签了什么类型的契约，再决定主题落点——是在契约内给惊喜，还是刻意违约制造冲击，但违约必须给足补偿（更高的情感
+                payoff）。
+              </p>
+
+              <h3 class="font-bold">十、如何修正"主题漂移"</h3>
+              <p>
+                长篇最容易写着写着主题飘了：开头想讲"勇敢"，中段却变成了"运气"。救法是<strong>回到主控思想三角，给每个关键选择打分</strong>：这场戏主角选
+                A，它指向我的正面价值还是负面价值？如果大量场景指向了别处，说明剧情被带偏了。修正不一定大改——有时只需调整高潮那一个选择，让全书的天平重新倒向你的主题；或在前半段加一两场"小选择"，提前把主题的种子埋进去。主题是书的脊椎，脊椎歪了，全身都会别扭，越早扶正越省力。
+              </p>
+
+              <h3 class="font-bold">十一、给主题的一句收束</h3>
+              <p>
+                如果本章只让你记住一句话，那就是：<strong>主题不是你写在扉页的格言，而是主角用整本书的命运替你证明的那个判断。</strong>读者记不住你说的话，但会记住你让他"亲眼看见"的那个人如何抉择、如何得失。所以别急着喊主题，先把那个人写活、把那条命运写绝，主题自会像盐溶于水一样，无声地渗进每一页。这也是前文所有章节（人物、冲突、结构）最终共同服务的那个终点。当你哪天能脱口而出"我这篇主角用命运证明了什么"，主题这门课，你就真正毕业了。
+              </p>
+              <div class="exercise-block">
+                <p class="font-medium">【本章练习】</p>
+                <p>
+                  写下你的故事想要探讨的核心问题，再设计2~3个角色，作为这个问题的不同选择对照组。
+                </p>
+                <textarea
+                  id="ex4"
+                  class="w-full border rounded p-2 mt-2"
+                  rows="4"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div id="chapter5" class="tab-content">
+            <div class="bg-white rounded-xl p-6 shadow space-y-4">
+              <h2 class="text-xl font-bold chapter-title">第5章 情节结构</h2>
+              <h3 class="font-bold">一、核心知识点：三幕结构是什么</h3>
+              <p>
+                编剧悉德·菲尔德（Syd
+                Field）把绝大多数好故事归纳为<strong>三幕</strong>：第一幕"建置"（Setup），介绍人物、世界与核心冲突的起因；第二幕"对抗"（Confrontation），主角追逐目标却连连受挫，冲突逐级升级；第三幕"结局"（Resolution），所有矛盾在高潮一次性引爆并收束。三幕不是僵化模板，而是符合人类认知节奏的"起—承—转—合"的工业级实现：读者天然期待"先认识谁、再经历什么、最后怎样收场"。
+              </p>
+
+              <h3 class="font-bold">二、四个关键转折点</h3>
+              <p>
+                三幕之间靠"转折"衔接，缺了转折，故事就成了一潭死水。标准配置是四个：
+              </p>
+              <ul class="list-disc pl-6 space-y-2">
+                <li>
+                  <strong>激励事件（第一幕内）：</strong
+                  >打破主角平静生活的那件事（如收到一封遗嘱、亲人失踪），逼他进入故事。
+                </li>
+                <li>
+                  <strong>第一幕转折（第一幕结尾）：</strong
+                  >主角做出"无法回头"的决定，正式踏入冲突中心。
+                </li>
+                <li>
+                  <strong>中点（第二幕中间）：</strong
+                  >一个假胜利或假失败，让主角误以为看清了局面，实则埋下更大危机；往往是"公开目标"与"真实代价"第一次正面碰撞。
+                </li>
+                <li>
+                  <strong>第二幕转折（第二幕结尾）：</strong
+                  >主角跌入最低谷——看似全盘皆输，旧方法彻底失灵，被迫面对真正的自己。
+                </li>
+                <li>
+                  <strong>高潮（第三幕）：</strong
+                  >所有线索收拢，主角用"变了之后的自己"完成终极对决。
+                </li>
+              </ul>
+              <div class="note-block">
+                <p>
+                  <strong>记忆口诀：</strong>进故事（激励）→ 跨门槛（一转）→
+                  中点假象 → 跌谷底（二转）→
+                  高潮收。五个点串起来，骨架就不会散。
+                </p>
+              </div>
+
+              <h3 class="font-bold">三、每一幕的功能清单</h3>
+              <p>
+                第一幕要回答"主角是谁、他想要什么、是什么拦住了他"；第二幕是全书最肥的部分，要不断"让主角用小赢证明自己在进步，用小输证明代价在加重"，并在中点后把冲突从"外部"推向"内部"；第三幕则必须"还清所有账"——伏笔回收、人物弧光闭环、主题落地。常见失误是第三幕潦草：前面埋了那么多雷，结尾却轻轻放过，读者会觉得被骗。
+              </p>
+
+              <h3 class="font-bold">四、如何避免"中间疲软"（第二幕综合症）</h3>
+              <p>
+                写长篇最易在第二幕中段泄气，读者也最容易弃书。三个对症药方：①<strong>中点设假象</strong>——让主角以为赢了，节奏先扬后抑，制造落差；②<strong>插入"B故事"</strong>（通常是情感/关系线），主线紧时松一口，主线松时紧一下，张弛交替；③<strong>每个小事件都推动主弧</strong>——第二章看似轻松，其实悄悄把主角往"必须改变"的方向推了半步。记住：第二幕不是"过渡"，而是"主角被现实反复教育"的过程，每一场都该让他更难、更痛、更接近那个
+                inevitable 的谷底。
+              </p>
+
+              <h3 class="font-bold">五、经典作品案例拆解：《泰坦尼克号》</h3>
+              <p>
+                第一幕建置：露丝厌弃上流社会的虚伪婚约，杰克登上船，两人在船头相遇（激励事件：相遇点燃自由渴望）。第一幕转折：露丝决定挣脱束缚、与杰克相恋，跨过阶级门槛。第二幕：两人恋情在船上推进（中点假象：看似能私奔成功），随后撞冰山，冲突从"爱情
+                vs 阶级"骤变为"生存 vs
+                死亡"。第二幕转折：救生艇不够，杰克被诬陷、锁在底舱，露丝选择跳回沉船救他——跌入最低谷。第三幕高潮：冰冷海水里，杰克把生还机会让给露丝，用死完成"爱是成全"的主题闭环。可见三幕不是束缚，而是让"爱情"与"灾难"两条线在同一骨架里严丝合缝。
+              </p>
+
+              <h3 class="font-bold">六、常见错误对照表</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="warn-block">
+                  <p>
+                    <strong>没有转折：</strong
+                    >平铺直叙，读者不知何时"进入正题"。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>清晰转折：</strong
+                    >四个关键点位明确，节奏有起承转合。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p>
+                    <strong>中段游移：</strong
+                    >第二幕散成几段无关插曲，失去推力。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>中点危机：</strong>中段有假象/危机，保持张力不滑坡。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p>
+                    <strong>结局潦草：</strong>高潮敷衍，伏笔不收，读者觉被骗。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>高潮 payoff：</strong>所有线索与弧光在高潮处闭环。
+                  </p>
+                </div>
+              </div>
+
+              <h3 class="font-bold">七、动手引导</h3>
+              <p>
+                本章练习块提供一张"三幕节拍表"。请为你自己的故事填出：激励事件、第一幕转折、中点（写明是假胜还是假败）、第二幕转折（谷底长什么样）、高潮（主角用哪种"新自我"获胜）。填完后对照正文，检查每个转折点之间是否"难度递增"。若某两段之间出现"
+                flat
+                地带"，就在那里加一个小冲突或小失败，把坡重新铺陡。结构不是枷锁，而是你迷路时的地图。
+              </p>
+
+              <h3 class="font-bold">八、节拍表（Beat Sheet）实操</h3>
+              <p>
+                把三幕落到纸上，最实用的工具是<strong>节拍表</strong>：从左到右列出"激励事件—一转—中点—二转—高潮"，每个格子写一句话概括该处发生了什么、人物状态如何变化。它的价值在于<strong>让你提前看见全书的起伏</strong>——如果表格里某两个相邻格子"状态没变"，那一段多半会塌；如果五个格子全挤在"主角在冒险"，说明缺少内在转折。专业编剧往往在动笔前就把节拍表磨到无懈可击，因为结构问题越早修越便宜，写到一半再拆骨架，代价是整本书推倒重来。
+              </p>
+
+              <h3 class="font-bold">九、三幕不等于"三等分"</h3>
+              <p>
+                一个常见误解是"三幕就是全书均分三份"。其实三幕的<strong>时长比例</strong>随类型而变：商业大片常是"25%—50%—25%"，但文艺片可能"40%—30%—30%"，悬疑片甚至"10%建置，余下全是对抗与反转"。重点是<strong>功能而非比例</strong>——第一幕负责"把人带进门"，第二幕负责"把人按在地上摩擦"，第三幕负责"收网"。你完全可以第一幕写得极短（一个惊悚开场直接把观众扔进冲突），只要功能到位，读者不会计较篇幅。
+              </p>
+
+              <h3 class="font-bold">十、用三幕检验你已有的草稿</h3>
+              <p>
+                若你已写了几章却觉得散，别急着删，先用三幕框架做一次"体检"：把现有内容分别贴进三幕，看哪幕是空的、哪幕是肿的。空的那幕，多半缺一个转折点；肿的那幕，可能塞了太多"信息交代场"。体检完你会发现，很多问题不是"文笔不行"，而是"骨架没搭好"。结构清晰之后，哪怕文字朴素，读者也追得下去；结构乱了，文字再华丽也救不回来。这就是为什么本章把三幕称为"故事的地基"。
+              </p>
+
+              <h3 class="font-bold">十一、三幕与前面章节的咬合</h3>
+              <p>
+                把全书串起来看：第1章的"欲望与目标"决定了主角的<strong>动机线</strong>，第2章的"冲突"决定了第二幕的<strong>对抗密度</strong>，第3章的"弧光"决定了高潮那一个<strong>定义性选择</strong>，而本章的三幕，正是把这些零件组装成一台会运转的机器的外壳。一台好机器，不是零件多，而是零件咬合紧——你写的每一场戏，都能在"动机—冲突—弧光—结构"的链条上找到自己的位置。当你卡文时，别硬憋情节，回到这条链，看是哪一颗齿轮没对上，往往就通了。结构从不是束缚创造力的框，而是帮创造力落地的脚手架——它接住你天马行空的念头，把它们排成读者追得下去的序。所以别把三幕当成条条框框去敬畏，而要把它当成一张你随时可以涂改的草图：先画骨架，再填血肉，写歪了就改骨架，远比血肉糊成一团再找骨架轻松。等你写完初稿回看，会感谢现在先花半小时把节拍表磨清楚的自己。结构意识越早建立，你浪费在返工上的力气就越少。
+              </p>
+              <div class="exercise-block">
+                <p class="font-medium">【本章练习】</p>
+                <p>
+                  按照三幕结构，给你的故事写梗概：触发事件、中点转折、最低点、高潮抉择。
+                </p>
+                <textarea
+                  id="ex5"
+                  class="w-full border rounded p-2 mt-2"
+                  rows="4"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div id="chapter6" class="tab-content">
+            <div class="bg-white rounded-xl p-6 shadow space-y-4">
+              <h2 class="text-xl font-bold chapter-title">
+                第6章 节奏、伏笔与反转
+              </h2>
+              <h3 class="font-bold">一、核心知识点：节奏是什么</h3>
+              <p>
+                节奏不是"写得快慢"，而是<strong>张力在读者心里的涨落曲线</strong>。好的节奏遵循"张—弛—张—弛"的呼吸律：一场高强度冲突后，必须给读者一个喘息（哪怕是短暂的平静或幽默），否则全程高能反而让人麻木，像一直按喇叭。关键是<strong>弛不是中断，而是为下一张蓄力</strong>——喘息时埋下新伏笔，下一次紧张才更有重量。
+              </p>
+
+              <h3 class="font-bold">二、场景层面的节奏：动作与反应</h3>
+              <p>
+                微观到单个场景，节奏由"动作（Action）—反应（Reaction）"的交替构成。主角采取一个行动，世界给他一个反应（常常是不如意的），他再据此调整行动。若一场戏只有动作没有反应，读者会觉得"太顺了，不真实"；若只有反应没有行动，又会拖沓。高手往往在"反应"里藏情绪转折——主角以为赢了，反应却告诉他"你其实输了"，节奏就此翻转。
+              </p>
+
+              <h3 class="font-bold">三、伏笔：契诃夫之枪</h3>
+              <p>
+                契诃夫有句名言："第一幕挂在墙上的枪，第三幕必须响。"这就是<strong
+                  >伏笔（Chekhov's Gun）</strong
+                >法则：你在前文郑重其事地呈现的东西，后文必须兑现；反之，若不想兑现，就别放上去。伏笔的精髓在于<strong>间隔</strong>——埋设与回收之间要隔足够远，远到读者几乎忘了它，当它被召回时才"啊"地一声。间隔太近则成"预告"，间隔中毫无铺垫则成"机械降神"。
+              </p>
+              <div class="note-block">
+                <p>
+                  <strong>埋设技巧：</strong
+                  >让伏笔第一次出现时"看起来只是日常"——一把普通的刀、一句随口的抱怨，直到关键时刻才显出它的分量。越是轻描淡写地埋，回收时越有雷霆万钧之力。
+                </p>
+              </div>
+
+              <h3 class="font-bold">四、反转：类型、公平性与代价</h3>
+              <p>
+                反转分三种：<strong>情节反转</strong>（事情不是你想的那样）、<strong>人物反转</strong>（某人真实身份/立场曝光）、<strong>观点反转</strong>（你对某事的价值判断被颠覆）。高级反转必须满足<strong>公平性</strong>：回头看，所有线索早就给了，只是读者没注意。不公平的反转靠"作者突然变卦"，读者会感到被耍。此外，反转要有代价——每次反转都应让某人的处境彻底改变，而不是"虚惊一场"了事，否则反转越多读者越无感。
+              </p>
+
+              <h3 class="font-bold">五、信息控制：读者知道多少</h3>
+              <p>
+                节奏还取决于你<strong>何时把信息给读者</strong>。三种常见手法：①<strong>幕后（读者比角色知道得多）</strong>，制造"他居然还蒙在鼓里"的揪心；②<strong>同幕（读者与角色同步）</strong>，共享惊喜；③<strong>盲点（读者比角色知道得少）</strong>，靠悬念吊胃口。切换信息权限，就能调节张弛。悬疑类常用"幕后+盲点"交替，让观众既紧张又好奇。
+              </p>
+
+              <h3 class="font-bold">
+                六、经典作品案例拆解：《第六感》与《控方证人》
+              </h3>
+              <p>
+                《第六感》是伏笔回收的巅峰：全片无数细节（主角从不被碰触、妻子对他视若无睹）其实早已揭示结局，只是观众在第一次看时自动忽略——这就是"公平性"的极致，二刷才懂每一帧都在铺垫。而《控方证人》则是多重反转的教科书：每一次你以为真相大白，立刻被新证据推翻，且每次反转都早有伏线，结尾的终极反转甚至让"前面所有反转"重新被解释。两部片共同证明：伏笔与反转不是噱头，而是对观众智商的尊重——你埋的每一颗针，都该在恰当处扎下去。
+              </p>
+
+              <h3 class="font-bold">七、常见错误对照表</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="warn-block">
+                  <p>
+                    <strong>全程高能：</strong
+                    >从头紧张到尾，读者麻木，像一直按喇叭。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>张弛交替：</strong>紧张后给喘息，喘息里埋下一根刺。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p>
+                    <strong>伏笔不收：</strong>前文郑重其事的东西，后再无交代。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>枪必响：</strong>每处伏笔都在合适时机被召回、兑现。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p>
+                    <strong>机械降神：</strong
+                    >结尾突然冒出无解的救兵，读者觉被骗。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>伏笔反转：</strong>反转的力气来自前文早已埋下的线。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p>
+                    <strong>虚惊一场：</strong>反转后一切照旧，读者白紧张一场。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p><strong>反转有价：</strong>每次翻转都真正改变某人处境。</p>
+                </div>
+              </div>
+
+              <h3 class="font-bold">八、动手引导</h3>
+              <p>
+                本章练习块让你列一张"伏笔—回收"表。请写出至少三条伏笔：每条注明"在哪章埋、计划在哪章响、第一次出现时如何伪装成日常"。写完问自己：三条的回收点是否分散在全书的后段、而非挤在结尾？若都堆在最后一章，节奏会前松后炸。再为你的故事设计一个"公平反转"：列出反转前读者能注意到的三个暗号，确保二刷时它们一目了然。节奏与伏笔，是让读者"想放下却放不下"的真正手艺。
+              </p>
+
+              <h3 class="font-bold">九、节奏的"呼吸"：章节长短的调度</h3>
+              <p>
+                节奏不只发生在场景内，也发生在<strong>章节层面</strong>。一个实用手法是"长短交替"：紧绷的动作章写短（两三页就切走，制造急促），舒缓的情感章写长（给读者沉淀），下一章再突然用一记重击打破平静。读者对"章节重量"的直觉，会自然形成呼吸感。许多畅销书甚至刻意把章末停在"最不想停的地方"，靠这种人为的"断点"强行拉高翻页率——这是节奏工程里最朴素也最有效的一招。
+              </p>
+
+              <h3 class="font-bold">十、伏笔的"假线索"与红鲱鱼</h3>
+              <p>
+                高手会在真伏笔之间撒<strong>红鲱鱼（Red Herring）</strong
+                >——看似重要、实为误导的线索，用来转移读者注意力、保护真反转。但红鲱鱼也要"有交代"，不能悬而不决；通常它最终会被证伪，或揭示为另一件小事的因。关键是<strong>真假之间保持平衡</strong>：全是真伏笔则反转太易猜，全是红鲱鱼则读者觉得被耍。此外，伏笔回收不必"一一对应"，有时两条看似无关的伏笔在结尾交汇成一道光——那种"原来早有安排"的震颤，是读者最上头的瞬间。
+              </p>
+
+              <h3 class="font-bold">十一、反转的伦理：别辜负读者的智商</h3>
+              <p>
+                最后一条铁律：<strong>反转可以意外，但不能作弊</strong>。作弊指作者藏起了读者"本该能知道的"关键信息（比如凶手其实早就露脸，镜头却故意回避），靠剪辑蒙蔽而非靠铺垫取胜。公平的反转，是所有证据都摆在台面上，只是读者没来得及拼对。差别在于：前者让读者愤怒"你耍我"，后者让读者折服"我早该想到的"。写反转前，请对自己诚实——这条反转的线索，我是否真的给过读者？若没有，就回去补一颗早该埋的钉子。
+              </p>
+
+              <h3 class="font-bold">十二、节奏、伏笔、反转三位一体</h3>
+              <p>
+                本章的三件武器其实是同一件事的三面：<strong>节奏</strong>决定读者心跳的快慢，<strong>伏笔</strong>决定那次心跳为何而加速，<strong>反转</strong>决定加速后如何落地。三者协同，才构成"放不下"的体验。一个
+                useful
+                的自测：随机翻开你书的任何一章，如果去掉它，读者既不知道新信息、也不期待后续、情绪也无波动，那这章就只是填充——它缺的不是文笔，而是本章说的某一种手艺。把它们装回去，平淡的章节也会重新带电。说到底，节奏伏笔反转都不是炫技，而是对读者注意力的温柔照料——你越懂得在何时收、何时放、何时骗、何时还，读者就越愿意把时间交给你。下一章我们会把视角收得更细，看看一句话、一个镜头怎么写，才配得上你在这里搭好的这副好骨架。
+              </p>
+              <div class="exercise-block">
+                <p class="font-medium">【本章练习】</p>
+                <p>
+                  设计一处伏笔，以及基于这个伏笔的反转，写清楚反转之后主角要面对什么新选择。
+                </p>
+                <textarea
+                  id="ex6"
+                  class="w-full border rounded p-2 mt-2"
+                  rows="4"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div id="chapter7" class="tab-content">
+            <div class="bg-white rounded-xl p-6 shadow space-y-4">
+              <h2 class="text-xl font-bold chapter-title">
+                第7章 视角、对白与细节
+              </h2>
+              <h3 class="font-bold">一、核心知识点：视角（Point of View）</h3>
+              <p>
+                视角决定"读者通过谁的眼睛看世界"，它直接操控共情与信息。常见三类：<strong>第一人称（我）</strong>代入感最强，但视野受限，适合强个人体验；<strong>第三人称限知（他/她，只进一人脑内）</strong>最常用，既保持一定客观又能深潜主角内心；<strong>第三人称全知</strong>上帝视角，可同时展现多人，但易稀释共情。还有进阶玩法<strong>不可靠叙事</strong>——叙述者有意或无意地误导读者（如《罗生门》多视角各执一词），悬念由此而生。选视角的原则只有一个：<strong
+                  >它能否最大化你这故事最需要的那种张力？</strong
+                >
+              </p>
+
+              <h3 class="font-bold">二、视角的一致性陷阱</h3>
+              <p>
+                新手最常犯的视角错误是"<strong>头顶跳蚤</strong>"——同一场景里镜头在三个人脑内来回跳，读者刚代入
+                A 就突然被塞进 B
+                的想法，沉浸感碎一地。除非刻意用全知，否则请守住"<strong>一场景一主视角</strong>"：这个场景我们跟着谁，就只进谁的脑内，其他人的心思用"他能观察到的行为"来暗示。克制的视角，反而比全知更有力量。
+              </p>
+
+              <h3 class="font-bold">三、对白的功能与潜台词</h3>
+              <p>
+                对白绝不只是"传递信息"。好对白至少有三种功能：<strong>推进情节</strong>（一句话改变局势）、<strong>揭示性格</strong>（怎么说话暴露是谁）、<strong>制造冲突</strong>（两人在对话里暗中过招）。其中最被低估的是<strong>潜台词</strong>：角色嘴上说的，和他真正想要的，不是一回事。一个想挽留的人不会说"别走"，而会说"外头下雨了"——用无关的话藏最深的执念。读者要自己咂摸，咂摸到的那一刻，共鸣最强。
+              </p>
+              <div class="note-block">
+                <p>
+                  <strong>对白自检：</strong
+                  >把你的对话朗读出来。若读着像"两个人轮流念说明书"，就删掉一半信息句，改让人物用情绪、用攻击、用沉默来说话。
+                </p>
+              </div>
+
+              <h3 class="font-bold">四、Show, Don't Tell（展示而非告诉）</h3>
+              <p>
+                这是写作第一铁律。<strong>"告诉"</strong>是直接下结论："他很愤怒。"<strong>"展示"</strong>是让愤怒自己显现："他把茶杯捏出了裂响，指节发白，却一字未说。"展示调动读者的感官与推理，让他"自己得出结论"，参与感远胜被告知。具体手法：用<strong>可观察的动作</strong>替代形容词，用<strong>感官细节</strong>（气味、声音、触感）替代概括，用<strong>人物的选择</strong>替代作者的评价。需要告诉的只有一种情况：纯粹的信息交代（时间、地点），且越短越好。
+              </p>
+
+              <h3 class="font-bold">五、经典作品案例拆解</h3>
+              <p>
+                《红楼梦》的对话是潜台词的巅峰：宝黛每次拌嘴，表面是怄气，底下全是"你到底在不在乎我"的试探，读者在字缝里读出的，比台词本身多十倍。而"展示而非告诉"的范本，看《摔跤吧！爸爸》里父亲把女儿推进河里学游泳那场——没有一句"他相信你能行"，只有他松手后站在岸上紧绷的脸和女儿挣扎浮起的身体，信念全在动作里。两例共同说明：高级的叙事，是把"评价权"交给读者，作者退到幕后。
+              </p>
+
+              <h3 class="font-bold">六、常见错误对照表</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="warn-block">
+                  <p>
+                    <strong>形容词堆砌（Tell）：</strong
+                    >"她很伤心地哭了"，读者无感。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>行为展示（Show）：</strong
+                    >"她把脸埋进围巾，肩抖得像筛糠"，读者共情。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p>
+                    <strong>信息对白：</strong
+                    >角色互相背诵背景设定，像念说明书。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>冲突对白：</strong
+                    >每句对话都在暗暗过招、推进或揭示。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p>
+                    <strong>视角跳跃：</strong
+                    >一场景里镜头在多人脑内乱跳，沉浸碎。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>稳定视角：</strong>一场景一主视角，其余用行为暗示。
+                  </p>
+                </div>
+                <div class="warn-block">
+                  <p>
+                    <strong>作者抢评：</strong
+                    >频繁跳出来替人物下结论，读者被推远。
+                  </p>
+                </div>
+                <div class="note-block">
+                  <p>
+                    <strong>交还读者：</strong>让事实自己说话，评价权留给读者。
+                  </p>
+                </div>
+              </div>
+
+              <h3 class="font-bold">七、动手引导</h3>
+              <p>
+                本章练习块给你一段"被告诉"的文字，请改写成"被展示"的版本：删掉所有评价性形容词，改用动作、感官与选择来传递同样的信息。改写后再做视角体检：通读你最近写的一章，标出每一段"进的是谁的脑内"；若一场景出现两个主视角，保留一个、把另一个改成"可被观察的行为"。视角稳了、对白有了潜台词、叙述交还了读者，你的文字就会从"习作感"跨入"专业感"。
+              </p>
+
+              <h3 class="font-bold">八、视角切换的"软着陆"</h3>
+              <p>
+                当你确实需要多视角（比如双主角的悬疑），切换时要给读者<strong>清晰的软着陆信号</strong>：用空行、章节标题、或明确的时间地点提示，避免读者还在
+                A 的脑里却突然被丢进 B
+                的身体。更进阶的玩法是<strong>受限视角的反差制造悬念</strong>：同一事件，分别用两个角色的限知视角讲一遍，读者拼出"他们各自误解了对方"，张力油然而生。视角的切换不是炫技，而是另一种控制信息、调节共情的旋钮——用得好，读者会忘了自己在"读"，只觉得"在场"。
+              </p>
+
+              <h3 class="font-bold">九、对白的"语言指纹"</h3>
+              <p>
+                让角色活起来的秘密之一，是给每人一套<strong>语言指纹</strong>：用词偏好（书卷气/市井俚语）、句式长短、口头禅、甚至沉默的方式。一个惜字如金的人，和一个人来疯，读者闭眼听就能分辨。反面教材是所有角色说话一个调，像同一个作者戴了不同面具。练习法：写一段群戏对话，然后遮住角色名，看能否仅凭"怎么说话"认出谁是谁——认不出，就回去给每人刻一道语言胎记。对白的最高境界，是"性格在说话"，而非"作者在交代"。
+              </p>
+
+              <h3 class="font-bold">十、Tell 也有合法地盘</h3>
+              <p>
+                "展示而非告诉"被很多人奉为绝对律令，但<strong>过犹不及</strong>。如果每分每秒都展示，书会变成没有重点的慢镜头。合法使用
+                Tell
+                的场景有三：①<strong>过渡与时空跳跃</strong>（"三年后，他成了医生"——没必要演完三年）；②<strong>读者早已知道的信息</strong>（不必再展示一遍常识）；③<strong>刻意制造平淡反差</strong>（用一句冷冰冰的告诉，反衬前文极致展示的情绪）。关键在于<strong>把展示留给"重要的、该被记住的瞬间"，把告诉留给"只是过场的背景"</strong>。该浓墨重彩处不惜笔墨，该一笔带过处绝不拖泥，这才是真功夫。
+              </p>
+
+              <h3 class="font-bold">十一、把三招合成肌肉记忆</h3>
+              <p>
+                视角、对白、展示，这三件武器单独练都不难，难在<strong>同时在线</strong>。一个检验标准：挑你最满意的一段戏，逐句问——这句话用的是稳定视角吗？这句对白有潜台词还是纯交代？这句是展示还是告诉？三问全过，那段就是专业级。刚开始会别扭，像同时学走路、说话、吃饭，但练到肌肉记忆后，它们会自动融进你的笔端。本章与全书前六章的关系是：前六章给了你"写什么"的骨架，本章给了你"怎么写得好看"的笔法——骨架与笔法兼备，故事才既扎实又动人。
+              </p>
+
+              <h3 class="font-bold">十二、从"知道"到"做到"的刻意练习</h3>
+              <p>
+                本章的所有技法，最终都要靠<strong>大量刻意练习</strong>才能内化为本能。一个高效训练：每天挑一段你喜欢的文字，先把它"翻译"成
+                tell（全用形容词和评价），再翻译回
+                show，对比两者给人的差异；再挑一段群戏，遮住人名辨识角色；再挑一个章节，标出它的视角归属。坚持几周，你会发现读任何书都开始"看见手艺"，而自己的笔也会自动避开那些新手坑。写作没有捷径，但正确的练习方向，能让同样的努力换来数倍的进步。
+              </p>
+              <div class="exercise-block">
+                <p class="font-medium">【本章练习】</p>
+                <p>
+                  选定视角，写一段双人对白，两人嘴上客气，但各自藏着对立的目的，写出潜台词。
+                </p>
+                <textarea
+                  id="ex7"
+                  class="w-full border rounded p-2 mt-2"
+                  rows="4"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div id="chapter8" class="tab-content">
+            <div class="bg-white rounded-xl p-6 shadow space-y-4">
+              <h2 class="text-xl font-bold chapter-title">
+                第8章 打磨、自检与修改
+              </h2>
+              <p>
+                写作的大部分工作是修改。初稿只是素材，不是成品——专业作者往往花在修改上的时间多于动笔。这一章给你一套可执行的修改流程。
+              </p>
+
+              <h3 class="font-bold">一、两轮修改法（核心知识点）</h3>
+              <ol class="list-decimal pl-6 space-y-2">
+                <li>
+                  <strong>第一轮：结构修改（动骨架）。</strong
+                  >逐项检查：目标是否清晰、冲突是否多层且有代价、三幕扭点是否到位、人物弧光是否成立、逻辑有无漏洞、配角动机是否合理；果断删掉无效支线。
+                </li>
+                <li>
+                  <strong>第二轮：文字与细节修改（动皮肉）。</strong
+                  >润色对白、节奏、描写与情绪，打磨语言。
+                </li>
+              </ol>
+              <div class="note-block">
+                <strong>优先级：先结构，后文字。</strong
+                >人物动机是空的，改词藻没用。第一轮换“骨架”，骨架稳了再动“皮肉”。很多人一上来改修辞，结果故事根本立不住。
+              </div>
+
+              <h3 class="font-bold">二、完整自检清单（逐条过）</h3>
+              <ul class="list-disc pl-6 space-y-1">
+                <li>主角的欲望是否清晰、具体？</li>
+                <li>阻碍足够强，不是轻易就能解决？</li>
+                <li>每一次重要选择都有代价？</li>
+                <li>配角有独立动机，不是工具人？</li>
+                <li>主题藏在选择里，没有直白说教？</li>
+                <li>关键转折有伏笔支撑，不是天降巧合？</li>
+                <li>故事结束，角色发生了可信的变化？</li>
+              </ul>
+
+              <h3 class="font-bold">三、“读者三秒测试”逐段删减（方法）</h3>
+              <ul class="list-disc pl-6 text-sm space-y-1">
+                <li>
+                  逐段问：删掉这段，故事是否成立？成立=可删（冗余描写、info-dump）。
+                </li>
+                <li>对白逐句问：这句能不能用动作/沉默替代？能=改。</li>
+                <li>
+                  把自查的 3 个缺陷按“结构类 / 文字类”分类，结构类优先修。
+                </li>
+              </ul>
+
+              <h3 class="font-bold">四、具体文字打磨技巧</h3>
+              <ul class="list-disc pl-6 text-sm space-y-1">
+                <li>
+                  <strong>杀副词：</strong
+                  >“他愤怒地喊”→“他喊”；情绪交给动作和对话。
+                </li>
+                <li>
+                  <strong>用具体名词 + 活跃动词：</strong
+                  >不说“他用了一根大钉子”，说“他捶打了一根尖尖的铁钉”。生动性来自事物的名称和动作的力度。
+                </li>
+                <li>
+                  <strong>让对话推进剧情：</strong
+                  >每场对话结束，关系或局势应有所不同，否则删。
+                </li>
+                <li>
+                  <strong>控制信息密度：</strong
+                  >把背景拆进动作与冲突里，避免大段“设定说明”。
+                </li>
+              </ul>
+
+              <h3 class="font-bold">五、借助右侧 AI 面板评审</h3>
+              <div class="note-block">
+                你可以把写完的内容丢进右侧 AI 面板，让 AI
+                对照上面这套清单帮你评审：它会指出哪条欲望不清晰、哪处转折缺伏笔、哪段可以删。把它当作一位严格的编辑，而不是代笔。
+              </div>
+
+              <h3 class="font-bold">六、经典修改案例</h3>
+              <ul class="list-disc pl-6 text-sm space-y-1">
+                <li>
+                  初稿：“他非常生气，因为公司不公平地开除他。”→
+                  修改：“他把自己工牌拍在桌上，金属扣磕出一声闷响，转身时撞翻了那盆养了三年的绿萝。”——情绪与境遇都展示出来了。
+                </li>
+              </ul>
+
+              <h3 class="font-bold">七、常见错误对照</h3>
+              <div class="note-block">
+                “边写边改逐字雕琢”→
+                改成“先一口气写完初稿，再整体改结构，最后润色”。只润色不查结构 →
+                改成“结构问题优先于修辞”。
+              </div>
+
+              <h3 class="font-bold">八、本章动手工作表</h3>
+              <ul class="list-disc pl-6 text-sm space-y-1">
+                <li>
+                  用完整自检清单给你的草稿打分，把不达标项按结构/文字分类。
+                </li>
+                <li>挑一段“告知”文字做“展示”改写练习，对比前后。</li>
+              </ul>
+              <div class="exercise-block">
+                <p class="font-medium">【本章练习】</p>
+                <p>
+                  拿出你前面写的故事梗概，对照自检清单，列出3个最明显的缺陷，以及修改方案。
+                </p>
+                <textarea
+                  id="ex8"
+                  class="w-full border rounded p-2 mt-2"
+                  rows="4"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========== 第9章 新增：故事练习示例 ========== -->
+          <div id="chapter9" class="tab-content">
+            <div class="bg-white rounded-xl p-6 shadow space-y-6">
+              <h2 class="text-xl font-bold chapter-title">
+                第9章 故事练习示例
+              </h2>
+              <div class="note-block">
+                <strong>说明：</strong>下面5组示例全部严格使用【角色表单 +
+                反向拉扯大纲模板】，目标关系统一为反向拉扯（被动任务成功，会毁掉主角主动目标），适合直接仿写、对照结构。题材包含现实、奇幻、悬疑、轻科幻、古风。
+              </div>
+
+              <!-- 示例1 -->
+              <div class="example-card">
+                <div class="example-title">示例1｜现实题材：旧钟表匠</div>
+                <div class="mb-2"><strong>【角色表单】</strong></div>
+                <ul class="list-disc pl-5 text-sm space-y-1">
+                  <li>角色名字：陈望</li>
+                  <li>
+                    主动目标：守住祖传钟表铺，留住和亡妻有关的全部回忆，不离开这条老街
+                  </li>
+                  <li>
+                    被动目标：拆迁办委托他，在三天内完成全部住户签约，完成任务可以拿到高额奖金；不完成，他自己的铺子也会被强拆
+                  </li>
+                  <li>
+                    目标关系：反向拉扯（签约成功，老街拆掉，他的主动目标彻底毁灭）
+                  </li>
+                  <li>
+                    核心执念、致命弱点：执念是不愿失去妻子留下的一切；弱点是害怕被人指责自私，习惯妥协讨好别人
+                  </li>
+                  <li>弧光类型：正向成长弧</li>
+                  <li>
+                    四层冲突简述：外部：拆迁时限、开发商压力；人际：老街邻居有人信任他、有人怨恨他；内在：一边是奖金自保，一边是对回忆的坚守；理念：发展效率
+                    vs 普通人的情感记忆
+                  </li>
+                </ul>
+                <div class="mt-3 mb-2"><strong>【大纲模板】</strong></div>
+                <ul class="list-disc pl-5 text-sm space-y-1">
+                  <li>
+                    1.开局：主角的日常与主动目标：陈望守着钟表铺，每天擦拭妻子留下的怀表，平静度日，拒绝搬走。
+                  </li>
+                  <li>
+                    2.触发事件：被动任务降临，任务成功会毁掉主动目标：拆迁负责人找到他，许诺重金，让他说服老街邻居签字；限期三天，不配合就优先拆他的铺子。
+                  </li>
+                  <li>
+                    3.第二幕：不断尝试、失败、代价升级、中点转折：他试着劝说邻居，有人指责他出卖老街；中途他发现开发商隐瞒了规划，承诺的回迁房是空头支票，他意识到自己正在帮别人欺骗老友。
+                  </li>
+                  <li>
+                    4.最低点 +
+                    高潮抉择：时限最后一晚，负责人施压，要么签字拿钱保住自己，要么拒绝，铺子立刻被拆。两难：自保妥协，还是站出来说出真相。
+                  </li>
+                  <li>
+                    5.结局、代价、人物变化：他选择公开真相，铺子如期拆除，奖金落空；但邻居们联合起来争取到补偿方案。他失去了铺子，却不再靠物件寄托思念，学会把回忆放在心里。
+                  </li>
+                  <li>
+                    本故事探讨的核心问题：为了活下去，是否可以牺牲他人的情感与记忆？
+                  </li>
+                </ul>
+              </div>
+
+              <!-- 示例2 -->
+              <div class="example-card">
+                <div class="example-title">示例2｜古风奇幻：守灯人</div>
+                <div class="mb-2"><strong>【角色表单】</strong></div>
+                <ul class="list-disc pl-5 text-sm space-y-1">
+                  <li>角色名字：阿萤</li>
+                  <li>
+                    主动目标：守护山中灵灯，等待失踪多年的姐姐归来，灵灯是姐姐回来的唯一路标
+                  </li>
+                  <li>
+                    被动目标：山门命令她，熄灭灵灯，封印山中妖物，否则妖物会蔓延下山屠戮村镇；完成任务可以得到宗门嘉奖
+                  </li>
+                  <li>
+                    目标关系：反向拉扯（熄灭灵灯，姐姐再也找不到回家的路）
+                  </li>
+                  <li>
+                    核心执念、致命弱点：执念是相信姐姐一定活着；弱点是无法接受离别，一直回避姐姐可能已经死去的事实
+                  </li>
+                  <li>弧光类型：正向成长弧</li>
+                  <li>
+                    四层冲突简述：外部：妖物躁动、宗门追兵；人际：同门觉得她执迷不悟；内在：等待姐姐，还是保护山下无辜百姓；理念：个体亲情
+                    vs 苍生安危
+                  </li>
+                </ul>
+                <div class="mt-3 mb-2"><strong>【大纲模板】</strong></div>
+                <ul class="list-disc pl-5 text-sm space-y-1">
+                  <li>
+                    1.开局：主角的日常与主动目标：阿萤独居灯台，日夜添油守灯，坚信姐姐会循着灯光回来。
+                  </li>
+                  <li>
+                    2.触发事件：被动任务降临，任务成功会毁掉主动目标：长老传讯，妖物借灵灯力量壮大，命她熄灯封印，否则山下村庄三日之内遭殃。
+                  </li>
+                  <li>
+                    3.第二幕：不断尝试、失败、代价升级、中点转折：她尝试寻找别的办法压制妖物，屡次失败；中途发现当年姐姐是主动入妖域，自愿作为封印的一部分，不是失踪。
+                  </li>
+                  <li>
+                    4.最低点 +
+                    高潮抉择：妖物冲破第一道屏障，山下火光已现。两难：保持灯火等姐姐，还是熄灯完成封印。
+                  </li>
+                  <li>
+                    5.结局、代价、人物变化：她选择熄灯封印，姐姐永远不会归来；她理解了姐姐当年的选择，接过守护山下的责任，放下执念，独自承担孤独。
+                  </li>
+                  <li>
+                    本故事探讨的核心问题：一份私人的约定，是否重于更多人的性命？
+                  </li>
+                </ul>
+              </div>
+
+              <!-- 示例3 -->
+              <div class="example-card">
+                <div class="example-title">示例3｜悬疑短篇：档案员</div>
+                <div class="mb-2"><strong>【角色表单】</strong></div>
+                <ul class="list-disc pl-5 text-sm space-y-1">
+                  <li>角色名字：林砚</li>
+                  <li>主动目标：找到十年前父亲冤案的证据，洗刷父亲污名</li>
+                  <li>
+                    被动目标：上司指派他，销毁这批旧案件档案，里面恰好包含父亲案子的全部材料；完成销毁，他可以晋升，拿到稳定安稳的生活
+                  </li>
+                  <li>
+                    目标关系：反向拉扯（档案销毁，翻案的最后线索永久消失）
+                  </li>
+                  <li>
+                    核心执念、致命弱点：执念是证明父亲清白；弱点是多年穷困，极度渴望稳定体面的生活，害怕重回底层
+                  </li>
+                  <li>弧光类型：正向成长弧</li>
+                  <li>
+                    四层冲突简述：外部：监控、保密规定、上级施压；人际：同事劝他识时务；内在：安稳前途
+                    vs 父亲的清白；理念：秩序维稳 vs 真相正义
+                  </li>
+                </ul>
+                <div class="mt-3 mb-2"><strong>【大纲模板】</strong></div>
+                <ul class="list-disc pl-5 text-sm space-y-1">
+                  <li>
+                    1.开局：主角的日常与主动目标：林砚在档案室默默翻找线索，多年隐忍，只为找到证据翻案。
+                  </li>
+                  <li>
+                    2.触发事件：被动任务降临，任务成功会毁掉主动目标：单位下发任务，限期销毁一批过时敏感旧档案，父亲案卷就在其中。
+                  </li>
+                  <li>
+                    3.第二幕：不断尝试、失败、代价升级、中点转折：他偷偷复制材料，险些被发现；中途查到，当年的经办人正是现在提拔他的上司。
+                  </li>
+                  <li>
+                    4.最低点 +
+                    高潮抉择：上司暗示，只要乖乖销毁，晋升名额就是他的。两难：接受前途封口，还是交出证据，毁掉自己的事业。
+                  </li>
+                  <li>
+                    5.结局、代价、人物变化：他匿名提交证据，晋升泡汤，被调离岗位；但案件重启调查。他不再把人生全部寄托在“平反”上，学会接受真相本身就值得付出代价。
+                  </li>
+                  <li>
+                    本故事探讨的核心问题：当真相会毁掉自己的人生，我们还要坚持真相吗？
+                  </li>
+                </ul>
+              </div>
+
+              <!-- 示例4 -->
+              <div class="example-card">
+                <div class="example-title">示例4｜轻科幻：记忆修复师</div>
+                <div class="mb-2"><strong>【角色表单】</strong></div>
+                <ul class="list-disc pl-5 text-sm space-y-1">
+                  <li>角色名字：苏禾</li>
+                  <li>
+                    主动目标：保留自己和病逝妹妹的全部原始记忆，不愿被修改、美化
+                  </li>
+                  <li>
+                    被动目标：机构要求她，给自己植入美化记忆，抹去妹妹离世的痛苦；完成记忆修改，她就能获得稀缺的医疗资源，治好自己的神经退行病
+                  </li>
+                  <li>
+                    目标关系：反向拉扯（记忆修改，真实的、带着伤痛的回忆会被替换，她失去真正的妹妹）
+                  </li>
+                  <li>
+                    核心执念、致命弱点：执念是不想遗忘和妹妹真实的一切；弱点是无法承受持续的痛苦，病痛发作时会想要逃避
+                  </li>
+                  <li>弧光类型：静态坚守弧</li>
+                  <li>
+                    四层冲突简述：外部：疾病持续恶化、机构催促；人际：医生劝她选择无痛；内在：痛苦记忆
+                    vs 活下去的机会；理念：没有痛苦的虚假幸福，是否算活着？
+                  </li>
+                </ul>
+                <div class="mt-3 mb-2"><strong>【大纲模板】</strong></div>
+                <ul class="list-disc pl-5 text-sm space-y-1">
+                  <li>
+                    1.开局：主角的日常与主动目标：苏禾靠记忆修复技术帮别人抚平伤痛，自己坚持保留所有关于妹妹的痛苦记忆。
+                  </li>
+                  <li>
+                    2.触发事件：被动任务降临，任务成功会毁掉主动目标：医生告知，只有接受记忆改写，才有资格拿到抑制病情的药剂。
+                  </li>
+                  <li>
+                    3.第二幕：不断尝试、失败、代价升级、中点转折：她尝试寻找别的治疗渠道，全部失败；她接待多个客户，看见人们在虚假美好里慢慢失去自我。
+                  </li>
+                  <li>
+                    4.最低点 +
+                    高潮抉择：病痛剧烈发作，医生最后通牒。两难：改写记忆换取长久生存，或者保留真实记忆，慢慢走向衰竭。
+                  </li>
+                  <li>
+                    5.结局、代价、人物变化：她拒绝改写，选择有限的生命，继续记录真实记忆；代价是寿命缩短。她守住了记忆的真实性，接纳痛苦也是爱的一部分。
+                  </li>
+                  <li>
+                    本故事探讨的核心问题：如果可以消除痛苦，我们是否应该选择无痛的人生？
+                  </li>
+                </ul>
+              </div>
+
+              <!-- 示例5 -->
+              <div class="example-card">
+                <div class="example-title">示例5｜田园温情：渡船夫</div>
+                <div class="mb-2"><strong>【角色表单】</strong></div>
+                <ul class="list-disc pl-5 text-sm space-y-1">
+                  <li>角色名字：老周</li>
+                  <li>
+                    主动目标：继续守着渡口，接送对岸独居的聋哑老人，这是他对过世老友的承诺
+                  </li>
+                  <li>
+                    被动目标：交通局通知他，配合拆除渡口，新建大桥，完成关停验收，他可以拿到一笔安置补偿金；渡口拆除之后，老人出行会彻底断绝
+                  </li>
+                  <li>
+                    目标关系：反向拉扯（渡口拆除，他无法兑现对老友的承诺，老人孤立无援）
+                  </li>
+                  <li>
+                    核心执念、致命弱点：执念是信守对老友的承诺；弱点是年纪大了，体力衰退，很想拿到钱安稳养老
+                  </li>
+                  <li>弧光类型：静态坚守弧</li>
+                  <li>
+                    四层冲突简述：外部：工期压力、强制拆除通知；人际：家人劝他拿钱养老；内在：养老安稳
+                    vs
+                    承诺与老人的安危；理念：现代化便利，是否要牺牲少数边缘人的便利？
+                  </li>
+                </ul>
+                <div class="mt-3 mb-2"><strong>【大纲模板】</strong></div>
+                <ul class="list-disc pl-5 text-sm space-y-1">
+                  <li>
+                    1.开局：主角的日常与主动目标：老周每天撑船，接送聋哑老人，遵守和老友临终前的约定。
+                  </li>
+                  <li>
+                    2.触发事件：被动任务降临，任务成功会毁掉主动目标：大桥工程启动，通知他关停渡口，配合验收，补偿金丰厚。
+                  </li>
+                  <li>
+                    3.第二幕：不断尝试、失败、代价升级、中点转折：他去找主管部门申请保留简易渡口，被驳回；家人轮番劝说，说老人可以搬迁，不必拖累自己。
+                  </li>
+                  <li>
+                    4.最低点 +
+                    高潮抉择：拆除日期临近，干部上门，最后一次确认签字。两难：签字拿钱安享晚年，还是拒绝，独自坚持摆渡直到渡口被拆。
+                  </li>
+                  <li>
+                    5.结局、代价、人物变化：他拒绝签字，补偿金取消；在大桥通车前，他坚持摆渡到最后一天。渡口消失，但他找到了志愿者接力接送老人，承诺以另一种方式延续。
+                  </li>
+                  <li>
+                    本故事探讨的核心问题：时代向前的时候，被落在后面的少数人，该由谁负责？
+                  </li>
+                </ul>
+              </div>
+
+              <div class="warn-block mt-4">
+                <strong>仿写提示：</strong>
+                1.
+                优先模仿【反向拉扯】这个高张力结构，不要让主动目标和被动目标同向；
+                2. 主题全部是开放式问题，没有标准答案； 3.
+                每一个高潮都必须是真正两难，不存在一边明显正确、一边纯粹邪恶；
+                4. 写完之后，直接复制整套表单+大纲丢到右侧AI评审面板自检。
+              </div>
+            </div>
+          </div>
+
+          <div id="practice" class="tab-content">
+            <div class="bg-white rounded-xl p-6 shadow space-y-6">
+              <div class="flex items-start justify-between gap-4 flex-wrap">
+                <div>
+                  <h2 class="text-xl font-bold chapter-title">
+                    实战演练（角色表单 + 故事大纲）
+                  </h2>
+                  <p class="text-sm text-slate-500 mt-1">
+                    把前几章的方法落到一份可动笔的设定里。填写后点「保存到本地」，可在左侧「练习记录」查看历史与总结；也可点「送AI分析」让右侧面板按全书标准评审。
+                  </p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    onclick="savePractice()"
+                    class="bg-green-600 text-white rounded-lg shadow-sm px-3 py-1.5 text-sm hover:bg-green-700">
+                    保存到本地
+                  </button>
+                  <button
+                    onclick="loadPracticeToAi()"
+                    class="bg-purple-600 text-white rounded-lg shadow-sm px-3 py-1.5 text-sm hover:bg-purple-700">
+                    送AI分析
+                  </button>
+                </div>
+              </div>
+              <section>
+                <h3 class="font-bold mb-2">角色目标拆解表单</h3>
+                <div class="space-y-3">
+                  <div>
+                    <label class="block font-medium">角色名字</label>
+                    <input
+                      id="charName"
+                      class="w-full border rounded p-2"
+                      placeholder="名字" />
+                  </div>
+                  <div>
+                    <label class="block font-medium"
+                      >主动目标（内心真正想要）</label
+                    >
+                    <textarea
+                      id="charActive"
+                      class="w-full border rounded p-2"
+                      rows="2"></textarea>
+                  </div>
+                  <div>
+                    <label class="block font-medium"
+                      >被动目标（外界强加）</label
+                    >
+                    <textarea
+                      id="charPassive"
+                      class="w-full border rounded p-2"
+                      rows="2"></textarea>
+                  </div>
+                  <div>
+                    <label class="block font-medium"
+                      >目标关系：同向助推 / 反向拉扯 / 目标异化</label
+                    >
+                    <input id="charRel" class="w-full border rounded p-2" />
+                  </div>
+                  <div>
+                    <label class="block font-medium">核心执念、致命弱点</label>
+                    <textarea
+                      id="charWeak"
+                      class="w-full border rounded p-2"
+                      rows="2"></textarea>
+                  </div>
+                  <div>
+                    <label class="block font-medium"
+                      >弧光类型：正向成长 / 负向堕落 / 静态坚守</label
+                    >
+                    <input id="charArc" class="w-full border rounded p-2" />
+                  </div>
+                  <div>
+                    <label class="block font-medium"
+                      >四层冲突简述（外部/人际/内在/理念）</label
+                    >
+                    <textarea
+                      id="charConflict"
+                      class="w-full border rounded p-2"
+                      rows="2"></textarea>
+                  </div>
+                </div>
+              </section>
+              <section>
+                <h3 class="font-bold mb-2">大纲模板：反向拉扯结构</h3>
+                <div class="space-y-4">
+                  <div class="border-l-4 border-amber-400 pl-4">
+                    <p class="font-semibold">1. 开局：主角的日常与主动目标</p>
+                    <textarea
+                      id="tplActive"
+                      class="w-full border rounded p-2"
+                      rows="2"></textarea>
+                  </div>
+                  <div class="border-l-4 border-red-400 pl-4">
+                    <p class="font-semibold">
+                      2. 触发事件：被动任务降临，任务成功会毁掉主动目标
+                    </p>
+                    <textarea
+                      id="tplPassive"
+                      class="w-full border rounded p-2"
+                      rows="2"></textarea>
+                  </div>
+                  <div class="border-l-4 border-blue-400 pl-4">
+                    <p class="font-semibold">
+                      3. 第二幕：不断尝试、失败、代价升级、中点转折
+                    </p>
+                    <textarea
+                      id="tplMid"
+                      class="w-full border rounded p-2"
+                      rows="3"></textarea>
+                  </div>
+                  <div class="border-l-4 border-purple-400 pl-4">
+                    <p class="font-semibold">
+                      4. 最低点 + 高潮抉择（两难选择）
+                    </p>
+                    <textarea
+                      id="tplClimax"
+                      class="w-full border rounded p-2"
+                      rows="2"></textarea>
+                  </div>
+                  <div class="border-l-4 border-emerald-400 pl-4">
+                    <p class="font-semibold">5. 结局、代价、人物变化</p>
+                    <textarea
+                      id="tplEnd"
+                      class="w-full border rounded p-2"
+                      rows="2"></textarea>
+                  </div>
+                  <div class="border-l-4 border-slate-300">
+                    <p class="font-semibold">本故事探讨的核心问题（主题）</p>
+                    <textarea
+                      id="tplQuestion"
+                      class="w-full border rounded p-2"
+                      rows="2"></textarea>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+          <div id="history" class="tab-content">
+            <div class="bg-white rounded-xl p-6 shadow space-y-4">
+              <h2 class="text-xl font-bold chapter-title">
+                练习记录与总结分析
+              </h2>
+              <p class="text-sm text-slate-500">
+                你每次点击「保存此练习」的内容，都会存在浏览器本地的 IndexedDB
+                中（仅本机、不联网）。可随时回来查看历史、做自动总结，或一键送右侧
+                AI 面板深度复盘。
+              </p>
+
+              <div
+                id="histSummary"
+                class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+
+              <div class="flex flex-wrap gap-2">
+                <button
+                  onclick="aiSummarize()"
+                  class="bg-purple-600 text-white rounded px-3 py-1.5 text-sm hover:bg-purple-700">
+                  用AI总结分析
+                </button>
+                <button
+                  onclick="exportAll()"
+                  class="bg-slate-600 text-white rounded px-3 py-1.5 text-sm hover:bg-slate-700">
+                  导出全部(JSON)
+                </button>
+                <button
+                  onclick="clearAllRecords()"
+                  class="bg-red-500 text-white rounded px-3 py-1.5 text-sm hover:bg-red-600">
+                  清空全部
+                </button>
+              </div>
+
+              <div id="histAnalysis" class="note-block"></div>
+
+              <h3 class="font-bold">历史记录（最新在前）</h3>
+              <p id="histEmpty" class="text-slate-400 text-sm hidden">
+                还没有保存的记录。在各章练习区写完，点击「保存此练习」即可。
+              </p>
+              <div id="histList" class="space-y-3"></div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- 右侧常驻 AI 分析面板 -->
+      <aside
+        class="bg-white border-l border-slate-200 p-4 overflow-y-auto flex flex-col">
+        <h2 class="text-lg font-bold mb-3">AI 故事分析</h2>
+        <div class="flex flex-wrap gap-2 mb-3">
+          <button
+            onclick="loadCharToAi()"
+            class="px-2 py-1 bg-slate-700 text-white rounded text-sm">
+            读取角色表单
+          </button>
+          <button
+            onclick="loadTplToAi()"
+            class="px-2 py-1 bg-slate-700 text-white rounded text-sm">
+            读取大纲
+          </button>
+          <button
+            onclick="clearAiInput()"
+            class="px-2 py-1 bg-slate-400 text-white rounded text-sm">
+            清空输入
+          </button>
+        </div>
+        <div class="mb-3">
+          <label class="block font-medium mb-1 text-sm">待分析内容</label>
+          <textarea
+            id="aiInput"
+            class="w-full border rounded p-2"
+            rows="5"
+            placeholder="粘贴练习、角色设定、大纲或者片段"></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="block font-medium mb-1 text-sm">分析指令（可改）</label>
+          <textarea id="aiPrompt" class="w-full border rounded p-2" rows="4">
+你是专业叙事导师，基于这套故事创作体系（欲望目标、三层目标关系、四层冲突、人物弧光、主题是开放式问题、三幕结构、伏笔反转、避免说教）评审下面的练习。
+请依次输出：
+1. 目标链评估：主动、被动目标是否清晰，二者关系是否合理；
+2. 冲突评估：外部、人际、内在冲突是否充分，有没有单薄问题；
+3. 人物弧光与动机：动机是否可信，是否存在工具人问题；
+4. 主题评估：探讨的问题是否明确，有没有说教倾向；
+5. 结构、伏笔、节奏缺陷；
+6. 优先级最高的3条可落地修改建议。
+不要扩写剧情，只做结构评判和教学反馈。
+待分析内容：
+</textarea
+          >
+        </div>
+        <div class="mb-3 flex-1">
+          <label class="block font-medium mb-1 text-sm">AI 返回结果</label>
+          <div
+            id="aiResult"
+            class="w-full border rounded p-2 min-h-[180px] bg-slate-50 whitespace-pre-wrap text-sm overflow-y-auto"></div>
+        </div>
+        <button
+          onclick="sendAi()"
+          class="w-full py-2 bg-blue-600 text-white rounded">
+          提交评审
+        </button>
+      </aside>
+    </div>
+
+    <script>
+      // 切换标签页
+      function switchTab(tabId) {
+        // 隐藏所有tab
+        document.querySelectorAll(".tab-content").forEach((el) => {
+          el.classList.remove("active");
+        });
+        // 显示目标tab
+        const target = document.getElementById(tabId);
+        if (target) target.classList.add("active");
+
+        // 菜单高亮
+        document.querySelectorAll(".menu-item").forEach((btn) => {
+          btn.classList.remove("active");
+        });
+        event.target.classList.add("active");
+      }
+
+      // 读取角色表单到AI输入框
+      function loadCharToAi() {
+        const data = `【角色表单】
+角色名字：${document.getElementById("charName").value || ""}
+主动目标：${document.getElementById("charActive").value || ""}
+被动目标：${document.getElementById("charPassive").value || ""}
+目标关系：${document.getElementById("charRel").value || ""}
+核心执念、致命弱点：${document.getElementById("charWeak").value || ""}
+弧光类型：${document.getElementById("charArc").value || ""}
+四层冲突简述：${document.getElementById("charConflict").value || ""}`;
+        document.getElementById("aiInput").value = data;
+      }
+
+      // 读取大纲模板到AI输入框
+      function loadTplToAi() {
+        const data = `【故事大纲】
+1.开局：主角的日常与主动目标：${document.getElementById("tplActive").value || ""}
+2.触发事件：被动任务降临：${document.getElementById("tplPassive").value || ""}
+3.第二幕：尝试、失败、中点转折：${document.getElementById("tplMid").value || ""}
+4.最低点+高潮抉择：${document.getElementById("tplClimax").value || ""}
+5.结局、代价、人物变化：${document.getElementById("tplEnd").value || ""}
+核心探讨问题：${document.getElementById("tplQuestion").value || ""}`;
+        document.getElementById("aiInput").value = data;
+      }
+
+      // 清空AI输入
+      function clearAiInput() {
+        document.getElementById("aiInput").value = "";
+      }
+
+      // API key 本地存储
+      function saveApiKey() {
+        const key = document.getElementById("apiKeyInput").value.trim();
+        localStorage.setItem("storyApiKey", key);
+        showToast("已保存（仅本地）", "success");
+      }
+      function clearApiKey() {
+        localStorage.removeItem("storyApiKey");
+        document.getElementById("apiKeyInput").value = "";
+        showToast("已清除", "info");
+      }
+
+      // 提交AI评审（兼容OpenAI接口）
+      async function sendAi() {
+        const key = localStorage.getItem("storyApiKey");
+        if (!key) {
+          showAlert("请先在左侧填入API Key并保存");
+          return;
+        }
+        const prompt =
+          document.getElementById("aiPrompt").value +
+          "\n" +
+          document.getElementById("aiInput").value;
+        const resBox = document.getElementById("aiResult");
+        resBox.innerText = "请求中...";
+        try {
+          const res = await fetch(
+            "https://api.openai.com/v1/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                Authorization: "Bearer " + key,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                model: "gpt-4o-mini",
+                messages: [{ role: "user", content: prompt }],
+                temperature: 0.4,
+              }),
+            },
+          );
+          const json = await res.json();
+          if (json.error) {
+            resBox.innerText = "错误：" + json.error.message;
+          } else {
+            resBox.innerText = json.choices[0].message.content;
+          }
+        } catch (e) {
+          resBox.innerText = "网络请求失败：" + e.message;
+        }
+      }
+
+      // ====== 练习记录：IndexedDB 本地保存 ======
+      const DB_NAME = "storyPracticeDB";
+      const STORE = "records";
+
+      function openDB() {
+        return new Promise((resolve, reject) => {
+          const req = indexedDB.open(DB_NAME, 1);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE)) {
+              const os = db.createObjectStore(STORE, {
+                keyPath: "id",
+                autoIncrement: true,
+              });
+              os.createIndex("key", "key", { unique: false });
+              os.createIndex("time", "time", { unique: false });
+            }
+          };
+          req.onsuccess = (e) => resolve(e.target.result);
+          req.onerror = (e) => reject(e.target.error);
+        });
+      }
+
+      async function getAllRecords() {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE, "readonly");
+          const req = tx.objectStore(STORE).getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async function saveExercise(key, chapter) {
+        const ta = document.getElementById(key);
+        if (!ta) return;
+        const content = ta.value.trim();
+        if (!content) {
+          showAlert("内容为空，先写点什么再保存吧～");
+          return;
+        }
+        const db = await openDB();
+        await new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE, "readwrite");
+          tx.objectStore(STORE).add({
+            key,
+            chapter,
+            content,
+            time: Date.now(),
+          });
+          tx.oncomplete = resolve;
+          tx.onerror = () => reject(tx.error);
+        });
+        showToast("已保存到本地（IndexedDB）", "success");
+        renderHistory();
+      }
+
+      async function deleteRecord(id) {
+        showConfirm("确定删除这条记录？", async () => {
+          const db = await openDB();
+          await new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE, "readwrite");
+            tx.objectStore(STORE).delete(id);
+            tx.oncomplete = resolve;
+            tx.onerror = () => reject(tx.error);
+          });
+          renderHistory();
+        });
+      }
+
+      async function clearAllRecords() {
+        showConfirm("确定清空全部练习记录？此操作不可恢复。", async () => {
+          const db = await openDB();
+          await new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE, "readwrite");
+            tx.objectStore(STORE).clear();
+            tx.oncomplete = resolve;
+            tx.onerror = () => reject(tx.error);
+          });
+          renderHistory();
+        });
+      }
+
+      function fmtTime(t) {
+        const d = new Date(t);
+        const p = (n) => (n < 10 ? "0" + n : "" + n);
+        return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+      }
+
+      function escapeHtml(s) {
+        return s.replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      }
+
+      async function renderHistory() {
+        const listEl = document.getElementById("histList");
+        if (!listEl) return;
+        const summaryEl = document.getElementById("histSummary");
+        const emptyEl = document.getElementById("histEmpty");
+        const analysisEl = document.getElementById("histAnalysis");
+        const list = await getAllRecords();
+        list.sort((a, b) => b.time - a.time);
+
+        if (!list.length) {
+          emptyEl.classList.remove("hidden");
+          summaryEl.innerHTML = "";
+          listEl.innerHTML = "";
+          analysisEl.innerHTML = "暂无记录，写下第一篇练习吧。";
+          return;
+        }
+        emptyEl.classList.add("hidden");
+
+        const totalChars = list.reduce((s, r) => s + r.content.length, 0);
+        const byChapter = {};
+        list.forEach((r) => {
+          byChapter[r.chapter] = (byChapter[r.chapter] || 0) + 1;
+        });
+        const times = list.map((r) => r.time).sort((a, b) => a - b);
+        const spanDays = Math.max(
+          1,
+          Math.round((times[times.length - 1] - times[0]) / 86400000) + 1,
+        );
+
+        const cards = [
+          ["总记录数", list.length],
+          ["累计字数", totalChars + " 字"],
+          ["覆盖章节", Object.keys(byChapter).length + " 章"],
+          ["练习跨度", spanDays + " 天"],
+        ];
+        summaryEl.innerHTML = cards
+          .map(
+            (c) =>
+              `<div class="bg-slate-50 border rounded-lg p-3 text-center">
+             <div class="text-2xl font-bold text-blue-600">${c[1]}</div>
+             <div class="text-xs text-slate-500 mt-1">${c[0]}</div>
+           </div>`,
+          )
+          .join("");
+
+        listEl.innerHTML = list
+          .map((r) => {
+            const snippet =
+              r.content.length > 120
+                ? r.content.slice(0, 120) + "…"
+                : r.content;
+            return `<div class="border rounded-lg p-3 bg-slate-50">
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-sm font-medium text-blue-700">${escapeHtml(r.chapter)}</span>
+              <span class="text-xs text-slate-400">${fmtTime(r.time)}</span>
+            </div>
+            <p class="text-sm text-slate-700 whitespace-pre-wrap">${escapeHtml(snippet)}</p>
+            <div class="mt-2 flex gap-2">
+              <button onclick="loadRecordToAi(${r.id})" class="text-xs bg-purple-100 text-purple-700 rounded px-2 py-1 hover:bg-purple-200">送AI评审</button>
+              <button onclick="deleteRecord(${r.id})" class="text-xs bg-red-100 text-red-700 rounded px-2 py-1 hover:bg-red-200">删除</button>
+            </div>
+          </div>`;
+          })
+          .join("");
+
+        const chaptersAll = [...document.querySelectorAll(".exercise-block")]
+          .map((b) => {
+            const t = b.closest(".tab-content");
+            const h = t && t.querySelector("h2");
+            return h ? h.innerText.trim() : "";
+          })
+          .filter(Boolean);
+        const zeroChapters = [...new Set(chaptersAll)].filter(
+          (c) => !byChapter[c],
+        );
+        let analysis = `你已保存 <b>${list.length}</b> 条练习，累计约 <b>${totalChars}</b> 字，覆盖 <b>${Object.keys(byChapter).length}</b> 个章节，练习跨度约 <b>${spanDays}</b> 天。`;
+        if (zeroChapters.length) {
+          analysis += `以下练习章节还没留下记录，建议补上：<b>${zeroChapters.join("、")}</b>。`;
+        } else {
+          analysis += `所有练习章节都已覆盖，保持住节奏！`;
+        }
+        const longest = list.reduce(
+          (m, r) => (r.content.length > (m ? m.content.length : 0) ? r : m),
+          null,
+        );
+        if (longest)
+          analysis += ` 你写得最用心的一次约 <b>${longest.content.length}</b> 字（${longest.chapter}）。`;
+        analysisEl.innerHTML = analysis;
+      }
+
+      async function loadRecordToAi(id) {
+        const db = await openDB();
+        const rec = await new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE, "readonly");
+          const req = tx.objectStore(STORE).get(id);
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+        if (!rec) return;
+        document.getElementById("aiInput").value =
+          `【来自练习记录：${rec.chapter}】\n${rec.content}\n\n请对照本教程的相应章节，指出这段练习的优点、不足，以及具体可改的方向。`;
+        showToast("已载入右侧AI面板，点击「发送」即可评审");
+      }
+
+      async function aiSummarize() {
+        const list = await getAllRecords();
+        if (!list.length) {
+          showAlert("暂无记录");
+          return;
+        }
+        let text = "【我的全部练习记录，请帮我做总结与进阶分析】\n";
+        list
+          .slice()
+          .sort((a, b) => a.time - b.time)
+          .forEach((r, i) => {
+            text += `\n— 记录${i + 1}｜${r.chapter}｜${fmtTime(r.time)}（${r.content.length}字）—\n${r.content}\n`;
+          });
+        text +=
+          "\n请基于以上所有练习，总结我的训练进展、反复出现的问题、优势，并给出接下来两周的针对性练习建议。";
+        document.getElementById("aiInput").value = text;
+        const key = localStorage.getItem("storyApiKey");
+        if (!key) {
+          showAlert(
+            "未检测到API Key，已把内容填入右侧面板，请先保存Key再发送。",
+          );
+          return;
+        }
+        sendAi();
+      }
+
+      function exportAll() {
+        getAllRecords().then((list) => {
+          const data = {
+            exportedAt: new Date().toISOString(),
+            count: list.length,
+            records: list,
+          };
+          const blob = new Blob([JSON.stringify(data, null, 2)], {
+            type: "application/json",
+          });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "story-practice-records.json";
+          a.click();
+          URL.revokeObjectURL(a.href);
+        });
+      }
+
+      let toastTimer = null;
+      function showToast(msg, type) {
+        const palette = {
+          success: "#16a34a",
+          info: "#334155",
+          warn: "#d97706",
+          error: "#dc2626",
+        };
+        const bg = palette[type] || palette.info;
+        let el = document.getElementById("toastBox");
+        if (!el) {
+          el = document.createElement("div");
+          el.id = "toastBox";
+          el.style.cssText =
+            "position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);z-index:10001;opacity:0;transition:opacity .25s ease, transform .25s ease;pointer-events:none;max-width:90vw;";
+          document.body.appendChild(el);
+        }
+        el.textContent = msg;
+        el.style.background = bg;
+        el.style.color = "#fff";
+        el.style.padding = "11px 18px";
+        el.style.borderRadius = "11px";
+        el.style.fontSize = "14px";
+        el.style.fontWeight = "500";
+        el.style.boxShadow = "0 10px 30px rgba(0,0,0,.22)";
+        el.style.transition = "opacity .25s ease, transform .25s ease";
+        requestAnimationFrame(() => {
+          el.style.opacity = "1";
+          el.style.transform = "translateX(-50%) translateY(0)";
+        });
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          el.style.opacity = "0";
+          el.style.transform = "translateX(-50%) translateY(16px)";
+        }, 2200);
+      }
+
+      // 自定义弹窗（替代原生 alert / confirm，可美化）
+      function cbModal(opts) {
+        const root =
+          document.getElementById("cbModalRoot") ||
+          (() => {
+            const d = document.createElement("div");
+            d.id = "cbModalRoot";
+            document.body.appendChild(d);
+            return d;
+          })();
+        const hasCancel = !!opts.cancelText;
+        const okBg = opts.danger ? "#dc2626" : "#2563eb";
+        const overlay = document.createElement("div");
+        overlay.style.cssText =
+          "position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:10000;opacity:0;transition:opacity .2s ease;padding:16px;";
+        const box = document.createElement("div");
+        box.style.cssText =
+          "background:#fff;border-radius:16px;max-width:400px;width:100%;padding:22px 22px 18px;box-shadow:0 24px 60px rgba(0,0,0,.28);transform:translateY(-14px) scale(.98);transition:transform .2s ease;text-align:left;";
+        box.innerHTML =
+          (opts.title
+            ? '<div style="font-size:16px;font-weight:700;color:#0f172a;margin-bottom:8px;">' +
+              escapeHtml(opts.title) +
+              "</div>"
+            : "") +
+          '<div style="font-size:14px;color:#475569;line-height:1.65;">' +
+          escapeHtml(opts.message) +
+          "</div>" +
+          '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">' +
+          (hasCancel
+            ? '<button id="cbCancel" style="padding:9px 16px;border-radius:10px;border:1px solid #cbd5e1;background:#f8fafc;color:#334155;font-size:14px;cursor:pointer;">' +
+              escapeHtml(opts.cancelText) +
+              "</button>"
+            : "") +
+          '<button id="cbOk" style="padding:9px 18px;border-radius:10px;border:none;background:' +
+          okBg +
+          ';color:#fff;font-size:14px;cursor:pointer;">' +
+          escapeHtml(opts.okText || "确定") +
+          "</button>" +
+          "</div>";
+        overlay.appendChild(box);
+        root.innerHTML = "";
+        root.appendChild(overlay);
+        requestAnimationFrame(() => {
+          overlay.style.opacity = "1";
+          box.style.transform = "translateY(0) scale(1)";
+        });
+        const close = (cb) => {
+          overlay.style.opacity = "0";
+          box.style.transform = "translateY(-14px) scale(.98)";
+          setTimeout(() => {
+            root.innerHTML = "";
+            if (cb) cb();
+          }, 200);
+        };
+        overlay.addEventListener("click", (e) => {
+          if (e.target === overlay) close(opts.onCancel);
+        });
+        box
+          .querySelector("#cbOk")
+          .addEventListener("click", () => close(opts.onOk));
+        if (hasCancel)
+          box
+            .querySelector("#cbCancel")
+            .addEventListener("click", () => close(opts.onCancel));
+      }
+      function showAlert(message, onOk) {
+        cbModal({
+          title: "提示",
+          message: message,
+          okText: "确定",
+          onOk: onOk,
+        });
+      }
+      function showConfirm(message, onOk, onCancel) {
+        cbModal({
+          title: "请确认",
+          message: message,
+          okText: "确定",
+          cancelText: "取消",
+          danger: true,
+          onOk: onOk,
+          onCancel: onCancel,
+        });
+      }
+
+      // 页面加载时：读取key、给每个练习块挂保存按钮、渲染历史
+
+      // ====== 实战演练：保存 / AI 分析 ======
+      const PRACTICE_IDS = [
+        "charName",
+        "charActive",
+        "charPassive",
+        "charRel",
+        "charWeak",
+        "charArc",
+        "charConflict",
+        "tplActive",
+        "tplPassive",
+        "tplMid",
+        "tplClimax",
+        "tplEnd",
+        "tplQuestion",
+      ];
+      const PRACTICE_LABELS = {
+        charName: "角色名字",
+        charActive: "主动目标",
+        charPassive: "被动目标",
+        charRel: "目标关系",
+        charWeak: "核心执念/致命弱点",
+        charArc: "弧光类型",
+        charConflict: "四层冲突",
+        tplActive: "1.开局",
+        tplPassive: "2.触发事件",
+        tplMid: "3.第二幕",
+        tplClimax: "4.最低点+高潮",
+        tplEnd: "5.结局",
+        tplQuestion: "主题",
+      };
+      function collectPractice() {
+        let text = "";
+        PRACTICE_IDS.forEach((id) => {
+          const el = document.getElementById(id);
+          const v = el ? el.value.trim() : "";
+          if (v) text += PRACTICE_LABELS[id] + "：" + v + "\n";
+        });
+        return text.trim();
+      }
+      async function savePractice() {
+        const content = collectPractice();
+        if (!content) {
+          showAlert("表单还是空的，先填一点再保存吧～");
+          return;
+        }
+        const db = await openDB();
+        await new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE, "readwrite");
+          tx.objectStore(STORE).add({
+            key: "practice",
+            chapter: "实战演练",
+            content,
+            time: Date.now(),
+          });
+          tx.oncomplete = resolve;
+          tx.onerror = () => reject(tx.error);
+        });
+        showToast("实战演练已保存到本地（IndexedDB）", "success");
+        renderHistory();
+      }
+      function loadPracticeToAi() {
+        const content = collectPractice();
+        if (!content) {
+          showAlert("表单还是空的，先填一点再分析吧～");
+          return;
+        }
+        const text =
+          "【实战演练：角色表单 + 故事大纲】\n" +
+          content +
+          "\n\n请作为严格的故事编辑，对照本教程标准（欲望/目标/阻碍、冲突与悬念、人物弧光、主题、三幕结构、节奏伏笔反转、视角对白）评审这份设定与大纲：指出优点、最薄弱的 2–3 处，并给出具体可改的方向。";
+        document.getElementById("aiInput").value = text;
+        showToast("已载入右侧AI面板，点击「发送」即可分析");
+      }
+
+      window.onload = function () {
+        const saved = localStorage.getItem("storyApiKey");
+        if (saved) document.getElementById("apiKeyInput").value = saved;
+        document.querySelectorAll(".exercise-block").forEach((block) => {
+          const ta = block.querySelector("textarea");
+          if (!ta) return;
+          const tab = block.closest(".tab-content");
+          const h2 = tab && tab.querySelector("h2");
+          const chapter = h2 ? h2.innerText.trim() : "练习";
+          const btn = document.createElement("button");
+          btn.textContent = "保存此练习";
+          btn.className =
+            "mt-2 bg-green-600 text-white rounded px-3 py-1.5 text-sm hover:bg-green-700";
+          btn.onclick = () => saveExercise(ta.id, chapter);
+          block.appendChild(btn);
+        });
+        renderHistory();
+      };
+    </script>
+  </body>
+</html>
