@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>网文男频爽点与剧情套路整理</title>
+<style>
+  :root{
+    --bg:#d8dce6;
+    --card:#ffffff;
+    --card2:#e6e9f0;
+    --accent:#2e1065;
+    --accent2:#6d28d9;
+    --text:#1f2530;
+    --muted:#5d6675;
+    --line:#e2e6ec;
+    --ok:#1f9d6b;
+    --ok-bg:rgba(31,157,107,.10);
+    --bad:#d83a1f;
+    --bad-bg:rgba(216,58,31,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.8;
+    display:flex;flex-direction:column;min-height:100vh;
+  }
+
+  header{
+    background:linear-gradient(135deg,#10042e 0%,#2e1065 100%);
+    color:#fff;padding:22px 28px;text-align:center;flex:0 0 auto;
+    box-shadow:0 2px 10px rgba(0,0,0,.08);
+  }
+  header h1{font-size:24px;font-weight:800;letter-spacing:1px;}
+  header p{margin-top:4px;font-size:13px;opacity:.92;font-weight:600;}
+
+  .layout{display:flex;flex:1 1 auto;min-height:0;}
+
+  aside{
+    flex:0 0 224px;background:var(--card);border-right:1px solid var(--line);
+    padding:20px 14px;overflow-y:auto;
+  }
+  aside .nav-title{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:1px;margin:4px 8px 12px;}
+  aside .menu{display:flex;flex-direction:column;gap:6px;}
+  aside .menu button{
+    display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+    background:transparent;border:none;color:var(--muted);cursor:pointer;
+    font-size:14px;font-weight:600;padding:11px 14px;border-radius:10px;transition:.2s;
+    font-family:inherit;
+  }
+  aside .menu button:hover{background:var(--card2);color:var(--text);}
+  aside .menu button.active{background:linear-gradient(135deg,#2e1065,#6d28d9);color:#fff;box-shadow:0 4px 12px rgba(46,16,101,.4);}
+  aside .menu button .idx{
+    flex:0 0 22px;height:22px;border-radius:6px;background:var(--card2);
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--muted);
+  }
+  aside .menu button.active .idx{background:rgba(255,255,255,.25);color:#fff;}
+
+  main{flex:1 1 auto;overflow-y:auto;padding:30px 38px 50px;background:var(--card);}
+  .panel{display:none;animation:fade .35s ease;}
+  .panel.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+  .sec-title{
+    font-size:23px;font-weight:800;margin-bottom:8px;padding-left:14px;
+    border-left:5px solid var(--accent);
+  }
+  .sec-sub{color:var(--muted);font-size:14px;margin-bottom:20px;padding-left:14px;}
+
+  .intro{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:22px 24px;color:var(--text);font-size:15px;
+  }
+  .intro h4{font-size:15px;color:var(--accent);margin:16px 0 6px;font-weight:800;}
+  .intro h4:first-child{margin-top:0;}
+  .intro b{color:var(--accent);}
+  .intro ul{margin:6px 0 6px 22px;}
+  .intro li{margin:5px 0;}
+  .intro .key{display:inline-block;background:var(--card2);border-radius:6px;padding:1px 8px;font-weight:700;color:var(--accent2);}
+
+  /* 通用卡片 */
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:22px 24px;height:100%;
+  }
+  .card h3{font-size:20px;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+  .card .tag{
+    display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:6px;
+    background:rgba(239,77,44,.12);color:var(--accent);margin-left:auto;
+  }
+  .card p{font-size:14px;color:var(--muted);}
+  .meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;font-size:12.5px;color:var(--muted);}
+  .meta span{background:var(--card2);border-radius:20px;padding:3px 11px;font-weight:600;}
+  .meta .rate{color:var(--accent2);background:rgba(232,147,12,.12);}
+  .formula{
+    margin-top:12px;font-size:13px;color:var(--ok);font-weight:700;
+    background:var(--ok-bg);border-radius:8px;padding:9px 12px;
+  }
+  .tips{margin-top:12px;font-size:13.5px;color:var(--text);background:var(--card2);border-radius:8px;padding:10px 13px;}
+  .tips b{color:var(--accent);}
+  .examples{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px;}
+  .ex{font-size:13.5px;margin-top:12px;padding:11px 14px;border-radius:8px;line-height:1.75;}
+  .ex .lab{font-weight:800;margin-right:6px;display:inline-block;}
+  .ex-good{background:var(--ok-bg);border-left:3px solid var(--ok);}
+  .ex-good .lab{color:var(--ok);}
+  .ex-bad{background:var(--bad-bg);border-left:3px solid var(--bad);}
+  .ex-bad .lab{color:var(--bad);}
+
+  /* SWIPER */
+  .swiper{position:relative;max-width:780px;margin:0 auto;}
+  .swiper-view{overflow:hidden;border-radius:16px;}
+  .swiper-track{display:flex;transition:transform .45s cubic-bezier(.22,.61,.36,1);}
+  .swiper-slide{flex:0 0 100%;padding:4px;}
+  .swiper-nav{display:flex;align-items:center;justify-content:space-between;margin-top:18px;gap:14px;}
+  .swiper-btn{
+    flex:0 0 auto;width:46px;height:46px;border-radius:50%;border:1px solid var(--line);
+    background:var(--card);color:var(--text);font-size:22px;cursor:pointer;transition:.2s;
+    display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.05);
+  }
+  .swiper-btn:hover:not(:disabled){background:var(--accent);border-color:var(--accent);color:#fff;}
+  .swiper-btn:disabled{opacity:.35;cursor:not-allowed;}
+  .swiper-dots{flex:1 1 auto;display:flex;flex-wrap:wrap;gap:7px;justify-content:center;}
+  .swiper-dots button{width:9px;height:9px;border-radius:50%;border:none;background:var(--line);cursor:pointer;transition:.2s;padding:0;}
+  .swiper-dots button.active{background:var(--accent);width:22px;border-radius:5px;}
+  .swiper-counter{flex:0 0 auto;font-size:13px;color:var(--muted);font-weight:700;min-width:58px;text-align:center;}
+
+  /* 流派 swiper 卡片内部 */
+  .blk-title{font-weight:800;color:var(--text);font-size:14.5px;margin-top:16px;padding-left:10px;border-left:3px solid var(--accent2);}
+  .work{margin-top:11px;border:1px solid var(--line);border-radius:10px;padding:12px 15px;background:var(--card2);}
+  .work .wname{font-weight:800;color:var(--accent);font-size:14.5px;margin-bottom:3px;}
+  .work p{font-size:13.2px;color:var(--muted);margin-top:5px;line-height:1.7;}
+  .work p b{color:var(--text);}
+
+  .flow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:18px 0;}
+  .flow .step{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px 15px;font-size:13px;font-weight:700;color:var(--text);box-shadow:0 2px 6px rgba(0,0,0,.04);}
+  .flow .arrow{color:var(--accent);font-weight:800;font-size:18px;}
+
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin-top:18px;background:var(--card);}
+  table{width:100%;border-collapse:collapse;font-size:14px;min-width:560px;}
+  th,td{padding:13px 15px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top;}
+  th{background:var(--card2);color:var(--accent2);font-weight:800;}
+  tr:last-child td{border-bottom:none;}
+  td:first-child{font-weight:800;color:var(--text);}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;}
+
+  .callout{
+    border-left:4px solid var(--accent2);background:rgba(232,147,12,.10);
+    padding:15px 20px;border-radius:0 10px 10px 0;margin:18px 0 0;font-size:14.5px;color:var(--text);line-height:1.8;
+  }
+  .callout b{color:var(--accent2);}
+  .callout h4{color:var(--accent);font-size:14.5px;margin:12px 0 4px;}
+  .callout ul{margin:4px 0 4px 20px;}
+  .callout li{margin:5px 0;}
+
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:16px;border-top:1px solid var(--line);background:var(--card);}
+
+  @media(max-width:720px){
+    .layout{flex-direction:column;}
+    aside{flex:0 0 auto;width:100%;border-right:none;border-bottom:1px solid var(--line);}
+    aside .menu{flex-direction:row;flex-wrap:wrap;}
+    aside .menu button{width:auto;}
+    main{padding:22px 16px 40px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>网文男频 · 爽点与剧情套路整理</h1>
+</header>
+
+<div class="layout">
+  <aside>
+    <div class="nav-title">导 航 目 录</div>
+    <nav class="menu" id="menu">
+      <button data-target="what" class="active"><span class="idx">01</span>什么是爽点</button>
+      <button data-target="shuang"><span class="idx">02</span>20 大核心爽点</button>
+      <button data-target="tropes"><span class="idx">03</span>剧情套路流派</button>
+      <button data-target="flow"><span class="idx">04</span>黄金爽点节奏</button>
+      <button data-target="combo"><span class="idx">05</span>爽点组合打法</button>
+      <button data-target="avoid"><span class="idx">06</span>爽点使用避坑</button>
+    </nav>
+  </aside>
+
+  <main id="main">
+
+    <!-- 01 什么是爽点 -->
+    <section class="panel active" id="what">
+      <div class="sec-title">一、什么是「爽点」</div>
+      <div class="sec-sub">理解爽点的底层逻辑，比背套路更重要</div>
+      <div class="intro">
+        <h4>1. 定义</h4>
+        <p><b>爽点</b>是男频小说里让读者产生「情绪快感」的关键时刻。它不一定是打斗，也可以是身份曝光、宝物认主、前任后悔——核心都是一句话：<b>读者替主角出了那口恶气，或得到了现实中得不到的满足。</b></p>
+
+        <h4>2. 心理机制</h4>
+        <ul>
+          <li><span class="key">替代性满足</span>：读者把自我投射到主角身上，主角的逆袭=读者的逆袭，主角的征服=读者的征服。</li>
+          <li><span class="key">多巴胺奖励</span>：期待被压抑越久，释放瞬间的神经奖励越强，这就是「憋得越久、放得越响」的生理基础。</li>
+          <li><span class="key">掌控感</span>：现实里人常感无力，爽文让主角（=读者）始终握有主动权，是对失控感的心理补偿。</li>
+          <li><span class="key">尊严补偿</span>：被轻视→被崇拜，对应男性在现实中普遍在意的「被尊重、被需要、被仰望」需求。</li>
+        </ul>
+
+        <h4>3. 爽点的三要素公式</h4>
+        <p><b>压抑（期待） × 反差 × 干脆的释放 = 爽度</b>。三者缺一不可：没有压抑就没有期待；没有反差就平淡；释放拖泥带水则快感被稀释。</p>
+
+        <h4>4. 爽点的五种情绪类型</h4>
+        <ul>
+          <li><b>实力碾压型</b>：越级、秒杀、一招制敌（燃、爽）。</li>
+          <li><b>地位逆袭型</b>：废柴→巅峰、被退婚→天下共主（励志、解气）。</li>
+          <li><b>情感征服型</b>：高冷女神倒贴、旧爱悔青肠子（虚荣、征服欲）。</li>
+          <li><b>智斗布局型</b>：反杀、幕后黑手、计划通（智商优越感）。</li>
+          <li><b>收集养成型</b>：收小弟、攒宝物、建势力（成长成就感）。</li>
+        </ul>
+
+        <h4>5. 爽点 ≠ 爽文</h4>
+        <p>不是每本书都要密集撒爽点。严肃向、悬疑向作品可以很长一段时间不爽，但要在关键节点给一次大的。爽文则把「高频小爽」当刚需。<b>判断标准</b>：读者读完后有没有「通体舒泰、想继续看」的冲动；有，就是击中了爽点。</p>
+
+        <h4>6. 男频爽点的红线</h4>
+        <ul>
+          <li><b>密度红线</b>：连续 3 章无爽点极易掉收；但连续 3 章大爽会「爽点通胀」，阈值被拉高后普通爽点失效。</li>
+          <li><b>公平感</b>：爽点必须「主角凭本事/外挂赢得」，不能靠对手无脑送。</li>
+          <li><b>代价感</b>：最好的爽点前往往有真实压抑，毫无铺垫的空降爽感很虚。</li>
+        </ul>
+
+        <h4>7. 设计一个爽点的 checklist</h4>
+        <ul>
+          <li>① 读者此刻在替谁憋屈 / 期待什么？</li>
+          <li>② 反派/障碍有没有足够的「分量感」？</li>
+          <li>③ 释放方式是否干脆、具体、可见？</li>
+          <li>④ 围观者反应是否放大了快感？</li>
+          <li>⑤ 这一爽之后，留了什么新钩子？</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 02 核心爽点 SWIPER -->
+    <section class="panel" id="shuang">
+      <div class="sec-title">二、男频 20 大核心爽点（可滑动）</div>
+      <div class="sec-sub">每张卡片含：机制 · 爽度 · 适用题材 · 使用要点 · 详细正例/反例</div>
+      <div class="swiper" id="swiper">
+        <div class="swiper-view">
+          <div class="swiper-track" id="track">
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>扮猪吃虎 <span class="tag">经典</span></h3>
+                <p>主角隐藏真实实力，先让对手轻视，再一击碾压。反差越大，释放越爽。</p>
+                <div class="meta"><span class="rate">爽度：★★★★★</span><span>适用：玄幻/都市/修真</span><span>情绪：实力碾压</span></div>
+                <div class="formula">隐藏实力 → 被轻视 → 翻盘碾压</div>
+                <div class="tips"><b>使用要点：</b>对手必须先「有分量」，轻视的台词要具体、当众，这样翻盘才有杀伤力；别拿杂鱼当对手。</div>
+                <div class="examples">
+                  <div class="ex ex-good"><span class="lab">正例</span>主角穿一身地摊货进拍卖会，被富二代当众讥讽「穷鬼也配来这种地方」，还被拦在门外。结果他抬手亮出一张黑金邀约卡——那是主办方求着他来的贵宾凭证，全场最珍贵的压轴拍品，竟是提前为他一人预留的。轻视越狠，翻盘越香，围观者的表情变化就是爽感的放大器。</div>
+                  <div class="ex ex-bad"><span class="lab">反例</span>主角明明是大陆第一强者，却专门伪装成杂役去挑衅一个炼气期小弟，赢了还洋洋得意。对手太弱、毫无分量，这种「大人打小孩」式的碾压没有反差、没有风险，读者只会觉得主角无聊，爽感归零。</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>打脸逆袭 <span class="tag">必杀</span></h3>
+                <p>反派先嘲讽打压主角，主角用实打实的实力回击，让对方当场社死。</p>
+                <div class="meta"><span class="rate">爽度：★★★★★</span><span>适用：全题材</span><span>情绪：解气</span></div>
+                <div class="formula">被嘲讽 → 实力 show → 对方傻眼</div>
+                <div class="tips"><b>使用要点：</b>羞辱要「具体+当众+有第三方见证」，否则打脸没人看；回击最好把原话原封不动甩回去。</div>
+                <div class="examples">
+                  <div class="ex ex-good"><span class="lab">正例</span>反派当众放话「你这种废物，这辈子也别想进内门」，台下哄笑。主角没争辩，下一秒直接当场突破，连长老都亲自现身要收他为徒。那句羞辱被原封不动甩了回去，围观群众集体倒戈，反派脸色由红转白——这就是「当众打脸」的精髓。</div>
+                  <div class="ex ex-bad"><span class="lab">反例</span>反派只随口说了句「你不行」，主角就暴怒开打，全程没几个人看见，打完读者也觉得「就这？」。没有具体的羞辱、没有第三方见证，情绪根本没被点燃，打脸变成了自嗨。</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>废柴逆袭 <span class="tag">经典</span></h3>
+                <p>从最底层、被家族抛弃的起点，一路爬到巅峰，读者代入感最强。</p>
+                <div class="meta"><span class="rate">爽度：★★★★☆</span><span>适用：玄幻/仙侠/都市</span><span>情绪：励志逆袭</span></div>
+                <div class="formula">废柴 → 金手指 → 节节高升</div>
+                <div class="tips"><b>使用要点：</b>「废」必须真实可感（被逐、被欺、被孤立），不能嘴上说废实际无敌；爬升要可见、有节点。</div>
+                <div class="examples">
+                  <div class="ex ex-good"><span class="lab">正例</span>主角被测出「万年废灵根」，当众被逐出族谱、分到最破的柴房、连下人都敢踩他。这种真实的惨，让读者狠狠共情。直到觉醒系统，从外门杂役一路打进圣子之争，当年嫌弃他的堂兄跪求原谅——先惨后爽，落差才成立。</div>
+                  <div class="ex ex-bad"><span class="lab">反例</span>作者嘴上说主角是废柴，实际一出场就隐藏神体、战力爆表、谁都打不过他。读者从头到尾没感受到「真惨」，所谓逆袭就成了无本之木，代入感直接断掉。</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>退婚流 <span class="tag">鼻祖</span></h3>
+                <p>被未婚妻当众退婚羞辱，主角立下 flag，日后让对方高攀不起。</p>
+                <div class="meta"><span class="rate">爽度：★★★★★</span><span>适用：玄幻/都市/历史</span><span>情绪：解气+逆袭</span></div>
+                <div class="formula">被退婚 → 立誓 → 三年/三十年后打脸</div>
+                <div class="tips"><b>使用要点：</b>必须拉长时间跨度，让 flag 真正「悬」着；归来时的身份落差要足够大，最好对方正有求于你。</div>
+                <div class="examples">
+                  <div class="ex ex-good"><span class="lab">正例</span>未婚妻当众撕婚书「你这辈子都配不上我」，主角不怒，只平静留下「三十年河东，莫欺少年穷」。多年后她家族遭难、走投无路，跪求当年那个「废物」出手——而主角已是天下共主。时间跨度让那口恶气憋得够久，释放才够痛快。</div>
+                  <div class="ex ex-bad"><span class="lab">反例</span>退婚刚发生，主角下一章就无敌把对方满门抄斩。没有了「隐忍—成长—归来」的时间跨度，flag 形同虚设，读者连期待都来不及建立，那口恶气直接没了。</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>升级碾压 <span class="tag">动力</span></h3>
+                <p>清晰的等级/境界体系，每突破一阶都给明确快感与战力质变。</p>
+                <div class="meta"><span class="rate">爽度：★★★★☆</span><span>适用：玄幻/游戏/科幻</span><span>情绪：成长</span></div>
+                <div class="formula">练级 → 突破 → 战力质变</div>
+                <div class="tips"><b>使用要点：</b>等级必须「兑现」成可见的战斗力碾压，不能只滚动数字；每次突破最好配一场实战。</div>
+                <div class="examples">
+                  <div class="ex ex-good"><span class="lab">正例</span>主角卡在凝气九层三个月，熬夜苦修又得奇遇，终于破入筑基。旧日同阶的死对头还停在凝气，被他一招秒杀，作者把等级差具象成「一拳碎山」。成长看得见、摸得着，读者跟着爽。</div>
+                  <div class="ex ex-bad"><span class="lab">反例</span>主角连连突破，境界数字狂飙，却全程没打一场兑现的战斗。等级成了流水账式的数字滚动，没有「用新境界碾压旧对手」的环节，升级毫无意义。</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>金手指 <span class="tag">引擎</span></h3>
+                <p>系统、老爷爷、空间、签到等外挂，是爽点的「发电站」。</p>
+                <div class="meta"><span class="rate">爽度：★★★★☆</span><span>适用：全题材</span><span>情绪：加速成长</span></div>
+                <div class="formula">获得外挂 → 加速成长 → 拉开差距</div>
+                <div class="tips"><b>使用要点：</b>外挂要「可成长、有惊喜、能转化成真实优势」；最好的金手指自带期待感（明天签什么？）。</div>
+                <div class="examples">
+                  <div class="ex ex-good"><span class="lab">正例</span>签到系统每天送一样逆天宝物，读者天天有「开箱期待」：今天签到得神兵，明天反杀追杀者，后天解锁新功能。金手指持续供给爽点，还让成长有节奏感。</div>
+                  <div class="ex ex-bad"><span class="lab">反例</span>金手指是「无限复活但每次都重来」，主角反复受虐却没变强。外挂不转化为优势，反而成了循环受苦的枷锁，读者越看越憋屈。</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>装逼打脸 <span class="tag">高频</span></h3>
+                <p>主角凡尔赛式低调秀实力，配合围观群众的震惊反应。</p>
+                <div class="meta"><span class="rate">爽度：★★★★☆</span><span>适用：都市/玄幻</span><span>情绪：虚荣+解气</span></div>
+                <div class="formula">低调发言 → 众人嘲 → 实力曝光</div>
+                <div class="tips"><b>使用要点：</b>「装」是铺垫，「逼」要兑付；没有实力支撑的嘴炮是装蒜；围观者反应是关键放大器。</div>
+                <div class="examples">
+                  <div class="ex ex-good"><span class="lab">正例</span>主角淡淡说了句「这剑一般」，剑痴当场嗤之以鼻、嘲他外行。主角随手一挥，剑气劈开千米瀑布，剑痴直接跪地拜师。低调是钩子，震惊反应是放大器，节奏拉满。</div>
+                  <div class="ex ex-bad"><span class="lab">反例</span>主角逢人就吹「我超厉害」，却拿不出任何证据，纯嘴炮。没有实力兑付的「装逼」只是装蒜，读者只觉得尴尬、出戏。</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>财富碾压 <span class="tag">物质</span></h3>
+                <p>随手掏出天价宝物/钞能力，让拜金反派跪地。</p>
+                <div class="meta"><span class="rate">爽度：★★★★☆</span><span>适用：都市/神豪</span><span>情绪：物质解气</span></div>
+                <div class="formula">被嫌穷 → 亮家底 → 全场跪</div>
+                <div class="tips"><b>使用要点：</b>反派必须是「势利眼」，这样被反噬才解气；主角人设要稳，别一边首富一边抠门。</div>
+                <div class="examples">
+                  <div class="ex ex-good"><span class="lab">正例</span>势利岳母嫌主角穷，逼女儿悔婚。主角不吵不闹，掏出能买下整条商业街的黑卡，岳母瞬间变脸端茶倒水。金钱羞辱被原样奉还，势利眼的反噬最解气。</div>
+                  <div class="ex ex-bad"><span class="lab">反例</span>主角钱多到没边，却还抠搜地跟人算小账、为几块钱吵架。人设前后矛盾，财富爽感被自己亲手消解，读者尴尬。</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>美女倒贴 <span class="tag">后宫</span></h3>
+                <p>校花、女神、圣女主动靠近，满足男性虚荣与征服欲。</p>
+                <div class="meta"><span class="rate">爽度：★★★★☆</span><span>适用：都市/玄幻/校草</span><span>情绪：征服欲</span></div>
+                <div class="formula">魅力/实力 → 女神心动 → 主动靠近</div>
+                <div class="tips"><b>使用要点：</b>倒贴必须「有动机」——崇拜实力、感激救命、认同人格；无理由舔狗式倒贴会降智招黑。</div>
+                <div class="examples">
+                  <div class="ex ex-good"><span class="lab">正例</span>高冷圣女本视男人为尘埃，直到亲眼见主角一剑斩魔神、护下全城，芳心暗许，主动护他周全。倒贴建立在对实力的崇拜上，逻辑自洽，读者买账。</div>
+                  <div class="ex ex-bad"><span class="lab">反例</span>女神连主角名字都不知道，一见他就投怀送抱、各种倒贴。缺乏任何动机的舔狗式操作，读者只会觉得降智、出戏，甚至反感。</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>复仇雪恨 <span class="tag">强情绪</span></h3>
+                <p>昔日仇人/家族欺压，主角归来一一清算，情绪最浓。</p>
+                <div class="meta"><span class="rate">爽度：★★★★★</span><span>适用：全题材</span><span>情绪：强解气</span></div>
+                <div class="formula">受辱 → 磨剑 → 归来清算</div>
+                <div class="tips"><b>使用要点：</b>仇恨要有「分量」（灭门、背叛、毁道），忍得越久清算越酣；清算要具体、逐一点名。</div>
+                <div class="examples">
+                  <div class="ex ex-good"><span class="lab">正例</span>当年灭门之仇的仇家，如今已权倾朝野。主角隐忍十年、布下暗网，最终当众揭其罪行、亲手了结。仇越大、忍越久，清算那一刻的酣畅越浓，读者跟着出了十年恶气。</div>
+                  <div class="ex ex-bad"><span class="lab">反例</span>主角因为「对方瞪了我一眼」就记仇灭人满门。仇恨毫无分量，复仇变成无差别泄愤，读者反而同情反派、反感主角。</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>被轻视后惊艳 <span class="tag">反差</span></h3>
+                <p>开局被所有人看不起，关键时刻一鸣惊人。</p>
+                <div class="meta"><span class="rate">爽度：★★★★☆</span><span>适用：全题材</span><span>情绪：反转</span></div>
+                <div class="formula">众嘲 → 沉默 → 惊艳全场</div>
+                <div class="tips"><b>使用要点：</b>「被轻视」必须是真实发生的群嘲，不能是主角自我脑补；惊艳要具体、有对比落差。</div>
+                <div class="examples">
+                  <div class="ex ex-good"><span class="lab">正例</span>大比上没人给主角下注，他默默抽中最弱签，台下全是哄笑。决赛他却一招败尽天骄，全场从哄笑到死寂再到沸腾——这种群体情绪的反转，是惊艳爽点的精髓。</div>
+                  <div class="ex ex-bad"><span class="lab">反例</span>所有人从头到尾都捧着主角，所谓「被轻视」只是主角自己心里脑补。没有真实的压抑做底，惊艳就无从谈起，读者无感。</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>捡漏淘宝 <span class="tag">意外</span></h3>
+                <p>在别人看不上的东西里淘到绝世宝物，眼光碾压。</p>
+                <div class="meta"><span class="rate">爽度：★★★★☆</span><span>适用：都市/鉴宝/修真</span><span>情绪：意外惊喜</span></div>
+                <div class="formula">别人嫌弃 → 主角入手 → 价值连城</div>
+                <div class="tips"><b>使用要点：</b>「捡漏」靠的是主角自己的眼光/知识，不能全靠系统提示代劳，否则读者无代入。</div>
+                <div class="examples">
+                  <div class="ex ex-good"><span class="lab">正例</span>地摊上被当破铜烂铁的残剑，主角凭自身鉴宝眼认出是上古剑胚，低价入手。转手引得宗门长老争抢、鉴定师当场打脸——靠的是主角的「眼力」，读者有代入感。</div>
+                  <div class="ex ex-bad"><span class="lab">反例</span>主角啥也不懂，全靠系统弹窗提示「这值钱」才无脑买。捡漏的「眼光爽」被系统代劳，读者成了旁观者，毫无参与感。</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>收小弟/势力 <span class="tag">成长</span></h3>
+                <p>从孤狼到组建班底、收服强者，规模感带来成就感。</p>
+                <div class="meta"><span class="rate">爽度：★★★★☆</span><span>适用：玄幻/都市/历史</span><span>情绪：养成成就感</span></div>
+                <div class="formula">独行 → 收服 → 势力成型</div>
+                <div class="tips"><b>使用要点：</b>收服要有「被折服的过程」，强者服众才显主角之强；不能是见一面就哭着当狗。</div>
+                <div class="examples">
+                  <div class="ex ex-good"><span class="lab">正例</span>主角先以武德折服一方恶霸，再收编落魄天才，最后连旧日对手都因敬佩来投。昔日的孤身少年，成了让人闻风依附的势力之主，规模感层层累积。</div>
+                  <div class="ex ex-bad"><span class="lab">反例</span>绝世强者见了主角一面，立刻跪下哭着要当狗，毫无被折服的过程。收小弟沦为数字堆叠，没有「征服感」，读者觉得廉价。</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>名声大噪 <span class="tag">地位</span></h3>
+                <p>从无名小卒到名动天下，身份光环不断叠加。</p>
+                <div class="meta"><span class="rate">爽度：★★★★☆</span><span>适用：全题材</span><span>情绪：地位提升</span></div>
+                <div class="formula">无名 → 一战成名 → 万人敬仰</div>
+                <div class="tips"><b>使用要点：</b>名声必须靠「具体战绩事件」堆出来，不能空降；每次出场他人态度的变化就是爽点。</div>
+                <div class="examples">
+                  <div class="ex ex-good"><span class="lab">正例</span>主角起初无人识，一战后「那个名字」传遍九州。再出场时掌门亲自出迎、仇家闻风丧胆——地位是靠一场场硬仗堆出来的，他人态度的转变就是爽感来源。</div>
+                  <div class="ex ex-bad"><span class="lab">反例</span>主角莫名其妙就「声名远播」，书中只写「他已名动天下」却无任何事件支撑。名声是空降的，读者感受不到，更不会替他爽。</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>护短打脸 <span class="tag">爽感</span></h3>
+                <p>有人欺辱主角在乎的人，主角暴怒出手，怒爽值拉满。</p>
+                <div class="meta"><span class="rate">爽度：★★★★★</span><span>适用：全题材</span><span>情绪：怒爽</span></div>
+                <div class="formula">亲友受欺 → 主角震怒 → 雷霆清算</div>
+                <div class="tips"><b>使用要点：</b>护短要「快、狠、不啰嗦」；最忌主角为了所谓大局眼睁睁看亲友受辱不还手。</div>
+                <div class="examples">
+                  <div class="ex ex-good"><span class="lab">正例</span>妹妹被权贵之子当街羞辱，一向淡定的主角瞬间杀气弥漫，直接踏平对方府邸。护短点燃了读者「自己人不能欺」的本能共鸣，怒爽值拉满。</div>
+                  <div class="ex ex-bad"><span class="lab">反例</span>主角为了「大局」「理智」，眼睁睁看亲友受辱不还手，还要讲道理。读者期待的那口怒爽没释放，反而憋屈到想弃书。</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>全处全收 <span class="tag">后宫</span></h3>
+                <p>红颜知己众多却专情，既满足收集欲又不招黑。</p>
+                <div class="meta"><span class="rate">爽度：★★★★☆</span><span>适用：玄幻/都市/后宫</span><span>情绪：征服+专情</span></div>
+                <div class="formula">众美环绕 → 主角专一 → 读者满足</div>
+                <div class="tips"><b>使用要点：</b>「团宠而不渣」是平衡术；海王式广撒网标榜深情必招黑，建议专情一人+红颜知己。</div>
+                <div class="examples">
+                  <div class="ex ex-good"><span class="lab">正例</span>多位性格迥异的女子因倾慕聚拢主角身边，主角待她们如挚友亲人、始终专情于一人。既满足收集欲，又守住「不渣」底线，团宠而不油腻。</div>
+                  <div class="ex ex-bad"><span class="lab">反例</span>主角见一个爱一个、海王式广撒网，还四处标榜自己「深情」。读者反感至极，口碑崩盘，被喷「渣男文」。</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>越级挑战 <span class="tag">燃</span></h3>
+                <p>以低境界秒杀高境界，制造「不可能」的爽感。</p>
+                <div class="meta"><span class="rate">爽度：★★★★★</span><span>适用：玄幻/游戏/战斗</span><span>情绪：燃</span></div>
+                <div class="formula">境界低 → 底牌出 → 越级秒杀</div>
+                <div class="tips"><b>使用要点：</b>胜利必须是「主角凭本事/底牌赢来的」，不能靠对手放水；围观者「这不可能」的惊呼本身就是爽点。</div>
+                <div class="examples">
+                  <div class="ex ex-good"><span class="lab">正例</span>主角筑基硬刚金丹老怪，靠绝世功法+压箱底底牌一剑封喉。围观者那句「这不可能」的惊呼，正是越级爽点的灵魂——打破常识的快感。</div>
+                  <div class="ex ex-bad"><span class="lab">反例</span>主角低境界能赢，全因「对方突然手抖/主动放水」。胜利不是主角赢来的，越级成了儿戏，毫无燃感，读者只觉得儿戏。</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>反杀布局 <span class="tag">智斗</span></h3>
+                <p>看似落入绝境，实则是主角设的局，最后反将一军。</p>
+                <div class="meta"><span class="rate">爽度：★★★★☆</span><span>适用：悬疑/权谋/玄幻</span><span>情绪：智商优越</span></div>
+                <div class="formula">似绝境 → 翻盘 → 对方中计</div>
+                <div class="tips"><b>使用要点：</b>布局必须「提前埋过伏笔」，读者回头看能恍然大悟；临时开挂硬解是偷懒，会被骂。</div>
+                <div class="examples">
+                  <div class="ex ex-good"><span class="lab">正例</span>主角「被困」敌阵，实则是早埋的诱敌之计。反派得意收网时，才发现自己才是被围的那个，计划通达成。伏笔收束的智斗爽，最显主角之智。</div>
+                  <div class="ex ex-bad"><span class="lab">反例</span>主角所谓「布局」是临时开挂硬解，前面没埋任何伏笔。所谓智斗是作者强行圆，读者回想发现漏洞百出，智商被侮辱。</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>国运/民族 <span class="tag">宏大</span></h3>
+                <p>为国争光、民族崛起，激发集体荣誉爽感。</p>
+                <div class="meta"><span class="rate">爽度：★★★★☆</span><span>适用：国运/直播/科幻</span><span>情绪：集体荣誉</span></div>
+                <div class="formula">被外压 → 主角扛旗 → 扬眉吐气</div>
+                <div class="tips"><b>使用要点：</b>爽点来自「扬眉吐气」，不是踩同胞；把同胞写愚昧拖后腿来捧主角，必招反感。</div>
+                <div class="examples">
+                  <div class="ex ex-good"><span class="lab">正例</span>异域天骄嘲华夏无人，主角代表国运出战，一人压全场，直播间亿万同胞沸腾。个人荣耀与民族情绪绑定，集体荣誉感拉满。</div>
+                  <div class="ex ex-bad"><span class="lab">反例</span>为了凸显主角，把同胞写得愚昧怯懦、全员拖后腿。宏大叙事变成了踩同胞捧主角，读者极其反感，舆论翻车。</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>无敌俯瞰 <span class="tag">心态</span></h3>
+                <p>已站在顶点，云淡风轻看众生挣扎，心态流爽感。</p>
+                <div class="meta"><span class="rate">爽度：★★★★☆</span><span>适用：无敌/轻松/搞笑</span><span>情绪：心态碾压</span></div>
+                <div class="formula">已是巅峰 → 世人不懂 → 淡然装逼</div>
+                <div class="tips"><b>使用要点：</b>「无敌」必须言行一致，不能嘴上说无敌却被小角色逼狼狈；俯瞰视角要真的「降维」。</div>
+                <div class="examples">
+                  <div class="ex ex-good"><span class="lab">正例</span>各方势力为秘宝打得头破血流，主角坐在云端轻笑「不过如此」，随手一点化解全网危机。降维视角的淡然，本身就是一种高级爽感。</div>
+                  <div class="ex ex-bad"><span class="lab">反例</span>主角嘴上说无敌，却天天被小角色逼得狼狈应战。言行不一，「无敌」成空话，读者瞬间出戏、弃书。</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div class="swiper-nav">
+          <button class="swiper-btn prev">‹</button>
+          <div class="swiper-dots"></div>
+          <div class="swiper-counter">1 / 20</div>
+          <button class="swiper-btn next">›</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 剧情套路流派 -->
+    <section class="panel" id="tropes">
+      <div class="sec-title">三、男频主流剧情套路（流派）</div>
+      <div class="sec-sub">10 大流派轮播 · 每张含核心设定、爽点来源与代表名作的梗概/套路运用/好在哪</div>
+      <div class="swiper">
+        <div class="swiper-view">
+          <div class="swiper-track">
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>穿越 / 重生流 <span class="tag">基础盘</span></h3>
+                <div class="meta"><span>适合：全平台</span><span>爽点：先知先觉</span></div>
+                <div class="formula">重生弥补 → 信息差 → 提前布局碾压</div>
+                <div class="tips"><b>核心设定：</b>主角带现代记忆/前世经验重开，信息差即金手指。重生偏「弥补遗憾+复仇」，穿越偏「开荒种田+知识降维」。</div>
+                <div class="blk-title">代表名作 · 深度分析</div>
+                <div class="work">
+                  <div class="wname">《斗破苍穹》</div>
+                  <p><b>梗概：</b>萧炎从天才沦为「废柴」，因退婚受辱立三年之约，得药老金手指一路崛起至炎帝。</p>
+                  <p><b>套路运用：</b>把重生流的「弥补遗憾」做成长期目标，退婚 flag 悬空三年，期间小逆袭不断供给爽点，是退婚逆袭的模板源头。</p>
+                  <p><b>好在哪：</b>「莫欺少年穷」把被轻视具象化、公开化，那口恶气憋得久、放得狠，节奏卡点精准，至今无人超越。</p>
+                </div>
+                <div class="work">
+                  <div class="wname">《庆余年》</div>
+                  <p><b>梗概：</b>现代青年范闲魂穿异世，带诗书与权谋智慧周旋于庙堂与江湖。</p>
+                  <p><b>套路运用：</b>穿越者的现代价值观与古代权力结构碰撞，用知识降维制造智斗爽点，而非单纯武力。</p>
+                  <p><b>好在哪：</b>不止爽，人物与文风出彩，证明穿越流也能写出深度与群像，拓宽了流派的受众上限。</p>
+                </div>
+                <div class="tips"><b>进阶写法：</b>别只靠「我知道未来」偷懒，给主角真实成长；重生可叠加金手指形成复合优势。<b>风险提示：</b>信息差用尽后易疲软，需尽早转向自身实力。</div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>系统流 <span class="tag">万能</span></h3>
+                <div class="meta"><span>适合：下沉快节奏</span><span>爽点：开箱期待</span></div>
+                <div class="formula">觉醒系统 → 任务驱动 → 奖励升级</div>
+                <div class="tips"><b>核心设定：</b>系统发布任务、给予奖励，强目标驱动。变种极多：签到、神级选择、加点、直播、抽奖。</div>
+                <div class="blk-title">代表名作 · 深度分析</div>
+                <div class="work">
+                  <div class="wname">《全球高武》</div>
+                  <p><b>梗概：</b>主角在系统式战力成长体系下疯狂练级，从普通学生打到守护人类的巅峰强者。</p>
+                  <p><b>套路运用：</b>把「升级」外显成可量化的任务与奖励，给读者稳定开箱期待；并把变强与国运危机绑定，爽点有宏大底色。</p>
+                  <p><b>好在哪：</b>目标清晰、节奏极稳，新手友好，用系统的「确定性」对冲了长篇的疲劳感。</p>
+                </div>
+                <div class="work">
+                  <div class="wname">《诡秘之主》</div>
+                  <p><b>梗概：</b>克莱恩在「魔药体系」中逐级晋升，每一步都有明确配方与风险。</p>
+                  <p><b>套路运用：</b>「魔药体系」本质是系统化升级路径，把系统流做成世界观的一部分，而非外挂。</p>
+                  <p><b>好在哪：</b>用严谨体系替代粗暴面板，证明系统流也能承载硬核设定与悬疑，登顶口碑票房双高。</p>
+                </div>
+                <div class="tips"><b>进阶写法：</b>系统要有「个性/反差」（毒舌、话痨、坑爹）增加趣味；奖励要逐步升级保持新鲜。<b>风险提示：</b>系统过度代劳会让主角「不存在」，读者只看重系统。</div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>退婚 / 废柴逆袭流 <span class="tag">鼻祖</span></h3>
+                <div class="meta"><span>适合：玄幻/仙侠</span><span>爽点：被轻视→逆袭</span></div>
+                <div class="formula">莫欺少年穷 → 三年之约 → 归来碾压</div>
+                <div class="tips"><b>核心设定：</b>被退婚或家族抛弃的废柴，凭金手指一路打脸回去。男频最古老也最稳的框架。</div>
+                <div class="blk-title">代表名作 · 深度分析</div>
+                <div class="work">
+                  <div class="wname">《斗破苍穹》退婚名场面</div>
+                  <p><b>梗概：</b>纳兰嫣然当众退婚，留下「你配不上我」的羞辱，萧炎立下三年之约。</p>
+                  <p><b>套路运用：</b>把「被轻视」公开化、具象化，flag 悬空三年，期间每个小逆袭都在为最终释放蓄力。</p>
+                  <p><b>好在哪：</b>那口恶气憋得够久、释放够狠，成为全网梗，是退婚流被反复致敬的原因。</p>
+                </div>
+                <div class="work">
+                  <div class="wname">《武极天下》</div>
+                  <p><b>梗概：</b>资质平平的主角凭奇遇与苦修逆袭，最终超越所谓天才。</p>
+                  <p><b>套路运用：</b>废柴靠「奇遇+苦修」双引擎翻身，强调「我命由我不由天」的励志感。</p>
+                  <p><b>好在哪：</b>把逆袭的「努力感」写出来，比纯靠外挂更让人共情，读者愿意陪主角熬。</p>
+                </div>
+                <div class="tips"><b>进阶写法：</b>退婚对象可写成「有苦衷/后期可救」避免纯脸谱；三年之约前塞满小逆袭保持追读。<b>风险提示：</b>模板化严重，开篇须写出新意，否则读者秒弃。</div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>无敌流 / 最强流 <span class="tag">爽文</span></h3>
+                <div class="meta"><span>适合：轻松/短视频</span><span>爽点：降维俯瞰</span></div>
+                <div class="formula">隐藏身份 → 被挑衅 → 随手镇压</div>
+                <div class="tips"><b>核心设定：</b>主角开局或很快无敌，靠身份反差与装逼打脸推进，弱化成长、强调心态。</div>
+                <div class="blk-title">代表名作 · 深度分析</div>
+                <div class="work">
+                  <div class="wname">《重生之都市修仙》</div>
+                  <p><b>梗概：</b>仙尊重生都市，开场即巅峰，随手镇压一切不服。</p>
+                  <p><b>套路运用：</b>用「现代都市+仙尊重生」的反差，主角每亮一次身份就是一次装逼打脸。</p>
+                  <p><b>好在哪：</b>无敌感通过配角震惊放大，不靠自说自话，读者跟着俯瞰众生，爽感持续。</p>
+                </div>
+                <div class="work">
+                  <div class="wname">《一念永恒》</div>
+                  <p><b>梗概：</b>怕死的主角一路误打误撞成最强，无敌中带搞笑。</p>
+                  <p><b>套路运用：</b>用主角性格反差（怂+强）把无敌流写出喜感，避免审美疲劳。</p>
+                  <p><b>好在哪：</b>证明无敌流不必全程紧绷，用轻松基调拓宽了受众，长期追读不累。</p>
+                </div>
+                <div class="tips"><b>进阶写法：</b>用「配角视角」反衬主角之强；可设「不能轻易出手的约束」制造张力。<b>风险提示：</b>全程无敌易审美疲劳，需靠反派脑补、身份层层揭晓维持新鲜。</div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>都市兵王 / 战神流 <span class="tag">下沉爆款</span></h3>
+                <div class="meta"><span>适合：七猫/番茄</span><span>爽点：身份反差+护短</span></div>
+                <div class="formula">隐姓埋名 → 家人被欺 → 战神身份曝光</div>
+                <div class="tips"><b>核心设定：</b>退役兵王/战神回归都市，护妻护女打脸豪门。</div>
+                <div class="blk-title">代表名作 · 深度分析</div>
+                <div class="work">
+                  <div class="wname">《最强战神》（品类代表）</div>
+                  <p><b>梗概：</b>战神为护家人隐姓埋名，妻儿受豪门欺辱，身份曝光后everything反转。</p>
+                  <p><b>套路运用：</b>「家庭温情+身份反差」双引擎，反派欺辱家人触发护短打脸，情绪共鸣极强。</p>
+                  <p><b>好在哪：</b>切中男性「护家」核心情感，下沉市场疯传，留存与付费双高。</p>
+                </div>
+                <div class="work">
+                  <div class="wname">同类爆款共性</div>
+                  <p><b>套路运用：</b>每章一个「被小看→亮身份→全场跪」的微循环，节奏极快。</p>
+                  <p><b>好在哪：</b>把「尊重」诉求做到极致，读者代入感强；失败作往往反派无脑、动机空泛。</p>
+                </div>
+                <div class="tips"><b>进阶写法：</b>给「隐姓埋名」合理动机（护家人/养伤），豪门反派要有层次。<b>风险提示：</b>套路极卷，开篇三章必须抓人，否则留存极差。</div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>神豪 / 钞能力流 <span class="tag">物质爽</span></h3>
+                <div class="meta"><span>适合：都市男频</span><span>爽点：物质羞辱奉还</span></div>
+                <div class="formula">被嘲穷 → 余额曝光 → 全场跪舔</div>
+                <div class="tips"><b>核心设定：</b>突然拥有无限财富或系统，用钱碾压势利眼。</div>
+                <div class="blk-title">代表名作 · 深度分析</div>
+                <div class="work">
+                  <div class="wname">神豪类代表作共性</div>
+                  <p><b>梗概：</b>主角获神豪系统/继承巨产，从被嘲穷到一掷千金。</p>
+                  <p><b>套路运用：</b>钱花在「打脸点」上——买下对方最骄傲的东西，让拜金者反噬。</p>
+                  <p><b>好在哪：</b>物质幻想直白、爽点密集，下沉读者代入「逆袭暴富」愿望极强。</p>
+                </div>
+                <div class="work">
+                  <div class="wname">进阶样本（创业+神豪）</div>
+                  <p><b>套路运用：</b>不止撒钱，结合创业投资体现主角脑子，财富成为能力的副产品。</p>
+                  <p><b>好在哪：</b>避免了纯撒钱的空洞，让主角立体，读者既爽又服。</p>
+                </div>
+                <div class="tips"><b>进阶写法：</b>钱要花在打脸点上；结合事业线体现主角脑子。<b>风险提示：</b>纯撒钱易空洞，需叠加事业/感情线让主角立体。</div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>无限流 / 诸天流 <span class="tag">脑洞</span></h3>
+                <div class="meta"><span>适合：起点脑洞</span><span>爽点：信息差通关</span></div>
+                <div class="formula">进入副本 → 通关变强 → 穿梭诸天</div>
+                <div class="tips"><b>核心设定：</b>穿梭副本/影视/世界完成任务，设定新颖、可玩性高。</div>
+                <div class="blk-title">代表名作 · 深度分析</div>
+                <div class="work">
+                  <div class="wname">《无限恐怖》</div>
+                  <p><b>梗概：</b>众人被主神投入一个个电影/游戏副本，生死间变强。</p>
+                  <p><b>套路运用：</b>「主神空间+副本通关」把升级、团队、智斗打包，副本即独立爽点单元。</p>
+                  <p><b>好在哪：</b>开山之作，用熟悉的影视 IP 降低门槛，紧张感与成长感并存。</p>
+                </div>
+                <div class="work">
+                  <div class="wname">《惊悚乐园》</div>
+                  <p><b>梗概：</b>主角以游戏数据化身份闯各种惊悚副本。</p>
+                  <p><b>套路运用：</b>数据化降低理解成本，用主角毒舌性格反差制造趣味。</p>
+                  <p><b>好在哪：</b>把无限流写出幽默与智斗，证明该流派不止是「闯关」，还能拼文笔与脑洞。</p>
+                </div>
+                <div class="tips"><b>进阶写法：</b>副本选大众熟悉 IP 降低理解成本；主线暗线串联各世界。<b>风险提示：</b>副本写崩或脱离主线易掉收，需控好「单元爽」与「主线钩」。</div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>苟道 / 老六流 <span class="tag">新趋势</span></h3>
+                <div class="meta"><span>适合：轻松搞笑</span><span>爽点：误判反差</span></div>
+                <div class="formula">低调发育 → 众人误判 → 一鸣惊人</div>
+                <div class="tips"><b>核心设定：</b>主角苟住发育、不当出头鸟，最后才发现是最强那个。</div>
+                <div class="blk-title">代表名作 · 深度分析</div>
+                <div class="work">
+                  <div class="wname">《我师兄实在太稳健了》</div>
+                  <p><b>梗概：</b>李长寿把「稳健」刻进骨子里，凡事留后手、能跑不刚，却一路苟成最强。</p>
+                  <p><b>套路运用：</b>把「苟」写成核心人设笑点，反差喜感来自「众人误判他弱」。</p>
+                  <p><b>好在哪：</b>用配角视角的误判制造喜剧反差，关键时刻一鸣惊人，爽感与笑点兼得。</p>
+                </div>
+                <div class="work">
+                  <div class="wname">《诡秘之主》克莱恩</div>
+                  <p><b>梗概：</b>主角谨慎到极点，每层计划都留退路。</p>
+                  <p><b>套路运用：</b>「苟」服务于悬疑与生存，让智斗有了真实的风险感。</p>
+                  <p><b>好在哪：</b>证明苟道能与严肃题材结合，提升逻辑可信度，读者为「稳」叫好。</p>
+                </div>
+                <div class="tips"><b>进阶写法：</b>用配角视角误判制造笑点；苟要有真实理由（惜命/有仇家）。<b>风险提示：</b>一味苟到底会拖节奏，该出手时必须干脆。</div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>反派 / 幕后黑手流 <span class="tag">视角新</span></h3>
+                <div class="meta"><span>适合：起点脑洞</span><span>爽点：计划通</span></div>
+                <div class="formula">布局 → 棋子动 → 计划通</div>
+                <div class="tips"><b>核心设定：</b>扮演反派或幕后布局者，操控全局。</div>
+                <div class="blk-title">代表名作 · 深度分析</div>
+                <div class="work">
+                  <div class="wname">幕后黑手类代表作共性</div>
+                  <p><b>梗概：</b>主角隐于幕后，推动棋子一步步达成目标。</p>
+                  <p><b>套路运用：</b>多线叙事让「读者比角色知道得多」，产生智商优越性。</p>
+                  <p><b>好在哪：</b>掌控感拉满，反转揭晓时「计划通」的快感，是传统视角给不了的。</p>
+                </div>
+                <div class="work">
+                  <div class="wname">反派视角的成功要素</div>
+                  <p><b>套路运用：</b>反转要埋可回收的伏笔，每一步都在前期埋过线。</p>
+                  <p><b>好在哪：</b>逻辑自洽时读者拍案叫绝；失败作则靠作者强行圆，被骂智商侮辱。</p>
+                </div>
+                <div class="tips"><b>进阶写法：</b>多线叙事+可回收伏笔；视角切换要有清晰标记。<b>风险提示：</b>逻辑要求高，布局圆不回必崩；视角易乱。</div>
+              </div>
+            </div>
+
+            <div class="swiper-slide">
+              <div class="card">
+                <h3>国运 / 直播流 <span class="tag">宏大</span></h3>
+                <div class="meta"><span>适合：番茄/七猫</span><span>爽点：集体荣誉</span></div>
+                <div class="formula">国运降临 → 主角出战 → 举国欢呼</div>
+                <div class="tips"><b>核心设定：</b>主角代表国家进入秘境，全国直播，个人荣耀绑定民族情绪。</div>
+                <div class="blk-title">代表名作 · 深度分析</div>
+                <div class="work">
+                  <div class="wname">国运品类爆款共性</div>
+                  <p><b>梗概：</b>各国选派代表进秘境，直播给全民看，胜负关系国运。</p>
+                  <p><b>套路运用：</b>用「直播间弹幕/各国反应」做群像放大器，个人战绩即时转化为全民情绪。</p>
+                  <p><b>好在哪：</b>个人荣耀与民族情绪绑定，扬眉吐气时举国沸腾，下沉爆发力极强。</p>
+                </div>
+                <div class="work">
+                  <div class="wname">翻车样本对照</div>
+                  <p><b>套路运用：</b>把同胞写愚昧拖后腿来捧主角。</p>
+                  <p><b>教训：</b>民族情绪要用在「对外扬眉」上，踩同胞必被骂翻车，是该类最大雷区。</p>
+                </div>
+                <div class="tips"><b>进阶写法：</b>用直播间弹幕/各国反应做放大器；危机要真能威胁国运才紧张。<b>风险提示：</b>踩同胞捧主角必翻车；情绪须用在对外扬眉。</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div class="swiper-nav">
+          <button class="swiper-btn prev">‹</button>
+          <div class="swiper-dots"></div>
+          <div class="swiper-counter">1 / 10</div>
+          <button class="swiper-btn next">›</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 黄金爽点节奏 -->
+    <section class="panel" id="flow">
+      <div class="sec-title">四、黄金爽点节奏（写章节用）</div>
+      <div class="sec-sub">节奏决定了「爽点有没有被释放出来」，比爽点本身更考验功力</div>
+
+      <div class="callout">
+        <h4>① 单章微节奏（五拍）</h4>
+        <ul>
+          <li><b>铺垫（10%-20%）：</b>给一点压抑或期待，比如反派放狠话、旧敌现身、谜题出现。</li>
+          <li><b>蓄力（30%-50%）：</b>主角低调准备/暗暗成长，读者跟着攒期待。</li>
+          <li><b>释放（章末 20%）：</b>打脸/突破/曝光，爽点炸开，这是章末高潮。</li>
+          <li><b>余波（收尾）：</b>围观者震惊、反派傻眼，把快感再放大一遍。</li>
+          <li><b>钩子：</b>留新悬念/新危机/新外挂，逼读者点下一章。</li>
+        </ul>
+      </div>
+
+      <div class="flow">
+        <div class="step">压抑/期待</div><div class="arrow">→</div>
+        <div class="step">铺垫蓄力</div><div class="arrow">→</div>
+        <div class="step">反转释放</div><div class="arrow">→</div>
+        <div class="step">众人震惊</div><div class="arrow">→</div>
+        <div class="step">留新钩子</div>
+      </div>
+
+      <div class="callout">
+        <h4>② 卷节奏（起承转合落在卷内）</h4>
+        每一卷都应该有完整的「小低谷→爬升→大事件→余韵」。卷末的大事件就是该卷的「中爽」爆点（如大比夺魁、秘境立威、身份曝光）。卷与卷之间用更大的谜题衔接，避免读者在卷末流失。
+      </div>
+
+      <div class="callout">
+        <h4>③ 全书节奏曲线</h4>
+        <ul>
+          <li><b>开篇（1-10 章）：</b>金手指+第一个小爽点快速建立，3 章内必须给第一次爽，否则流失。</li>
+          <li><b>前期（10-30%）：</b>密集小爽堆叠，建立主角人设与读者黏性。</li>
+          <li><b>中期（30-70%）：</b>引入更强对手/更大地图，制造「瓶颈—突破」的阶段性大爽。</li>
+          <li><b>后期（70-100%）：</b>所有伏笔收束，终极大爽（决战、复仇清算、登顶）集中释放。</li>
+        </ul>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>层级</th><th>频率</th><th>典型内容</th><th>作用</th><th>写法注意</th></tr></thead>
+          <tbody>
+            <tr><td>微爽</td><td>每 1-3 章</td><td>小打脸、小收获、装逼</td><td>维持追读</td><td>要干脆，章末给钩子</td></tr>
+            <tr><td>中爽</td><td>每卷 1 次</td><td>大比、秘境、立威</td><td>阶段爽感</td><td>需前铺压抑，反差够大</td></tr>
+            <tr><td>大爽</td><td>关键节点</td><td>退婚履约、复仇清算</td><td>情绪高潮</td><td>分量最重，伏笔全收</td></tr>
+            <tr><td>终极爽</td><td>全书 1-3 次</td><td>决战、登顶、身份揭晓</td><td>封神时刻</td><td>前面所有压抑的总释放</td></tr>
+            <tr><td>钩子</td><td>每章末</td><td>悬念、新危机、新外挂</td><td>防弃书</td><td>让人「忍不住点下一章」</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout">
+        <h4>④ 钩子 12 式（章末留什么）</h4>
+        <ul>
+          <li>新危机降临（强敌/追杀/倒计时）</li>
+          <li>新金手指/功能解锁预告</li>
+          <li>身份/底牌将曝光的前一刻</li>
+          <li>悬念提问（「他竟是……？」）</li>
+          <li>反派放狠话、约战</li>
+          <li>神秘人物/宝物出现</li>
+          <li>主角说一句意味深长的话</li>
+          <li>误会产生（读者知道真相，角色不知道）</li>
+          <li>转折性情报（身世/阴谋揭一角）</li>
+          <li>实力即将突破的临界点</li>
+          <li>旧日仇人/故人重逢</li>
+          <li>「欲知后事，且看下回」式断在高潮</li>
+        </ul>
+      </div>
+
+      <div class="callout">
+        <h4>⑤ 不同字数目标的节奏建议</h4>
+        <ul>
+          <li><b>短篇（&lt;30 万）：</b>开篇即爽，一条主线打到底，全程高密度小爽。</li>
+          <li><b>中篇（30-100 万）：</b>每 10 万字一个中爽爆点，卷结构清晰。</li>
+          <li><b>长篇（100-300 万）：</b>地图/境界分段升级，每段都有「新起点+新压迫+新逆袭」。</li>
+          <li><b>超长篇（&gt;300 万）：</b>必须不断「开新地图」重置压迫感，否则老读者阈值过高无爽感。</li>
+        </ul>
+        <b>节奏急救：</b>若卡文/掉收，最快的解法是「塞一个小反派当众嘲讽→主角当场打脸」，立刻回血追读。
+      </div>
+    </section>
+
+    <!-- 05 组合打法 -->
+    <section class="panel" id="combo">
+      <div class="sec-title">五、爽点组合打法（爆款配方）</div>
+      <div class="sec-sub">单一爽点易腻，爆款往往是 3-5 个爽点的「组合拳」</div>
+      <div class="grid">
+        <div class="card">
+          <h3>退婚流配方</h3>
+          <p><b>组合：</b>退婚羞辱 + 立 flag + 金手指觉醒 + 三年后履约打脸 + 前未婚妻悔青肠子。</p>
+          <div class="tips"><b>节奏：</b>开场即退婚立 flag（钩子），中间塞小逆袭保持期待，大比/三年之约做终极释放。适用玄幻/都市，男频最稳开局。</div>
+        </div>
+        <div class="card">
+          <h3>装逼打脸配方</h3>
+          <p><b>组合：</b>反派嚣张 + 众人嘲主角 + 主角淡然亮底牌 + 全场震惊 + 反派社死。</p>
+          <div class="tips"><b>节奏：</b>反派戏份要给足（嚣张才有反差），底牌亮出要干脆，结尾用群嘲转跪舔放大。万能高频爽，可反复用但需换场景。</div>
+        </div>
+        <div class="card">
+          <h3>复仇归来配方</h3>
+          <p><b>组合：</b>昔日受辱 + 多年磨剑 + 王者归来 + 逐一点名清算 + 旧敌跪地求饶。</p>
+          <div class="tips"><b>节奏：</b>归来第一战要狠（立威），之后逐一清算旧账，每次清算都是一个中爽。适合中期主线，情绪最浓。</div>
+        </div>
+        <div class="card">
+          <h3>捡漏逆袭配方</h3>
+          <p><b>组合：</b>被当冤大头 + 淘宝捡漏 + 专家打脸 + 价值曝光 + 众人眼红。</p>
+          <div class="tips"><b>节奏：</b>「被嘲笑乱花钱」是铺垫，鉴定结果曝光是释放，专家反被教做人最解气。适用鉴宝/都市/修真。</div>
+        </div>
+        <div class="card">
+          <h3>后宫团配方</h3>
+          <p><b>组合：</b>实力/魅力展现 + 各类型女神倒贴 + 护短打脸 + 专情不渣 + 团宠。</p>
+          <div class="tips"><b>节奏：</b>每位女角色倒贴都要有独立动机；护短打脸穿插其中维持爽度；专情底线守住口碑。适用后宫/玄幻。</div>
+        </div>
+        <div class="card">
+          <h3>系统升级配方</h3>
+          <p><b>组合：</b>觉醒系统 + 任务驱动 + 奖励爆装备 + 越级碾压 + 排行榜登顶。</p>
+          <div class="tips"><b>节奏：</b>用「任务+奖励」制造稳定开箱期待；每次登顶一个阶段爽；排行变化可视化成长。万能引擎，适配多数题材。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 避坑 -->
+    <section class="panel" id="avoid">
+      <div class="sec-title">六、爽点使用避坑</div>
+      <div class="sec-sub">这些坑踩中任何一个，爽点都会「写了等于没写」甚至招黑</div>
+      <div class="callout">
+        <h4>1. 爽点通胀</h4>
+        <b>表现：</b>天天大爽、章章高潮。<b>危害：</b>读者阈值被拉高，普通爽点失效，后期无以为继。<b>正确做法：</b>爽点分级（微/中/大/终极），憋得越久放得越响；用小爽维持、大爽收束。
+      </div>
+      <div class="callout">
+        <h4>2. 无脑碾压</h4>
+        <b>表现：</b>没有铺垫的秒杀，对手毫无分量。<b>危害：</b>胜利空虚，读者无感。<b>正确做法：</b>先给对手「分量感」（境界、地位、嚣张资本），再让主角凭本事翻盘；反差才是爽源。
+      </div>
+      <div class="callout">
+        <h4>3. 主角降智</h4>
+        <b>表现：</b>为制造爽点强行让主角犯蠢送人头、漏 obvious 破绽。<b>危害：</b>读者出戏、愤怒。<b>正确做法：</b>主角的「吃瘪」必须是合理代价（实力不及/情报缺失），不能为了反派爽而让主角变傻。
+      </div>
+      <div class="callout">
+        <h4>4. 反派脸谱</h4>
+        <b>表现：</b>反派纯工具人，只会嘲讽、无脑嚣张、毫无层次。<b>危害：</b>打脸快感递减，读者懒得恨。<b>正确做法：</b>给反派动机与手段（嫉妒、利益、立场），让其「可恨但有脑」，被打脸时才真正解气。
+      </div>
+      <div class="callout">
+        <h4>5. 只有爽没线</h4>
+        <b>表现：</b>纯爽点堆砌，没有主线目标与人物成长。<b>危害：</b>短期爽、长期崩，长篇必扑。<b>正确做法：</b>每个爽点都服务于主线推进（变强/复仇/登顶），用「目标—阻碍—突破」串起全书的线。
+      </div>
+      <div class="callout">
+        <h4>6. 感情线处理</h4>
+        <b>表现：</b>后宫描写无脑海王、见一个爱一个还标榜深情。<b>危害：</b>口碑崩盘、被喷渣男文。<b>正确做法：</b>走「专情一人 + 红颜知己团宠」的平衡路线；每位女性角色的倒贴都要有独立、可信的动机。
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  /* 左侧菜单切换右侧面板 */
+  const menuBtns = [...document.querySelectorAll('#menu button')];
+  const panels = [...document.querySelectorAll('#main .panel')];
+  menuBtns.forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const id = btn.dataset.target;
+      menuBtns.forEach(b=>b.classList.toggle('active', b===btn));
+      panels.forEach(p=>p.classList.toggle('active', p.id===id));
+      document.getElementById('main').scrollTop = 0;
+    });
+  });
+
+  /* 通用 SWIPER：可用于任意 .swiper 区块 */
+  function initSwiper(root, sectionId){
+    const track = root.querySelector('.swiper-track');
+    const slides = [...track.children];
+    const total = slides.length;
+    const prev = root.querySelector('.swiper-btn.prev');
+    const next = root.querySelector('.swiper-btn.next');
+    const dotsBox = root.querySelector('.swiper-dots');
+    const counter = root.querySelector('.swiper-counter');
+    let index = 0;
+
+    slides.forEach((_,i)=>{
+      const d = document.createElement('button');
+      d.addEventListener('click',()=>goTo(i));
+      dotsBox.appendChild(d);
+    });
+    const dots = [...dotsBox.children];
+
+    function goTo(i){
+      index = Math.max(0, Math.min(total-1, i));
+      track.style.transform = `translateX(-${index*100}%)`;
+      dots.forEach((d,k)=>d.classList.toggle('active', k===index));
+      counter.textContent = `${index+1} / ${total}`;
+      prev.disabled = index===0;
+      next.disabled = index===total-1;
+    }
+    prev.addEventListener('click',()=>goTo(index-1));
+    next.addEventListener('click',()=>goTo(index+1));
+
+    document.addEventListener('keydown',e=>{
+      const sec = document.getElementById(sectionId);
+      if(!sec || !sec.classList.contains('active')) return;
+      if(e.key==='ArrowLeft') goTo(index-1);
+      if(e.key==='ArrowRight') goTo(index+1);
+    });
+
+    let startX=0, dragging=false, delta=0;
+    const view = root.querySelector('.swiper-view');
+    view.addEventListener('pointerdown',e=>{
+      dragging=true; startX=e.clientX; delta=0;
+      track.style.transition='none';
+      try{ view.setPointerCapture(e.pointerId); }catch(_){}
+    });
+    view.addEventListener('pointermove',e=>{
+      if(!dragging) return;
+      delta = e.clientX - startX;
+      track.style.transform = `translateX(calc(-${index*100}% + ${delta}px))`;
+    });
+    function endDrag(){
+      if(!dragging) return;
+      dragging=false;
+      track.style.transition='';
+      const w = view.clientWidth;
+      if(delta < -w*0.18) goTo(index+1);
+      else if(delta > w*0.18) goTo(index-1);
+      else goTo(index);
+    }
+    view.addEventListener('pointerup',endDrag);
+    view.addEventListener('pointercancel',endDrag);
+    view.addEventListener('pointerleave',endDrag);
+
+    goTo(0);
+  }
+  document.querySelectorAll('.swiper').forEach(s=>{
+    initSwiper(s, s.closest('.panel').id);
+  });
+</script>
+</body>
+</html>
