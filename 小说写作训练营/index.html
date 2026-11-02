@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小说写作训练营</title>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+<style>
+:root{
+  --paper:#F6F0E3;
+  --paper-2:#FBF7EC;
+  --paper-deep:#EDE4CF;
+  --ink:#2B2620;
+  --ink-2:#55503F;
+  --ink-3:#8A8174;
+  --cinnabar:#C1492F;
+  --cinnabar-deep:#9C3722;
+  --teal:#3E5C5B;
+  --teal-soft:#E4ECE8;
+  --gold:#B98A3E;
+  --line:#D8CDB4;
+  --line-soft:#E5DCC7;
+  --shadow:0 10px 30px rgba(43,38,32,.08);
+  --shadow-sm:0 3px 12px rgba(43,38,32,.07);
+  --radius:14px;
+  --serif:"Noto Serif SC","Songti SC","SimSun","STSong",serif;
+  --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--sans);
+  color:var(--ink);
+  background:var(--paper);
+  line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(43,38,32,.018) 0px, rgba(43,38,32,.018) 1px, transparent 1px, transparent 34px),
+    radial-gradient(circle at 15% 10%, rgba(185,138,62,.06), transparent 40%);
+  min-height:100vh;
+}
+::selection{background:rgba(193,73,47,.18)}
+a{color:var(--teal);text-decoration:none}
+button{font-family:var(--sans)}
+
+/* ===== 顶栏 ===== */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(246,240,227,.92);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line-soft);
+}
+.topbar-inner{
+  max-width:1180px;margin:0 auto;padding:0 28px;
+  height:64px;display:flex;align-items:center;justify-content:space-between;gap:20px;
+}
+.brand{
+  font-family:var(--serif);font-weight:900;font-size:21px;letter-spacing:.5px;
+  color:var(--ink);display:flex;align-items:center;gap:10px;white-space:nowrap;
+}
+.brand-mark{
+  width:34px;height:34px;border-radius:8px;flex:none;
+  background:var(--cinnabar);color:#FBF7EC;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-weight:900;font-size:18px;
+  box-shadow:inset 0 -2px 0 rgba(0,0,0,.18);
+}
+.brand small{display:block;font-family:var(--sans);font-weight:400;font-size:10px;letter-spacing:2px;color:var(--ink-3);line-height:1}
+.nav{display:flex;align-items:center;gap:4px}
+.nav a{
+  color:var(--ink-2);font-weight:500;font-size:14.5px;
+  padding:8px 16px;border-radius:9px;transition:all .18s;
+  border-bottom:2px solid transparent;
+}
+.nav a:hover{color:var(--cinnabar);background:rgba(193,73,47,.06)}
+.nav a.active{color:var(--cinnabar);background:rgba(193,73,47,.08)}
+.hamburger{
+  display:none;background:none;border:1px solid var(--line);border-radius:9px;
+  width:42px;height:42px;cursor:pointer;color:var(--ink);
+  align-items:center;justify-content:center;
+}
+.hamburger svg{width:22px;height:22px}
+
+/* ===== 主容器 ===== */
+main{max-width:1180px;margin:0 auto;padding:28px 28px 90px}
+.view{display:none;animation:fadeIn .35s ease}
+.view.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ===== 通用组件 ===== */
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:12.5px;font-weight:700;letter-spacing:3px;color:var(--cinnabar);
+  text-transform:uppercase;margin-bottom:14px;
+}
+.eyebrow::before{content:"";width:26px;height:2px;background:var(--cinnabar);border-radius:2px}
+.page-title{
+  font-family:var(--serif);font-weight:900;font-size:38px;line-height:1.25;
+  letter-spacing:.5px;color:var(--ink);margin-bottom:14px;
+}
+.page-sub{font-size:15.5px;color:var(--ink-2);max-width:720px}
+.card{
+  background:var(--paper-2);border:1px solid var(--line-soft);
+  border-radius:var(--radius);padding:26px;box-shadow:var(--shadow-sm);
+  position:relative;
+}
+.card-title{font-family:var(--serif);font-weight:700;font-size:19px;color:var(--ink);margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.card-title .num{
+  font-family:var(--serif);font-weight:900;font-size:14px;color:var(--cinnabar);
+  border:1.5px solid var(--cinnabar);border-radius:7px;width:30px;height:30px;flex:none;
+  display:inline-flex;align-items:center;justify-content:center;
+}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;justify-content:center;
+  border:none;cursor:pointer;border-radius:10px;
+  font-family:var(--sans);font-weight:600;font-size:14.5px;
+  padding:11px 22px;transition:all .18s;line-height:1.4;
+}
+.btn-primary{background:var(--cinnabar);color:#FBF7EC;box-shadow:0 4px 14px rgba(193,73,47,.28)}
+.btn-primary:hover{background:var(--cinnabar-deep);transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--teal);border:1.5px solid var(--teal)}
+.btn-ghost:hover{background:var(--teal-soft)}
+.btn-soft{background:rgba(62,92,91,.1);color:var(--teal)}
+.btn-soft:hover{background:rgba(62,92,91,.18)}
+.btn-sm{padding:7px 14px;font-size:13px;border-radius:8px}
+.btn.done{background:var(--teal);color:#F2F6F3;box-shadow:0 3px 10px rgba(62,92,91,.25)}
+.btn[disabled]{opacity:.5;cursor:not-allowed;transform:none}
+.tag{
+  display:inline-flex;align-items:center;font-size:12px;font-weight:600;
+  padding:3px 11px;border-radius:99px;letter-spacing:.5px;
+}
+.tag-cin{background:rgba(193,73,47,.1);color:var(--cinnabar-deep)}
+.tag-teal{background:rgba(62,92,91,.1);color:var(--teal)}
+.tag-gold{background:rgba(185,138,62,.14);color:var(--gold)}
+.tag-line{background:transparent;border:1px solid var(--line);color:var(--ink-3)}
+.grid{display:grid;gap:20px}
+.grid-2{grid-template-columns:repeat(2,1fr)}
+.grid-3{grid-template-columns:repeat(3,1fr)}
+.mt-8{margin-top:8px}.mt-16{margin-top:16px}.mt-24{margin-top:24px}.mt-32{margin-top:32px}
+.text-muted{color:var(--ink-3)}
+.section-block{margin-top:52px}
+.section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px}
+.section-head h2{font-family:var(--serif);font-weight:900;font-size:27px;color:var(--ink);letter-spacing:.3px}
+.section-head .more{font-size:13.5px;color:var(--ink-3);white-space:nowrap}
+.divider{height:1px;background:linear-gradient(90deg,var(--line),transparent);margin:26px 0;border:none}
+.empty-hint{color:var(--ink-3);font-size:14px;padding:18px 0;text-align:center;font-style:italic}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;cursor:pointer;
+  font-size:13px;font-weight:600;color:var(--ink-2);
+  border:1px solid var(--line);border-radius:99px;padding:6px 15px;
+  background:var(--paper-2);transition:all .15s;
+}
+.chip:hover{border-color:var(--cinnabar);color:var(--cinnabar)}
+.chip.active{background:var(--cinnabar);color:#FBF7EC;border-color:var(--cinnabar)}
+.chip-wrap{display:flex;flex-wrap:wrap;gap:9px}
+
+/* 朱砂批注（签名元素） */
+.margin-note{
+  position:relative;border-left:3px solid var(--cinnabar);
+  background:rgba(193,73,47,.045);border-radius:0 10px 10px 0;
+  padding:14px 18px;margin:18px 0;font-size:14px;color:var(--ink-2);
+}
+.margin-note::before{
+  content:"批注";position:absolute;top:-11px;left:14px;
+  background:var(--cinnabar);color:#FBF7EC;font-size:10.5px;font-weight:700;letter-spacing:2px;
+  padding:2px 10px;border-radius:5px;
+}
+
+/* ===== Home hero ===== */
+.hero{
+  position:relative;overflow:hidden;
+  background:linear-gradient(160deg,var(--paper-2) 0%, var(--paper) 60%, var(--paper-deep) 100%);
+  border:1px solid var(--line-soft);border-radius:22px;
+  padding:56px 56px 48px;box-shadow:var(--shadow);
+}
+.hero::before{
+  content:"";position:absolute;right:-60px;top:-60px;width:260px;height:260px;
+  border-radius:50%;background:radial-gradient(circle,rgba(193,73,47,.10),transparent 65%);
+}
+.hero::after{
+  content:"";position:absolute;right:40px;bottom:-80px;width:340px;height:340px;
+  border-radius:50%;background:radial-gradient(circle,rgba(62,92,91,.10),transparent 65%);
+}
+.hero-inner{position:relative;z-index:1}
+.hero h1{
+  font-family:var(--serif);font-weight:900;font-size:46px;line-height:1.3;
+  letter-spacing:1px;color:var(--ink);margin-bottom:16px;
+}
+.hero h1 .accent{color:var(--cinnabar);position:relative}
+.hero p{font-size:16px;color:var(--ink-2);max-width:640px;margin-bottom:28px}
+.hero-stats{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:30px}
+.stat{
+  background:rgba(255,255,255,.55);border:1px solid var(--line-soft);border-radius:14px;
+  padding:14px 22px;min-width:120px;
+}
+.stat b{font-family:var(--serif);font-weight:900;font-size:30px;color:var(--cinnabar);display:block;line-height:1.1}
+.stat span{font-size:12.5px;color:var(--ink-3);letter-spacing:1px}
+.hero-cta{display:flex;gap:14px;flex-wrap:wrap}
+
+/* ===== 路线图 ===== */
+.roadmap{display:grid;gap:16px}
+.road-item{
+  display:flex;gap:20px;align-items:stretch;
+  background:var(--paper-2);border:1px solid var(--line-soft);border-radius:var(--radius);
+  padding:22px 24px;cursor:pointer;transition:all .18s;position:relative;
+}
+.road-item:hover{border-color:var(--line);box-shadow:var(--shadow-sm);transform:translateY(-2px)}
+.road-item.done-stage{border-left:4px solid var(--teal)}
+.road-item .stage-num{
+  flex:none;width:54px;height:54px;border-radius:13px;
+  background:var(--paper-deep);border:1.5px solid var(--line);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-weight:900;font-size:20px;color:var(--ink-2);
+}
+.road-item.done-stage .stage-num{background:var(--teal);border-color:var(--teal);color:#F2F6F3}
+.road-item .road-body{flex:1;min-width:0}
+.road-item .road-body h3{font-family:var(--serif);font-weight:700;font-size:18px;color:var(--ink)}
+.road-item .road-body .weeks{font-size:12.5px;color:var(--cinnabar);font-weight:700;letter-spacing:1px}
+.road-item .road-body p{font-size:13.5px;color:var(--ink-2);margin-top:4px}
+.road-item .road-goal{font-size:12.5px;color:var(--ink-3);margin-top:8px}
+.road-item .road-check{
+  flex:none;align-self:center;width:26px;height:26px;border-radius:50%;
+  border:2px solid var(--line);display:flex;align-items:center;justify-content:center;
+}
+.road-item.done-stage .road-check{background:var(--teal);border-color:var(--teal);color:#F2F6F3}
+.road-item.done-stage .road-check svg{width:14px;height:14px}
+
+/* ===== 课程详情 ===== */
+.course-hero{display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap}
+.course-hero .ch-num{
+  flex:none;width:74px;height:74px;border-radius:16px;
+  background:var(--cinnabar);color:#FBF7EC;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-weight:900;font-size:28px;
+  box-shadow:0 6px 18px rgba(193,73,47,.3);
+}
+.course-hero .ch-body{flex:1;min-width:260px}
+.course-hero h1{font-family:var(--serif);font-weight:900;font-size:30px;color:var(--ink);line-height:1.3}
+.course-hero .weeks{display:inline-flex;align-items:center;gap:6px;margin-top:6px;font-size:13.5px;font-weight:700;color:var(--cinnabar)}
+.goal-list{list-style:none;display:grid;gap:9px}
+.goal-list li{display:flex;gap:10px;font-size:14.5px;color:var(--ink-2)}
+.goal-list li::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:var(--cinnabar);margin-top:9px}
+.knowledge-item{border:1px solid var(--line-soft);border-radius:12px;padding:18px 20px;background:var(--paper-2)}
+.knowledge-item h4{font-family:var(--serif);font-weight:700;font-size:16.5px;color:var(--ink);margin-bottom:6px;display:flex;gap:9px;align-items:baseline}
+.knowledge-item h4 .k-idx{font-size:12px;color:var(--cinnabar);font-weight:900}
+.knowledge-item p{font-size:14px;color:var(--ink-2)}
+.knowledge-item .ex{
+  margin-top:9px;font-size:13px;color:var(--teal);
+  border-left:2px solid var(--teal);padding-left:12px;
+}
+.task-item{border-left:3px solid var(--gold);background:rgba(185,138,62,.06);border-radius:0 12px 12px 0;padding:16px 20px;margin-bottom:14px}
+.task-item h4{font-family:var(--serif);font-weight:700;font-size:16px;color:var(--ink)}
+.task-item p{font-size:14px;color:var(--ink-2);margin-top:4px}
+.task-item .task-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
+.deliver-box{background:var(--teal-soft);border:1px dashed var(--teal);border-radius:12px;padding:16px 20px;margin-top:10px}
+.deliver-box h5{font-size:13.5px;color:var(--teal);font-weight:700;letter-spacing:1px;margin-bottom:6px}
+.deliver-box p{font-size:14px;color:var(--ink-2)}
+.course-nav{display:flex;justify-content:space-between;gap:12px;margin-top:34px;flex-wrap:wrap}
+
+/* ===== 练习 ===== */
+.practice-card{
+  background:var(--paper-2);border:1px solid var(--line-soft);border-radius:var(--radius);
+  padding:22px;transition:all .18s;position:relative;
+}
+.practice-card:hover{box-shadow:var(--shadow-sm);transform:translateY(-2px)}
+.practice-card .pc-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.practice-card h4{font-family:var(--serif);font-weight:700;font-size:17px;color:var(--ink);line-height:1.4}
+.practice-card p{font-size:13.5px;color:var(--ink-2);margin-top:6px}
+.practice-card .pc-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+.practice-card .pc-foot{display:flex;align-items:center;justify-content:space-between;margin-top:14px;gap:10px}
+.practice-card.done-pc{border-left:4px solid var(--teal)}
+.daily-box{
+  background:linear-gradient(150deg,var(--cinnabar) 0%,var(--cinnabar-deep) 100%);
+  border-radius:20px;padding:34px 38px;color:#FBF7EC;position:relative;overflow:hidden;box-shadow:var(--shadow);
+}
+.daily-box::after{content:"";position:absolute;right:-40px;bottom:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.07)}
+.daily-box h3{font-family:var(--serif);font-weight:900;font-size:24px;margin-bottom:6px}
+.daily-box .d-cat{font-size:12.5px;letter-spacing:2px;opacity:.85;font-weight:700}
+.daily-box p{font-size:15px;line-height:1.8;opacity:.96;max-width:680px;margin-top:10px}
+.daily-box .d-hint{font-size:12.5px;opacity:.75;margin-top:14px}
+.daily-actions{display:flex;gap:12px;margin-top:22px;flex-wrap:wrap;position:relative;z-index:1}
+.daily-actions .btn-primary{background:#FBF7EC;color:var(--cinnabar-deep);box-shadow:none}
+.daily-actions .btn-primary:hover{background:#fff}
+.daily-actions .btn-ghost{border-color:rgba(251,247,236,.7);color:#FBF7EC}
+.daily-actions .btn-ghost:hover{background:rgba(255,255,255,.12)}
+
+/* ===== 模板 ===== */
+.tpl-nav{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:24px}
+.tpl-body h3{font-family:var(--serif);font-weight:900;font-size:24px;color:var(--ink);margin-bottom:4px}
+.tpl-desc{color:var(--ink-2);font-size:14.5px;margin-bottom:18px}
+.tpl-field{border-bottom:1px dashed var(--line);padding:13px 4px}
+.tpl-field:last-child{border-bottom:none}
+.tpl-field label{display:block;font-weight:700;font-size:13.5px;color:var(--ink);letter-spacing:.5px}
+.tpl-field .f-eg{font-size:12px;color:var(--ink-3);margin-top:2px}
+.tpl-field textarea,.tpl-field input{
+  width:100%;margin-top:7px;border:1px solid var(--line);border-radius:9px;
+  background:#FFFDF6;padding:10px 13px;font-family:var(--sans);font-size:14px;color:var(--ink);
+  resize:vertical;min-height:46px;transition:border .15s;
+}
+.tpl-field textarea:focus,.tpl-field input:focus{outline:none;border-color:var(--cinnabar);box-shadow:0 0 0 3px rgba(193,73,47,.1)}
+.tpl-actions{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap}
+
+/* ===== 评估 ===== */
+.assess-grid{display:grid;grid-template-columns:1fr 320px;gap:24px}
+.assess-item{border:1px solid var(--line-soft);border-radius:12px;padding:16px 20px;background:var(--paper-2)}
+.assess-item .ai-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.assess-item h4{font-family:var(--serif);font-weight:700;font-size:15.5px;color:var(--ink)}
+.assess-item .ai-score{font-family:var(--serif);font-weight:900;font-size:24px;color:var(--cinnabar)}
+.assess-item p{font-size:13px;color:var(--ink-2);margin-top:4px}
+.assess-item .ai-desc{font-size:12px;color:var(--ink-3);margin-top:6px}
+.assess-item.saved{border-left:4px solid var(--teal)}
+.score-dots{display:flex;gap:8px;margin-top:12px}
+.score-dots button{
+  flex:1;height:34px;border-radius:8px;border:1.5px solid var(--line);
+  background:var(--paper-2);cursor:pointer;font-family:var(--serif);font-weight:900;font-size:15px;color:var(--ink-3);
+  transition:all .14s;
+}
+.score-dots button:hover{border-color:var(--cinnabar);color:var(--cinnabar)}
+.score-dots button.on{background:var(--cinnabar);border-color:var(--cinnabar);color:#FBF7EC}
+.radar-wrap{background:var(--paper-2);border:1px solid var(--line-soft);border-radius:var(--radius);padding:22px;text-align:center}
+.radar-wrap h4{font-family:var(--serif);font-weight:700;font-size:16px;color:var(--ink);margin-bottom:4px}
+.radar-wrap .r-sub{font-size:12.5px;color:var(--ink-3);margin-bottom:10px}
+.history-list{max-height:360px;overflow:auto;display:grid;gap:8px}
+.history-item{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line-soft);border-radius:10px;padding:10px 14px;font-size:13px}
+.history-item .h-score{font-family:var(--serif);font-weight:900;color:var(--cinnabar)}
+.history-item .h-time{color:var(--ink-3);font-size:12px}
+.history-item .h-total{color:var(--ink-2)}
+
+/* ===== 进度面板 ===== */
+.progress-panel{
+  background:var(--paper-deep);border:1px solid var(--line-soft);border-radius:var(--radius);
+  padding:24px;margin-top:34px;
+}
+.progress-panel h3{font-family:var(--serif);font-weight:700;font-size:18px;color:var(--ink);margin-bottom:16px;display:flex;align-items:center;gap:9px}
+.progress-bars{display:grid;gap:14px}
+.pbar .pb-top{display:flex;justify-content:space-between;font-size:13px;color:var(--ink-2);margin-bottom:6px}
+.pbar .pb-top b{color:var(--ink)}
+.pbar-track{height:9px;border-radius:99px;background:rgba(43,38,32,.09);overflow:hidden}
+.pbar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--teal),var(--teal));transition:width .5s ease}
+.pbar-fill.cin{background:linear-gradient(90deg,var(--cinnabar),var(--gold))}
+.badge{
+  display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;
+  background:var(--gold);color:#FFF;padding:4px 12px;border-radius:99px;letter-spacing:.5px;
+}
+
+/* ===== Toast & Modal ===== */
+#toast{
+  position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:#F6F0E3;padding:12px 24px;border-radius:99px;
+  font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:all .3s ease;z-index:200;
+  box-shadow:0 8px 24px rgba(0,0,0,.22);max-width:88vw;text-align:center;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.modal-mask{
+  position:fixed;inset:0;background:rgba(43,38,32,.42);z-index:150;
+  display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .22s;
+}
+.modal-mask.show{opacity:1;pointer-events:auto}
+.modal{
+  background:var(--paper-2);border-radius:18px;max-width:560px;width:100%;
+  padding:30px 32px;box-shadow:0 24px 60px rgba(0,0,0,.3);max-height:84vh;overflow:auto;
+  transform:translateY(12px);transition:transform .22s;
+}
+.modal-mask.show .modal{transform:none}
+.modal h3{font-family:var(--serif);font-weight:900;font-size:21px;color:var(--ink);margin-bottom:6px}
+.modal .m-sub{font-size:13.5px;color:var(--ink-3);margin-bottom:18px}
+.modal .m-body p{font-size:14.5px;color:var(--ink-2);margin-bottom:10px;line-height:1.8}
+
+/* ===== 页脚 ===== */
+.foot{
+  max-width:1180px;margin:0 auto;padding:30px 28px 40px;
+  border-top:1px solid var(--line-soft);
+  display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  font-size:13px;color:var(--ink-3);
+}
+
+/* ===== 响应式 ===== */
+@media (max-width:900px){
+  .grid-3{grid-template-columns:repeat(2,1fr)}
+  .assess-grid{grid-template-columns:1fr}
+}
+@media (max-width:768px){
+  .topbar-inner{padding:0 18px}
+  .nav{
+    position:fixed;top:64px;left:0;right:0;background:var(--paper-2);
+    flex-direction:column;align-items:stretch;padding:12px 16px 18px;
+    border-bottom:1px solid var(--line-soft);box-shadow:var(--shadow);
+    display:none;z-index:99;
+  }
+  .nav.open{display:flex}
+  .nav a{padding:12px 16px;font-size:15px}
+  .hamburger{display:flex}
+  main{padding:20px 16px 80px}
+  .hero{padding:34px 26px}
+  .hero h1{font-size:32px}
+  .page-title{font-size:30px}
+  .grid-2,.grid-3{grid-template-columns:1fr}
+  .road-item{flex-direction:column;gap:12px}
+  .road-item .road-check{align-self:flex-end;position:absolute;top:18px;right:18px}
+  .course-nav{flex-direction:column}
+  .course-hero .ch-num{width:58px;height:58px;font-size:23px}
+  .daily-box{padding:26px 22px}
+  .section-head{flex-direction:column;align-items:flex-start;gap:6px}
+}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<!-- ===== 顶栏 ===== -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-mark">墨</span>
+      <span>小说写作训练营<small>NOVEL CRAFT BOOTCAMP</small></span>
+    </div>
+    <nav class="nav" id="nav">
+      <a href="#/home" data-route="home">总览</a>
+      <a href="#/course" data-route="course">训练体系</a>
+      <a href="#/practice" data-route="practice">每日练习</a>
+      <a href="#/template" data-route="template">写作模板</a>
+      <a href="#/assess" data-route="assess">能力评估</a>
+    </nav>
+    <button class="hamburger" id="hamburger" aria-label="菜单">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- ===== 总览视图 ===== -->
+<section class="view" id="view-home">
+  <div class="hero">
+    <div class="hero-inner">
+      <span class="eyebrow">八周 · 从灵感走向完稿</span>
+      <h1>从零开始，写出你的<br><span class="accent">第一个好故事</span></h1>
+      <p>这不是写作理论的堆砌，而是一套可执行的训练计划。八大阶段环环相扣，从灵感捕捉、人物塑造，到情节结构、文笔打磨，最终完成一篇完整短篇。每天 30 分钟，把写作变成习惯。</p>
+      <div class="hero-stats">
+        <div class="stat"><b id="stat-stages">8</b><span>训练阶段</span></div>
+        <div class="stat"><b id="stat-practices">24</b><span>写作练习</span></div>
+        <div class="stat"><b id="stat-templates">5</b><span>创作模板</span></div>
+        <div class="stat"><b id="stat-complete">0</b><span>已完成练习</span></div>
+      </div>
+      <div class="hero-cta">
+        <button class="btn btn-primary" onclick="go('course')">开始训练</button>
+        <button class="btn btn-ghost" onclick="go('practice')">随机一练</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-head">
+      <h2>训练路线图</h2>
+      <span class="more" id="roadmap-progress"></span>
+    </div>
+    <div class="roadmap" id="roadmap"></div>
+  </div>
+
+  <div class="progress-panel">
+    <h3>训练进度</h3>
+    <div class="progress-bars" id="progress-bars"></div>
+  </div>
+</section>
+
+<!-- ===== 课程视图 ===== -->
+<section class="view" id="view-course">
+  <div id="course-detail"></div>
+</section>
+
+<!-- ===== 练习视图 ===== -->
+<section class="view" id="view-practice">
+  <div class="section-head" style="align-items:flex-start">
+    <div>
+      <span class="eyebrow">Daily Drills</span>
+      <h2 style="font-family:var(--serif);font-weight:900;font-size:30px;margin-bottom:6px">每日写作练习</h2>
+      <p class="page-sub">每天抽一个练习，10–30 分钟完成。写什么不重要，重要的是「保持手感」——练习的核心是刻意训练单一能力。</p>
+    </div>
+  </div>
+
+  <div class="daily-box mt-16" id="daily-box"></div>
+
+  <div class="section-block">
+    <div class="section-head">
+      <h2>练习题库</h2>
+      <span class="more" id="practice-count"></span>
+    </div>
+    <div class="chip-wrap mb16" id="practice-filter" style="margin-bottom:16px"></div>
+    <div class="grid grid-3" id="practice-list"></div>
+  </div>
+</section>
+
+<!-- ===== 模板视图 ===== -->
+<section class="view" id="view-template">
+  <div class="section-head" style="align-items:flex-start">
+    <div>
+      <span class="eyebrow">Frameworks</span>
+      <h2 style="font-family:var(--serif);font-weight:900;font-size:30px;margin-bottom:6px">写作模板库</h2>
+      <p class="page-sub">把创作方法沉淀成可填写的表格。灵感来了直接套用，让「结构化」成为你创作的底层能力。</p>
+    </div>
+  </div>
+  <div class="tpl-nav" id="tpl-nav"></div>
+  <div class="card" id="tpl-body" style="padding:30px 32px"></div>
+</section>
+
+<!-- ===== 评估视图 ===== -->
+<section class="view" id="view-assess">
+  <div class="section-head" style="align-items:flex-start">
+    <div>
+      <span class="eyebrow">Self Assessment</span>
+      <h2 style="font-family:var(--serif);font-weight:900;font-size:30px;margin-bottom:6px">能力评估</h2>
+      <p class="page-sub">按写作能力六大维度给自己打分（1–5 分），生成雷达图跟踪成长轨迹。分数会保存在本地浏览器中。</p>
+    </div>
+  </div>
+
+  <div class="assess-grid mt-24">
+    <div id="assess-items"></div>
+    <div>
+      <div class="radar-wrap">
+        <h4>能力雷达图</h4>
+        <div class="r-sub">最近一次评估</div>
+        <div id="radar-chart"></div>
+        <button class="btn btn-primary mt-16" style="width:100%" onclick="saveAssess()">保存本次评估</button>
+        <button class="btn btn-soft mt-8" style="width:100%" onclick="resetAssess()">重置评分</button>
+      </div>
+      <div class="card mt-16">
+        <h4 style="font-family:var(--serif);font-weight:700;font-size:16px;margin-bottom:12px">历史记录</h4>
+        <div class="history-list" id="assess-history"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 弹窗 ===== -->
+<div class="modal-mask" id="modal-mask">
+  <div class="modal">
+    <h3 id="modal-title"></h3>
+    <div class="m-sub" id="modal-sub"></div>
+    <div class="m-body" id="modal-body"></div>
+    <div style="display:flex;gap:12px;margin-top:20px;justify-content:flex-end;flex-wrap:wrap">
+      <button class="btn btn-soft" onclick="closeModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<footer class="foot">
+  <span>小说写作训练营 · 八周从灵感到完稿</span>
+  <span>进度数据保存在本机浏览器</span>
+</footer>
+<script>
+/* ===================== 数据层 ===================== */
+
+/* 八大训练阶段 */
+const STAGES = [
+  {
+    id:1, num:"壹", title:"灵感与立意", weeks:"第 1 周",
+    goal:"找到值得写的故事：建立素材库，掌握高概念，确定主题。",
+    subtitle:"一切好故事始于一个好念头。这一阶段训练你捕捉灵感、提炼故事内核的能力。",
+    objectives:[
+      "建立个人素材库，养成随手记录的习惯",
+      "学会把生活碎片提炼成故事核（高概念）",
+      "明确自己要写的题材与主题方向"
+    ],
+    knowledge:[
+      {t:"灵感不是等来的", ex:"每天记录 3 件「让心一动」的小事：地铁里陌生人的一句话、窗外的一场雨、一句让你愣住的歌词。写作的原材料就在这些日常碎片里。", d:"灵感是「捕捉」而非「等待」。随身带一个素材本，或手机备忘录里建一个「灵感库」。记录时只写事实和细节，不加评判——评判会杀死灵感。"},
+      {t:"高概念：一句话讲清你的故事", ex:"「一个失去记忆的杀手，发现自己要杀的人正是想找回的记忆。」——高概念=熟悉元素×意外组合，一句话就让人想读下去。", d:"高概念不是题材，而是「意外的组合」。尝试用『如果……会怎样』造句：如果人可以买卖寿命？如果一个社恐被迫成为谈判专家？"},
+      {t:"主题先于情节", ex:"《活着》讲的是「人如何承受苦难」。主题是你的故事想说的话，情节只是让它被看见的容器。", d:"先想清楚：这个故事的读者，读完会带走什么感受或思考？主题越具体，情节越有方向。别写「关于爱情」，要写「关于爱里不敢说出口的自卑」。"},
+      {t:"故事核三要素", ex:"人物（谁）+ 渴望（要什么）+ 阻碍（什么挡着）。把这三样写到一句话里，故事就有了骨架。", d:"任何一个能写下去的故事，都源于一个让人物无法回避的渴望与阻碍的碰撞。检验标准：这句话丢给朋友，对方会追问「然后呢」。"}
+    ],
+    tasks:[
+      {t:"灵感收集 ×3", d:"连续三天，每天记录 3 个灵感碎片，每个 1–2 句即可，最后整理成你的第一份素材库。", meta:"30 分钟 · 输出 9 条灵感"},
+      {t:"高概念练习 ×5", d:"用「如果……会怎样」写出 5 个高概念，每个一句话。不追求完美，追求「让我想写」。", meta:"20 分钟 · 输出 5 句"},
+      {t:"主题一句话", d:"从 5 个高概念里选 1 个你最有感觉的，写下它的主题（一句话），并说明为什么选它。", meta:"15 分钟 · 输出 1 句"}
+    ],
+    deliver:"素材库（≥9 条灵感）+ 高概念清单（5 句）+ 选定主题",
+    standard:"能一句话向别人讲清你的故事，并能说出它想表达的主题。"
+  },
+  {
+    id:2, num:"贰", title:"人物塑造", weeks:"第 2 周",
+    goal:"让读者记住人物：建立欲望与缺陷，设计人物弧光。",
+    subtitle:"读者记住故事，往往是因为记住了人物。这一阶段让你的人物「活」起来。",
+    objectives:[
+      "理解欲望与缺陷是人物行动的双引擎",
+      "学会写立体的人物小传",
+      "设计让人物成长的人物弧光"
+    ],
+    knowledge:[
+      {t:"欲望：人物行动的第一引擎", ex:"《老人与海》里的老人渴望「钓上那条大马林鱼」。欲望越具体、越强烈，人物越有力量。", d:"问你的主角三个问题：他最想要什么？如果得不到会怎样？为什么现在才去要？欲望要具体到「看得见摸得着」。"},
+      {t:"缺陷：让人物真实的关键", ex:"完美的人物没有故事。主角的缺陷（懦弱、自私、傲慢）制造麻烦，麻烦催生行动，行动改变命运。", d:"给人物一个致命的性格缺陷，并让这个缺陷在关键处害他一次。缺陷不是缺点清单，而是人物行为逻辑的根源。"},
+      {t:"人物小传：从简历到灵魂", ex:"别只写「28 岁，程序员」。写他的恐惧（怕被遗忘）、他的秘密（偷偷写小说）、他的口头禅（「没事，我来」）。", d:"人物小传包含四层：外在（身份外貌）、内在（性格三观）、深层（恐惧秘密）、关系（他怕谁/爱谁/恨谁）。小传不必全写进小说，但你得知道。"},
+      {t:"人物弧光：成长的力量", ex:"《肖申克的救赎》安迪从隐忍到自由，是被希望救赎的弧光。人物在故事里必须「变了」——变得更糟或更好。", d:"设计弧光：起点（缺失什么）→ 关键事件（被迫面对）→ 终点（变成谁）。没有弧光的人物，只是剧情道具。"}
+    ],
+    tasks:[
+      {t:"主角小传", d:"为你的主角写一份 300 字小传：外在、内在、恐惧、秘密、欲望各一段。", meta:"30 分钟 · 输出 300 字"},
+      {t:"配角设计 ×2", d:"为故事设计 2 个配角：一个是主角的「镜像」（相似但选择不同），一个是主角的「反面」（价值观对立）。", meta:"20 分钟 · 输出 2 份"},
+      {t:"弧光设计", d:"画出主角的弧光：起点状态 → 中间转变 → 终点状态，各写 50 字。", meta:"15 分钟 · 输出 3 段"}
+    ],
+    deliver:"主角小传（300字）+ 配角设计（2 份）+ 弧光三段式",
+    standard:"你的人物有了「非做不可」的欲望，和会拖后腿却让读者心疼的缺陷。"
+  },
+  {
+    id:3, num:"叁", title:"情节与结构", weeks:"第 3 周",
+    goal:"让故事立得住：掌握三幕结构，学会搭情节骨架。",
+    subtitle:"灵感是火花，结构是骨架。这一阶段学会让故事「不塌」的搭建术。",
+    objectives:[
+      "掌握三幕式结构的基本框架",
+      "学会设计起承转合的节奏",
+      "用因果链让情节环环相扣"
+    ],
+    knowledge:[
+      {t:"三幕结构：故事的骨架", ex:"第一幕（建置）：介绍人物与目标；第二幕（对抗）：冲突升级、主角受挫；第三幕（解决）：高潮与收尾。", d:"不必死守比例，但要知道：读者需要一个「为什么开始、为什么坚持、为什么结束」的完整弧线。"},
+      {t:"起承转合：中文叙事节奏", ex:"起（引入）、承（展开）、转（转折/意外）、合（收束）。「转」是黄金点，好故事一定有让人意外的转折。", d:"在 60% 处安排一次「意料之外、情理之中」的转折，让故事从平稳滑向高潮。"},
+      {t:"因果链：情节不能靠巧合", ex:"A 因 B 果：人物因为性格缺陷（因）犯下错误（果），错误引来报复（果），报复逼迫成长……", d:"检查每一章：上一章的结尾是不是下一章的原因？如果去掉一章故事还成立，这章就是赘肉。"},
+      {t:"冲突的三种形态", ex:"人与他人（对手）、人与自己（内心挣扎）、人与环境（命运/社会）。", d:"好故事至少同时运转两种冲突。只有外部冲突叫「打斗」，只有内心冲突叫「日记」。"}
+    ],
+    tasks:[
+      {t:"三幕拆解", d:"把你最近看过的一部电影/小说，用三幕结构拆解成 9 个节点（每幕 3 个关键情节点）。", meta:"40 分钟 · 输出 9 节点"},
+      {t:"故事大纲", d:"为你的故事写一页大纲：起承转合四段，每段 100 字。", meta:"30 分钟 · 输出 400 字"},
+      {t:"因果链自查", d:"写下故事的 8 个关键事件，用箭头连成因果链，检查有没有「凭巧合推进」的地方。", meta:"20 分钟 · 输出 1 张链图"}
+    ],
+    deliver:"三幕拆解（9 节点）+ 一页大纲（400字）+ 因果链自查",
+    standard:"你的故事可以一句话讲清主线，且每段情节都有「非发生不可」的理由。"
+  },
+  {
+    id:4, num:"肆", title:"场景与描写", weeks:"第 4 周",
+    goal:"让读者「看见」故事：掌握展示法则，学会描写细节。",
+    subtitle:"「别告诉我他伤心，让他哭给我看。」这一阶段训练你的镜头语言。",
+    objectives:[
+      "掌握「展示而非讲述」的核心法则",
+      "学会用五感细节构建真实场景",
+      "理解场景是故事的最小叙事单位"
+    ],
+    knowledge:[
+      {t:"展示，而非讲述", ex:"✗ 她很伤心。✓ 她把咖啡杯转了三圈，忽然笑了——眼泪砸在杯沿上。", d:"讲述是「结论」，展示是「证据」。把情绪、性格、关系用动作和细节写出来，让读者自己得出结论，参与感更强。"},
+      {t:"五感描写：让场景立体", ex:"不只写「看到」，还要写「听到、闻到、摸到、尝到」。雨声、廉价香水味、玻璃杯的冰凉，都是世界的质感。", d:"每次写场景，至少调动两种感官。视觉为主，辅以听觉/触觉/嗅觉，读者会瞬间「进入」现场。"},
+      {t:"场景=小故事", ex:"每个场景都要有自己的「冲突→变化」：进来时人物想要 A，出去时他得到了 B（或失去了 B）。", d:"写场景前问：这个场景的「变化」是什么？没有变化的场景就是过场戏，删掉或合并。"},
+      {t:"细节的克制", ex:"描写不是越多越好。选 2–3 个「有信息量」的细节，胜过十行华丽辞藻。", d:"好细节的标准：能同时透露「环境+人物+情绪」。比如人物脱下湿透的鞋，既写了雨，也写了他的狼狈。"}
+    ],
+    tasks:[
+      {t:"场景改写", d:"把「她很伤心」这句话，改写成一段 200 字、只用动作和细节展示的场景。", meta:"15 分钟 · 输出 200 字"},
+      {t:"五感速写", d:"写你此刻所在的空间，动用视觉+听觉+触觉+嗅觉，200 字。", meta:"15 分钟 · 输出 200 字"},
+      {t:"场景卡 ×3", d:"为你的故事设计 3 个关键场景，每个写清：目标（进来想要什么）、冲突（谁挡着）、变化（出去时状态）。", meta:"30 分钟 · 输出 3 卡"}
+    ],
+    deliver:"场景改写（200字）+ 五感速写（200字）+ 场景卡 ×3",
+    standard:"读者能「看见」你的场景，且每个场景都推动故事向前一步。"
+  },
+  {
+    id:5, num:"伍", title:"对话与文笔", weeks:"第 5 周",
+    goal:"让语言有味道：写出活生生的对话，打磨独特文笔。",
+    subtitle:"对话泄露人物的灵魂，文笔是作者的指纹。这一阶段打磨你的「声音」。",
+    objectives:[
+      "学会写符合人物身份的对话",
+      "理解对话的潜台词与留白",
+      "找到属于自己的文笔风格"
+    ],
+    knowledge:[
+      {t:"对话要符合人设", ex:"教授不会说「卧槽」，混混不会说「甚为遗憾」。每个人物都有自己的词汇库、口头禅、句长习惯。", d:"检验法：把对话里的名字遮住，读者能猜出是谁说的吗？若不能，说明对话没性格。"},
+      {t:"潜台词：没说出口的才是重点", ex:"「你什么时候回来？」（潜台词：我想你了）「随便你。」（潜台词：我在乎但我不说）", d:"真实的人很少直说心里话。让对话「绕着说」，读者读到的意思会比字面更丰富。"},
+      {t:"对话的节奏", ex:"紧张时对话短促、一句一行；亲密时对话绵长、彼此接话。节奏即情绪。", d:"写对话时想象自己在「听」：停顿、抢话、答非所问，都是节奏工具。别忘了用动作打断对话（「他拿起杯子」）。"},
+      {t:"文笔：去修饰，留质感", ex:"✗ 她美丽地、悲伤地、缓缓地流下眼泪。✓ 眼泪先于声音落下。", d:"文笔的进阶不是堆词，而是做减法。短句有力，长句舒缓；动词比形容词有力。读自己的稿子，删掉所有「的」「很」「非常」。"}
+    ],
+    tasks:[
+      {t:"对话练习", d:"写一段 300 字对话，两人围绕「要不要离开」争吵，但全程不提「离开」二字。", meta:"20 分钟 · 输出 300 字"},
+      {t:"文笔实验", d:"把同一件小事（如喝水）用三种风格各写 50 字：极简、诗意、幽默。", meta:"15 分钟 · 输出 150 字"},
+      {t:"人声区分", d:"给故事里 3 个人物各写 3 句「自我介绍」，让风格明显不同。", meta:"15 分钟 · 输出 9 句"}
+    ],
+    deliver:"对话练习（300字）+ 文笔实验（150字）+ 人声区分（9句）",
+    standard:"遮住名字也能分辨是谁在说话；你的文字开始有自己的「指纹」。"
+  },
+  {
+    id:6, num:"陆", title:"节奏与悬念", weeks:"第 6 周",
+    goal:"让读者放不下：掌控叙事节奏，设计悬念钩子。",
+    subtitle:"好故事让读者「想翻页」。这一阶段学会控制读者的呼吸。",
+    objectives:[
+      "掌握张弛有度的叙事节奏",
+      "学会在关键处埋设悬念与钩子",
+      "用铺垫与反转制造阅读快感"
+    ],
+    knowledge:[
+      {t:"节奏：张弛之道", ex:"连续紧张会疲劳，一直平淡会弃读。紧张（短句、快动作）与舒缓（细节、内心）交替，读者才跟得上。", d:"写完一个激烈场景，紧接着来一段平静的「余韵」；大高潮之前，先有一小段「暴风雨前的宁静」。"},
+      {t:"钩子：每一章都想翻页", ex:"章末留一个「未完成/意外/悬念」：一扇打开的门、一句没说完的话、一个突然出现的人。", d:"每章结尾问自己：读者此刻最大的疑问是什么？把这个疑问「悬」在章末，就是钩子。"},
+      {t:"铺垫与反转", ex:"好的反转不是凭空而降，而是「情理之中，意料之外」。前面埋下不经意的细节，后面回收引爆。", d:"手法：让读者以为自己知道答案，再在结尾推翻。但推翻前，一定给过「藏在角落的真相」。"},
+      {t:"悬念的类型", ex:"知道信息差（读者知道主角不知道/主角知道读者不知道）、倒计时（时间快来不及了）、道德困境（下一步怎么办）。", d:"三种悬念换着用，读者的注意力就不会疲劳。"}
+    ],
+    tasks:[
+      {t:"节奏对照", d:"写同一场景两个版本：一版用连续短句制造紧张，一版用长句舒缓铺陈。各 150 字。", meta:"20 分钟 · 输出 300 字"},
+      {t:"钩子练习 ×3", d:"为你故事的 3 个章节各写一个章末钩子（一句话）。", meta:"10 分钟 · 输出 3 句"},
+      {t:"反转设计", d:"给你的故事设计一个结尾反转，并倒推 3 处「提前埋好的线索」。", meta:"25 分钟 · 输出 1 组"}
+    ],
+    deliver:"节奏对照（300字）+ 钩子 ×3 + 反转设计（含线索）",
+    standard:"读者读你的故事时会「想知道接下来发生什么」，并且停不下来。"
+  },
+  {
+    id:7, num:"柒", title:"修改与打磨", weeks:"第 7 周",
+    goal:"让作品脱胎换骨：学会修改，让文字从「能看」到「耐看」。",
+    subtitle:"初稿是把石头拖下山，修改才是雕刻。这一阶段掌握打磨之道。",
+    objectives:[
+      "理解「修改才是写作」的理念",
+      "掌握修改的三遍流程（内容-结构-语言）",
+      "学会用朗读与冷处理发现问题"
+    ],
+    knowledge:[
+      {t:"初稿允许丑", ex:"海明威说：所有初稿都是垃圾。别在初稿时追求完美，先「把故事倒出来」，再回来雕刻。", d:"心理建设：第一遍的任务是「完成」，不是「完美」。写作与修改分开，边写边改会卡死灵感。"},
+      {t:"修改第一遍：改内容", ex:"先问大问题：这个故事成立吗？人物动机可信吗？情节有没有硬伤？这时大刀阔斧地删改。", d:"顺序很重要：先改「对与错」，再改「好与坏」。顺序反了，等于在错误的骨架上涂油漆。"},
+      {t:"修改第二遍：改结构", ex:"检查节奏、详略、段落衔接。哪段太长？哪里读者会失去兴趣？可以移动段落，调整顺序。", d:"试着把章节打乱重排，看看叙事顺序是否更优。有时只是换一下出场顺序，故事就活了。"},
+      {t:"修改第三遍：改语言", ex:"删掉赘词，替换重复，让动词精准。大声朗读——读不通顺的地方就是问题所在。", d:"实用技巧：把稿子放三天（冷处理）再看；用另一字体排版，眼睛会「重新看见」文字；朗读时用手机录音，听出问题。"}
+    ],
+    tasks:[
+      {t:"冷处理改稿", d:"拿出你前几周写的一段文字（或现写 300 字），放一天后再改，改出第二稿。", meta:"两天 · 输出 2 稿"},
+      {t:"三遍修改", d:"对同一段文字依次做三遍修改：内容（删改情节）、结构（调顺序）、语言（精炼字句），每遍记录改了什么。", meta:"40 分钟 · 输出 3 稿+记录"},
+      {t:"朗读纠错", d:"把你最近的作品大声读出来，标记 5 处「读着别扭」的地方并修正。", meta:"20 分钟 · 输出 5 处修正"}
+    ],
+    deliver:"冷处理二稿 + 三遍修改记录 + 朗读修正 5 处",
+    standard:"你不再害怕修改，并把「改」当成让作品变好的必经之路。"
+  },
+  {
+    id:8, num:"捌", title:"完稿与复盘", weeks:"第 8 周",
+    goal:"让故事抵达终点：完成一篇完整短篇，并学会复盘。",
+    subtitle:"写作者的分水岭不是天赋，是「能把它写完」。这一阶段让你拥有自己的成品。",
+    objectives:[
+      "整合八周所学，完成一篇完整短篇",
+      "掌握完稿检查清单",
+      "学会复盘与开启下一程"
+    ],
+    knowledge:[
+      {t:"完成大于完美", ex:"很多写作者死在 80% 处。规定一个截止日期，写完——哪怕粗糙。先有成品，才有打磨的对象。", d:"设定「烂尾也要写完」的心理底线。卡住时告诉自己：先写结尾，回头再补。"},
+      {t:"完稿检查清单", ex:"① 主线讲完了吗？② 人物动机可信吗？③ 有没有未回收的伏笔？④ 开头能勾人吗？⑤ 结尾有力吗？", d:"逐条打勾，不打勾不罢休。这不是「找茬」，是让作品可以见人的底线。"},
+      {t:"复盘：写作的加速器", ex:"每写完一篇，回答：这篇的亮点是什么？最大的问题是什么？下次改进什么？", d:"复盘让经验沉淀。不复盘的写作，只是重复；复盘的写作，才是成长。"},
+      {t:"构建写作系统", ex:"固定的时间（如早起 30 分钟）、固定的产出（每天 500 字）、固定的反馈（读者/伙伴）。", d:"写作不是靠灵感，是靠系统。灵感负责点火，系统负责持续燃烧。"}
+    ],
+    tasks:[
+      {t:"完成短篇", d:"整合八周所学，写一篇 1500–3000 字的完整短篇（含开头-发展-转折-结尾）。", meta:"3–5 天 · 输出完整短篇"},
+      {t:"完稿自查", d:"用完稿检查清单逐条检查你的短篇，列出每一条的修改结果。", meta:"40 分钟 · 输出清单"},
+      {t:"复盘报告", d:"写下：这篇的 2 个亮点、2 个不足、下篇的 1 个改进点。", meta:"20 分钟 · 输出复盘"}
+    ],
+    deliver:"完整短篇（1500–3000字）+ 完稿清单 + 复盘报告",
+    standard:"你拥有了一篇可以给朋友看、可以继续打磨的完整作品。恭喜，你已毕业。"
+  }
+];
+
+/* 每日练习题库（按能力维度分类） */
+const PRACTICES = [
+  {id:"P1", cat:"灵感", title:"三件小事", desc:"记录今天让你「心一动」的三件小事：一句话、一个画面、一种情绪。只写事实，不加评判。", time:"10 分钟", level:"入门", hint:"坚持一周，你会拥有一座自己的素材金矿。"},
+  {id:"P2", cat:"灵感", title:"如果……会怎样", desc:"用「如果……会怎样」造 5 个句子，把它变成故事核。例：如果一个人能听见植物的声音？", time:"15 分钟", level:"入门", hint:"越荒谬的组合，往往越有故事张力。"},
+  {id:"P3", cat:"灵感", title:"主题一句话", desc:"从今天的新闻/见闻里，提炼一个你想表达的主题，用一句话说清楚。", time:"10 分钟", level:"入门", hint:"主题决定故事的方向，先有方向再动笔。"},
+  {id:"P4", cat:"灵感", title:"旧物复活", desc:"写一件你身边的旧物（笔、杯子、旧照片），想象它见证过的三个瞬间。", time:"15 分钟", level:"进阶", hint:"旧物是时间的容器，也是情感的入口。"},
+  {id:"P5", cat:"灵感", title:"新闻改写成故事", desc:"找一条真实新闻，只保留事实骨架，把它改写成一个小说的开头（200 字）。", time:"20 分钟", level:"进阶", hint:"现实往往是最好的虚构蓝本。"},
+  {id:"P6", cat:"灵感", title:"反义词世界", desc:"把你的世界观反过来写：如果谎言是美德，诚实是犯罪？写 3 个随之而来的场景。", time:"20 分钟", level:"挑战", hint:"反常规设定最能激发想象。"},
+
+  {id:"P7", cat:"人物", title:"人物速写", desc:"观察你身边一个人（或陌生人），用 100 字写出他的欲望和秘密。", time:"10 分钟", level:"入门", hint:"欲望写在行动里，秘密藏在细节里。"},
+  {id:"P8", cat:"人物", title:"欲望与缺陷", desc:"给你故事的主角写：他最想要什么？他最致命的缺陷是什么？这个缺陷会在哪里害他？", time:"15 分钟", level:"入门", hint:"欲望推动前进，缺陷制造麻烦——双引擎缺一不可。"},
+  {id:"P9", cat:"人物", title:"镜像配角", desc:"设计一个主角的「镜像配角」：和主角相似，却在关键时刻做了相反的选择。", time:"20 分钟", level:"进阶", hint:"镜像配角能照出主角的另一种可能。"},
+  {id:"P10", cat:"人物", title:"反派立起来", desc:"给故事设计一个反派，并写出他「自认为正确」的理由（200 字）。", time:"20 分钟", level:"进阶", hint:"没有反派觉得自己是坏人。"},
+  {id:"P11", cat:"人物", title:"人物采访", desc:"假装采访你的主角，问他 10 个问题（童年、恐惧、秘密、梦想），替他回答。", time:"20 分钟", level:"进阶", hint:"采访得越深，人物越立体。"},
+  {id:"P12", cat:"人物", title:"声音辨识", desc:"写同一句话（如「我要走了」），分别出自 3 个性格迥异的人物之口，共 150 字。", time:"15 分钟", level:"挑战", hint:"对话是人物性格的试金石。"},
+
+  {id:"P13", cat:"情节", title:"三幕一句话", desc:"用三句话（每幕一句）讲清你故事的主线：建置/对抗/解决。", time:"10 分钟", level:"入门", hint:"三句话讲不清，说明主线还不够清晰。"},
+  {id:"P14", cat:"情节", title:"因果链", desc:"写下你故事的 6 个关键事件，用「因为……所以……」连接成链。", time:"20 分钟", level:"进阶", hint:"链条上每一环都必须「非发生不可」。"},
+  {id:"P15", cat:"情节", title:"转折设计", desc:"在故事 60% 处设计一个「意料之外、情理之中」的转折，写 150 字。", time:"20 分钟", level:"挑战", hint:"好的转折，回头看处处是伏笔。"},
+  {id:"P16", cat:"情节", title:"章末钩子", desc:"为你故事的任意一章写一个章末钩子：让读者忍不住想知道下一章。", time:"10 分钟", level:"入门", hint:"钩子=悬念+未完待续+意外。"},
+  {id:"P17", cat:"情节", title:"冲突升级", desc:"写一场小矛盾（如谁洗碗），在 6 个回合里把它升级成不可收拾的局面。", time:"20 分钟", level:"进阶", hint:"冲突要层层加码，每一次都要踩在前一次上。"},
+  {id:"P18", cat:"情节", title:"结局倒推", desc:"先写下故事的结局，再倒推：为了这个结局，故事必须发生哪 3 件事？", time:"20 分钟", level:"挑战", hint:"结局决定布局，倒推让结构更稳。"},
+
+  {id:"P19", cat:"场景", title:"五感速写", desc:"写你此刻所在的空间，动用视觉+听觉+触觉+嗅觉，150 字。", time:"10 分钟", level:"入门", hint:"两种感官起步，三种更好。"},
+  {id:"P20", cat:"场景", title:"展示非讲述", desc:"把「他很紧张」改写成一段 150 字、只用动作和细节展示的场景。", time:"15 分钟", level:"入门", hint:"动作、细节、对话——别用形容词下结论。"},
+  {id:"P21", cat:"场景", title:"场景卡", desc:"为故事写一个场景卡：目标（要什么）/冲突（谁挡着）/变化（出去时状态）。", time:"15 分钟", level:"进阶", hint:"没有变化的场景，是过场戏。"},
+  {id:"P22", cat:"场景", title:"一物见人", desc:"用一件物品写一个人物：他的旧外套、磨破的鞋、总是翻到同一页的书。", time:"20 分钟", level:"进阶", hint:"细节能同时透露环境+人物+情绪。"},
+  {id:"P23", cat:"场景", title:"慢镜头", desc:"把「他推开门」这一秒，写成 150 字的慢镜头：手的迟疑、门轴的声音、光线的涌入。", time:"20 分钟", level:"挑战", hint:"慢下来，读者才能进入现场。"},
+  {id:"P24", cat:"场景", title:"天气即情绪", desc:"让天气/光线映照人物情绪：写一个悲伤的人走在晴朗的街上（反差），150 字。", time:"15 分钟", level:"挑战", hint:"用环境写情绪，比直接写情绪高级。"},
+
+  {id:"P25", cat:"对话", title:"潜台词对话", desc:"写一段对话：两人都不说心里话，但读者能读出真正的意思（200 字）。", time:"20 分钟", level:"挑战", hint:"「你几点回来」往往不是问时间。"},
+  {id:"P26", cat:"对话", title:"三声自我介绍", desc:"给 3 个不同人物各写一句自我介绍，让人一眼看出性格。", time:"10 分钟", level:"入门", hint:"句式、用词、口吻都要因人而异。"},
+  {id:"P27", cat:"对话", title:"沉默的力量", desc:"写一段对话，其中一人全程沉默，但用动作和反应参与对话（200 字）。", time:"20 分钟", level:"挑战", hint:"沉默也是一种台词。"},
+  {id:"P28", cat:"对话", title:"动作打断", desc:"写一段 200 字对话，用 3 个动作打断对话节奏（喝水、移开视线、攥紧拳头）。", time:"20 分钟", level:"进阶", hint:"动作让对话「立体」，也泄露真实情绪。"},
+
+  {id:"P29", cat:"文笔", title:"删繁就简", desc:"把一段 150 字写得啰嗦的文字，删到 80 字且意思不变。", time:"15 分钟", level:"进阶", hint:"删掉「的」「很」「非常」开始。"},
+  {id:"P30", cat:"文笔", title:"短句的力量", desc:"用一个连续的短句段（每句不超过 8 字）写一段紧张场景（100 字）。", time:"15 分钟", level:"进阶", hint:"短句=紧张、干脆、呼吸急促。"},
+  {id:"P31", cat:"文笔", title:"动词锤炼", desc:"把一段 100 字里所有「走/看/说/拿」换成更精准的动词（踱、瞥、嘟囔、攥）。", time:"15 分钟", level:"进阶", hint:"精准的动词胜过一堆形容词。"},
+  {id:"P32", cat:"文笔", title:"风格三写", desc:"同一件小事（如等雨停）用三种风格各写 50 字：极简、诗意、冷峻。", time:"20 分钟", level:"挑战", hint:"找手感，也找自己的声音。"}
+];
+
+/* 写作模板库 */
+const TEMPLATES = [
+  {id:"T1", name:"故事核模板", icon:"◎", desc:"把一个想法变成可写的故事骨架。", fields:[
+    {label:"一句话故事", eg:"例：一个社恐化妆师，被迫在暗杀现场给目标化妆。"},
+    {label:"主角", eg:"谁？身份/性格/一句话人设"},
+    {label:"渴望", eg:"他/她最想要什么？（具体到看得见）"},
+    {label:"阻碍", eg:"谁/什么挡着他？来自人、自己还是命运？"},
+    {label:"主题", eg:"这个故事读完，希望读者带走什么？"},
+    {label:"类型/篇幅", eg:"悬疑/言情/科幻；短篇/中篇/长篇"}
+  ]},
+  {id:"T2", name:"人物小传", icon:"人", desc:"四层立体塑造人物。", fields:[
+    {label:"外在", eg:"身份、年龄、外貌、习惯动作"},
+    {label:"内在", eg:"性格核心、价值观、口头禅"},
+    {label:"深层", eg:"恐惧什么？隐藏什么秘密？"},
+    {label:"关系", eg:"爱谁/恨谁/怕谁？和主角什么关系？"},
+    {label:"欲望与缺陷", eg:"最想要什么 × 最致命的缺陷是什么"},
+    {label:"弧光", eg:"起点状态 → 关键事件 → 终点状态"}
+  ]},
+  {id:"T3", name:"三幕大纲", icon:"构", desc:"一页搭起故事骨架。", fields:[
+    {label:"第一幕 · 建置", eg:"引入人物与日常；激励事件推动他出发。目标？"},
+    {label:"第二幕 · 对抗（上半）", eg:"冲突初显；主角尝试，受挫；新信息浮现。"},
+    {label:"第二幕 · 对抗（下半）", eg:"转折点；主角被迫做出关键抉择；最黑暗时刻。"},
+    {label:"第三幕 · 解决", eg:"高潮对决；主角改变；收尾与余韵。"},
+    {label:"关键转折点", eg:"激励事件 / 中点转折 / 至暗时刻 / 高潮"},
+    {label:"因果链自查", eg:"每章结尾是否是下章的原因？有无巧合推进？"}
+  ]},
+  {id:"T4", name:"场景卡", icon:"景", desc:"让每个场景都有存在意义。", fields:[
+    {label:"场景目标", eg:"人物在这个场景里想得到什么？"},
+    {label:"冲突来源", eg:"谁/什么在阻碍？来自人/自己/环境？"},
+    {label:"变化", eg:"场景结束时，人物状态/关系/信息有何变化？"},
+    {label:"五感细节", eg:"至少两种感官的具体细节（声音/气味/触感）"},
+    {label:"情绪基调", eg:"这个场景想营造什么情绪？如何用环境衬托？"},
+    {label:"承接关系", eg:"上一场景的果？下一场景的因？"}
+  ]},
+  {id:"T5", name:"完稿检查清单", icon:"检", desc:"让作品可以见人的底线。", fields:[
+    {label:"主线完整", eg:"开头-发展-转折-结尾都讲完了吗？"},
+    {label:"人物动机", eg:"每个人物的行动都可信吗？"},
+    {label:"伏笔回收", eg:"有没有开了头却没回收的伏笔？"},
+    {label:"开头勾人", eg:"第一段能让读者读下去吗？"},
+    {label:"结尾有力", eg:"结尾有情绪落点，还是草草收场？"},
+    {label:"语言洁净", eg:"有没有可以删掉的赘词和病句？朗读通顺吗？"}
+  ]}
+];
+
+/* 评估维度 */
+const ASSESS_DIMS = [
+  {id:"A1", name:"灵感与立意", desc:"题材选择与故事内核的吸引力", q:"你总能找到值得写的故事吗？"},
+  {id:"A2", name:"人物塑造", desc:"人物立体度与动机可信度", q:"你的人物有欲望和缺陷吗？读者能记住他们吗？"},
+  {id:"A3", name:"情节结构", desc:"故事骨架的完整与因果", q:"你的故事主线清晰、因果成立吗？"},
+  {id:"A4", name:"场景描写", desc:"画面的具体感与沉浸感", q:"读者能「看见」你的场景吗？"},
+  {id:"A5", name:"对话文笔", desc:"对话性格化与语言质感", q:"你的对话符合人设、文字有味道吗？"},
+  {id:"A6", name:"节奏悬念", desc:"叙事张弛与钩子设计", q:"读者会想一直翻页吗？"}
+];
+</script>
+<script>
+/* ===================== 应用逻辑 ===================== */
+const LS_KEY = "novel_bootcamp_v1";
+
+/* ---------- 状态管理 ---------- */
+let state = {
+  route: "home",
+  doneStages: [],       // 完成的阶段 id
+  donePractices: [],    // 完成的练习 id
+  dailyPicked: null,    // 今日练习
+  tplIndex: 0,          // 当前模板
+  filter: "全部",       // 练习筛选
+  scores: {A1:3,A2:3,A3:3,A4:3,A5:3,A6:3}, // 当前评估
+  history: []           // 历史评估 {time,total,scores}
+};
+function loadState(){
+  try{ const raw = localStorage.getItem(LS_KEY); if(raw){ const d = JSON.parse(raw); Object.assign(state, d); } }catch(e){}
+}
+function saveState(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
+}
+
+/* ---------- 工具 ---------- */
+const $ = (id) => document.getElementById(id);
+function toast(msg){
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._timer); t._timer = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+function go(route){ location.hash = "#/" + route; }
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function svgCheck(){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'; }
+function closeModal(){ $("modal-mask").classList.remove("show"); }
+
+/* ---------- 路由 ---------- */
+function router(){
+  const h = location.hash || "#/home";
+  const route = h.replace("#/","").split("?")[0] || "home";
+  state.route = route; saveState();
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  const v = $("view-" + route);
+  if(v) v.classList.add("active");
+  document.querySelectorAll(".nav a").forEach(a=>{
+    a.classList.toggle("active", a.dataset.route===route);
+  });
+  $("nav").classList.remove("open");
+  window.scrollTo({top:0, behavior:"instant" in window ? "instant":"auto"});
+  // 渲染当前视图
+  if(route==="home") renderHome();
+  else if(route==="course") renderCourseList();
+  else if(route==="practice") renderPractice();
+  else if(route==="template") renderTemplate();
+  else if(route==="assess") renderAssess();
+}
+
+/* ===================== 视图：首页 ===================== */
+function renderHome(){
+  // 统计
+  $("stat-practices").textContent = PRACTICES.length;
+  $("stat-templates").textContent = TEMPLATES.length;
+  $("stat-stages").textContent = STAGES.length;
+  $("stat-complete").textContent = state.donePractices.length;
+  // 路线图
+  $("roadmap-progress").textContent = `已完成 ${state.doneStages.length}/${STAGES.length} 阶段`;
+  $("roadmap").innerHTML = STAGES.map(s=>`
+    <div class="road-item ${state.doneStages.includes(s.id)?"done-stage":""}" onclick="openStage(${s.id})">
+      <div class="stage-num">${s.num}</div>
+      <div class="road-body">
+        <span class="weeks">${s.weeks}</span>
+        <h3>${s.title}</h3>
+        <p>${s.subtitle}</p>
+        <div class="road-goal">🎯 ${s.goal}</div>
+      </div>
+      <div class="road-check">${state.doneStages.includes(s.id)?svgCheck():""}</div>
+    </div>`).join("");
+  // 进度条
+  const stPct = Math.round(state.doneStages.length/STAGES.length*100);
+  const prPct = Math.round(state.donePractices.length/PRACTICES.length*100);
+  $("progress-bars").innerHTML = `
+    <div class="pbar"><div class="pb-top"><span>阶段训练</span><b>${state.doneStages.length}/${STAGES.length} · ${stPct}%</b></div><div class="pbar-track"><div class="pbar-fill" style="width:${stPct}%"></div></div></div>
+    <div class="pbar"><div class="pb-top"><span>写作练习</span><b>${state.donePractices.length}/${PRACTICES.length} · ${prPct}%</b></div><div class="pbar-track"><div class="pbar-fill cin" style="width:${prPct}%"></div></div></div>`;
+}
+
+/* ===================== 视图：课程 ===================== */
+function openStage(id){
+  state.route = "course"; saveState();
+  const s = STAGES.find(x=>x.id===id);
+  if(!s) return;
+  $("view-course").classList.add("active");
+  document.querySelectorAll(".view").forEach(v=>v.id!=="view-course"&&v.classList.remove("active"));
+  document.querySelectorAll(".nav a").forEach(a=>a.classList.toggle("active", a.dataset.route==="course"));
+  $("nav").classList.remove("open");
+  window.scrollTo({top:0});
+  const done = state.doneStages.includes(s.id);
+  $("course-detail").innerHTML = `
+    <div class="course-hero card" style="padding:34px 36px">
+      <div class="ch-num">${s.num}</div>
+      <div class="ch-body">
+        <span class="eyebrow">第 ${s.id} 阶段 · ${s.weeks}</span>
+        <h1>${s.title}</h1>
+        <div class="weeks">训练目标：${s.goal}</div>
+        <p class="text-muted mt-8">${s.subtitle}</p>
+      </div>
+    </div>
+    <div class="section-block">
+      <div class="section-head"><h2>本阶段目标</h2></div>
+      <div class="card"><ul class="goal-list">${s.objectives.map(o=>`<li>${o}</li>`).join("")}</ul></div>
+    </div>
+    <div class="section-block">
+      <div class="section-head"><h2>核心知识</h2></div>
+      <div class="grid grid-2">${s.knowledge.map((k,i)=>`
+        <div class="knowledge-item">
+          <h4><span class="k-idx">0${i+1}</span>${k.t}</h4>
+          <p>${k.d}</p>
+          ${k.ex?`<div class="ex">${k.ex}</div>`:""}
+        </div>`).join("")}</div>
+    </div>
+    <div class="section-block">
+      <div class="section-head"><h2>训练任务</h2></div>
+      <div>${s.tasks.map(t=>`
+        <div class="task-item">
+          <h4>${t.t}</h4>
+          <p>${t.d}</p>
+          <div class="task-meta"><span class="tag tag-gold">${t.meta}</span></div>
+        </div>`).join("")}</div>
+    </div>
+    <div class="section-block">
+      <div class="section-head"><h2>阶段产出</h2></div>
+      <div class="deliver-box">
+        <h5>交付物</h5><p>${s.deliver}</p>
+      </div>
+      <div class="deliver-box mt-8" style="background:rgba(193,73,47,.05);border-color:var(--cinnabar)">
+        <h5 style="color:var(--cinnabar)">完成标准</h5><p>${s.standard}</p>
+      </div>
+    </div>
+    <div class="course-nav">
+      <button class="btn btn-ghost" onclick="go('course')">← 返回训练体系</button>
+      <button class="btn ${done?"done":""}" onclick="toggleStage(${s.id})">${done?"✓ 已完成本阶段":"标记本阶段完成"}</button>
+    </div>`;
+}
+
+function renderCourseList(){
+  $("course-detail").innerHTML = `
+    <div class="section-head" style="align-items:flex-start">
+      <div>
+        <span class="eyebrow">Curriculum</span>
+        <h2 style="font-family:var(--serif);font-weight:900;font-size:30px;margin-bottom:6px">八大训练阶段</h2>
+        <p class="page-sub">从灵感到完稿，每周一个主题，循序渐进。每阶段含核心知识、训练任务与阶段产出，完成即打卡。</p>
+      </div>
+    </div>
+    <div class="grid" style="gap:14px">
+      ${STAGES.map(s=>`
+      <div class="road-item ${state.doneStages.includes(s.id)?"done-stage":""}" onclick="openStage(${s.id})">
+        <div class="stage-num">${s.num}</div>
+        <div class="road-body">
+          <span class="weeks">${s.weeks}</span>
+          <h3>${s.title}</h3>
+          <p>${s.subtitle}</p>
+        </div>
+        <div class="road-check">${state.doneStages.includes(s.id)?svgCheck():""}</div>
+      </div>`).join("")}
+    </div>`;
+}
+function toggleStage(id){
+  const i = state.doneStages.indexOf(id);
+  if(i>=0) state.doneStages.splice(i,1); else state.doneStages.push(id);
+  saveState();
+  toast(state.doneStages.includes(id)?"已标记完成，恭喜进阶":"已取消完成标记");
+  openStage(id);
+}
+
+/* ===================== 视图：练习 ===================== */
+function renderPractice(){
+  renderDaily();
+  renderPracticeFilter();
+  renderPracticeList();
+}
+function renderDaily(){
+  if(!state.dailyPicked) pickDaily();
+  const p = PRACTICES.find(x=>x.id===state.dailyPicked);
+  if(!p) return;
+  $("daily-box").innerHTML = `
+    <span class="d-cat">今日练习 · ${p.cat} · ${p.level}</span>
+    <h3>${p.title}</h3>
+    <p>${p.desc}</p>
+    <div class="d-hint">${p.hint} · 建议用时 ${p.time}</div>
+    <div class="daily-actions">
+      <button class="btn btn-primary" onclick="markPractice('${p.id}')">${state.donePractices.includes(p.id)?"✓ 已完成":"标记完成"}</button>
+      <button class="btn btn-ghost" onclick="pickDaily()">换一个练习</button>
+    </div>`;
+}
+function pickDaily(){
+  const pool = PRACTICES.filter(p=>!state.donePractices.includes(p.id));
+  const src = pool.length? pool : PRACTICES;
+  state.dailyPicked = src[Math.floor(Math.random()*src.length)].id;
+  saveState();
+  if(state.route==="practice") renderDaily();
+}
+function markPractice(id){
+  if(state.donePractices.includes(id)){
+    state.donePractices = state.donePractices.filter(x=>x!==id);
+    toast("已取消完成标记");
+  }else{
+    state.donePractices.push(id);
+    toast("练习完成，手感 +1");
+  }
+  saveState();
+  if(state.route==="practice"){ renderDaily(); renderPracticeList(); renderPracticeCount(); }
+}
+function renderPracticeFilter(){
+  const cats = ["全部", ...new Set(PRACTICES.map(p=>p.cat))];
+  $("practice-filter").innerHTML = cats.map(c=>
+    `<span class="chip ${state.filter===c?"active":""}" onclick="setFilter('${c}')">${c}</span>`).join("");
+}
+function setFilter(c){ state.filter = c; saveState(); renderPracticeList(); renderPracticeFilter(); }
+function renderPracticeCount(){
+  $("practice-count").textContent = `${PRACTICES.length} 个练习 · 已完成 ${state.donePractices.length}`;
+}
+function renderPracticeList(){
+  renderPracticeCount();
+  const list = state.filter==="全部" ? PRACTICES : PRACTICES.filter(p=>p.cat===state.filter);
+  $("practice-list").innerHTML = list.length? list.map(p=>`
+    <div class="practice-card ${state.donePractices.includes(p.id)?"done-pc":""}">
+      <div class="pc-top">
+        <span class="tag ${p.level==="入门"?"tag-teal":p.level==="进阶"?"tag-gold":"tag-cin"}">${p.level}</span>
+        <span class="text-muted" style="font-size:12px">${p.cat} · ${p.time}</span>
+      </div>
+      <h4>${p.title}</h4>
+      <p>${p.desc}</p>
+      <div class="pc-meta">
+        <span class="tag tag-line">${p.hint}</span>
+      </div>
+      <div class="pc-foot">
+        <button class="btn btn-sm ${state.donePractices.includes(p.id)?"btn-soft":""}" onclick="markPractice('${p.id}')">${state.donePractices.includes(p.id)?"已完成":"标记完成"}</button>
+        ${state.dailyPicked===p.id?'<span class="tag tag-cin">今日</span>':''}
+      </div>
+    </div>`).join("")
+    : `<div class="empty-hint">暂无该分类的练习</div>`;
+}
+
+/* ===================== 视图：模板 ===================== */
+function renderTemplate(){
+  $("tpl-nav").innerHTML = TEMPLATES.map((t,i)=>
+    `<button class="btn btn-sm ${state.tplIndex===i?"btn-primary":"btn-soft"}" onclick="setTpl(${i})">${t.icon} ${t.name}</button>`).join("");
+  const t = TEMPLATES[state.tplIndex];
+  $("tpl-body").innerHTML = `
+    <div class="tpl-head">
+      <span class="tag tag-cin">模板 ${String(state.tplIndex+1).padStart(2,"0")}</span>
+      <h3 class="mt-8">${t.icon} ${t.name}</h3>
+      <p class="tpl-desc">${t.desc}</p>
+    </div>
+    ${t.fields.map((f,i)=>`
+      <div class="tpl-field">
+        <label>${f.label}</label>
+        <div class="f-eg">${f.eg}</div>
+        <textarea rows="3" placeholder="在此填写……" id="tpl-${t.id}-${i}"></textarea>
+      </div>`).join("")}
+    <div class="tpl-actions">
+      <button class="btn btn-primary" onclick="clearTpl('${t.id}')">清空模板</button>
+      <button class="btn btn-soft" onclick="saveTpl('${t.id}')">保存到本地</button>
+      <button class="btn btn-ghost" onclick="copyTpl('${t.id}')">复制内容</button>
+    </div>`;
+}
+function setTpl(i){ state.tplIndex = i; saveState(); renderTemplate(); }
+function saveTpl(tid){
+  const t = TEMPLATES.find(x=>x.id===tid);
+  const data = t.fields.map((f,i)=>{
+    const el = $("tpl-"+tid+"-"+i);
+    return {label:f.label, value:el?el.value:""};
+  });
+  try{
+    const all = JSON.parse(localStorage.getItem("novel_templates")||"{}");
+    all[tid] = data; localStorage.setItem("novel_templates", JSON.stringify(all));
+    toast("模板内容已保存到本地");
+  }catch(e){ toast("保存失败"); }
+}
+function clearTpl(tid){
+  const t = TEMPLATES.find(x=>x.id===tid);
+  t.fields.map((f,i)=>{ const el = $("tpl-"+tid+"-"+i); if(el) el.value=""; });
+  toast("已清空");
+}
+function copyTpl(tid){
+  const t = TEMPLATES.find(x=>x.id===tid);
+  let txt = `【${t.name}】\n`;
+  t.fields.forEach((f,i)=>{ const el = $("tpl-"+tid+"-"+i); txt += `\n${f.label}：${el?el.value:""}`; });
+  navigator.clipboard.writeText(txt).then(()=>toast("已复制到剪贴板"),()=>toast("复制失败，请手动复制"));
+}
+
+/* ===================== 视图：评估 ===================== */
+function renderAssess(){
+  $("assess-items").innerHTML = ASSESS_DIMS.map(d=>`
+    <div class="assess-item">
+      <div class="ai-top">
+        <div>
+          <h4>${d.name}</h4>
+          <div class="ai-desc">${d.desc} · ${d.q}</div>
+        </div>
+        <span class="ai-score">${state.scores[d.id]}</span>
+      </div>
+      <div class="score-dots">${[1,2,3,4,5].map(n=>`
+        <button class="${state.scores[d.id]===n?"on":""}" onclick="setScore('${d.id}',${n})">${n}</button>`).join("")}</div>
+    </div>`).join("");
+  renderRadar();
+  renderHistory();
+}
+function setScore(id,n){ state.scores[id]=n; saveState(); renderAssess(); }
+function resetAssess(){
+  ASSESS_DIMS.forEach(d=>state.scores[d.id]=3);
+  saveState(); renderAssess(); toast("已重置为 3 分");
+}
+function saveAssess(){
+  const total = ASSESS_DIMS.reduce((s,d)=>s+state.scores[d.id],0);
+  const avg = (total/ASSESS_DIMS.length).toFixed(1);
+  state.history.unshift({time:new Date().toLocaleString("zh-CN",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}), total, avg, scores:{...state.scores}});
+  if(state.history.length>20) state.history = state.history.slice(0,20);
+  saveState();
+  toast(`已保存评估 · 平均 ${avg} 分`);
+  renderAssess();
+}
+function renderHistory(){
+  $("assess-history").innerHTML = state.history.length? state.history.map(h=>`
+    <div class="history-item">
+      <span class="h-time">${h.time}</span>
+      <span>平均 <span class="h-total">${h.avg}</span> 分</span>
+      <span class="h-score">${h.total}/${ASSESS_DIMS.length*5}</span>
+    </div>`).join("")
+    : `<div class="empty-hint">还没有历史记录，先保存一次评估吧</div>`;
+}
+function renderRadar(){
+  const el = $("radar-chart");
+  const dims = ASSESS_DIMS.map(d=>state.scores[d.id]);
+  el.innerHTML = radarSVG(dims);
+}
+function radarSVG(vals){
+  const size = 280, cx = 140, cy = 145, r = 95, n = vals.length;
+  const angle = i => -Math.PI/2 + i*2*Math.PI/n;
+  const pt = (i,rr) => [cx + rr*Math.cos(angle(i)), cy + rr*Math.sin(angle(i))];
+  // 背景网格（5 层）
+  let grid = "";
+  for(let g=1; g<=5; g++){
+    const rr = r*g/5;
+    let pts = ""; for(let i=0;i<n;i++){ const [x,y]=pt(i,rr); pts += x.toFixed(1)+","+y.toFixed(1)+(i<n-1?" ":""); }
+    grid += `<polygon points="${pts}" fill="none" stroke="#D8CDB4" stroke-width="1"/>`;
+  }
+  // 轴线
+  let axes = ""; for(let i=0;i<n;i++){ const [x,y]=pt(i,r); axes += `<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#D8CDB4" stroke-width="1"/>`; }
+  // 数据区
+  let dpts = ""; for(let i=0;i<n;i++){ const rr = r*(vals[i]/5); const [x,y]=pt(i,rr); dpts += x.toFixed(1)+","+y.toFixed(1)+(i<n-1?" ":""); }
+  // 标签
+  let labels = ""; for(let i=0;i<n;i++){
+    const [x,y] = pt(i, r+26);
+    const name = ASSESS_DIMS[i].name;
+    labels += `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="11" fill="#55503F" font-family="'Noto Sans SC',sans-serif">${name}</text>`;
+  }
+  // 数值点
+  let dots = ""; for(let i=0;i<n;i++){ const rr=r*(vals[i]/5); const [x,y]=pt(i,rr); dots += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" fill="#C1492F"/>`; }
+  return `<svg viewBox="0 0 280 300" width="100%" style="max-width:280px">
+    ${grid}${axes}
+    <polygon points="${dpts}" fill="rgba(193,73,47,.18)" stroke="#C1492F" stroke-width="2" stroke-linejoin="round"/>
+    ${dots}${labels}
+  </svg>`;
+}
+
+/* ===================== 初始化 ===================== */
+window.addEventListener("hashchange", router);
+$("hamburger").addEventListener("click", ()=>$("nav").classList.toggle("open"));
+loadState();
+router();
+</script>
+</body>
+</html>
