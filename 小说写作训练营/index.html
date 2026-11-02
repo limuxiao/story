@@ -365,6 +365,14 @@ main{max-width:1180px;margin:0 auto;padding:28px 28px 90px}
 .modal h3{font-family:var(--serif);font-weight:900;font-size:21px;color:var(--ink);margin-bottom:6px}
 .modal .m-sub{font-size:13.5px;color:var(--ink-3);margin-bottom:18px}
 .modal .m-body p{font-size:14.5px;color:var(--ink-2);margin-bottom:10px;line-height:1.8}
+.modal .m-body .ws-hint{font-size:13px;color:var(--ink-2);background:var(--paper-deep);border-left:3px solid var(--cinnabar);padding:9px 13px;border-radius:8px;margin:-2px 0 4px}
+.blk-title{font-weight:800;color:var(--ink);font-size:15px;margin:18px 0 8px;padding-left:10px;border-left:3px solid var(--cinnabar)}
+.ws-text{width:100%;min-height:230px;resize:vertical;margin-top:4px;border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-family:var(--sans);font-size:14.5px;line-height:1.8;color:var(--ink);background:var(--paper);box-sizing:border-box}
+.ws-text:focus{outline:none;border-color:var(--cinnabar);box-shadow:0 0 0 3px rgba(193,73,47,.12)}
+.ws-foot{display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap}
+.ws-saved{font-size:12.5px;color:var(--teal);font-weight:700}
+.ws-done{display:inline-flex;align-items:center;gap:3px;font-size:12px;color:var(--teal);font-weight:700}
+.ws-material{margin-top:4px;border:1px dashed var(--line);border-radius:12px;padding:14px 16px;background:var(--paper-deep);font-size:14px;line-height:1.9;color:var(--ink-2)}
 
 /* ===== 页脚 ===== */
 .foot{
@@ -420,12 +428,13 @@ main{max-width:1180px;margin:0 auto;padding:28px 28px 90px}
       <a href="#/practice" data-route="practice">每日练习</a>
       <a href="#/template" data-route="template">写作模板</a>
       <a href="#/assess" data-route="assess">能力评估</a>
+      <a href="#/workbook" data-route="workbook">习题册</a>
     </nav>
     <button class="hamburger" id="hamburger" aria-label="菜单">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
   </div>
-</nav>
+</header>
 
 <!-- ===== 总览视图 ===== -->
 <section class="view" id="view-home">
@@ -485,6 +494,25 @@ main{max-width:1180px;margin:0 auto;padding:28px 28px 90px}
     </div>
     <div class="chip-wrap mb16" id="practice-filter" style="margin-bottom:16px"></div>
     <div class="grid grid-3" id="practice-list"></div>
+  </div>
+</section>
+
+<!-- ===== 习题册视图 ===== -->
+<section class="view" id="view-workbook">
+  <div class="section-head" style="align-items:flex-start">
+    <div>
+      <span class="eyebrow">Workbook</span>
+      <h2 style="font-family:var(--serif);font-weight:900;font-size:30px;margin-bottom:6px">习题册</h2>
+      <p class="page-sub">按种类整理的写作习题，每类 30 题。点「写习题」即可在弹窗里动笔，内容自动保存在本机。</p>
+    </div>
+  </div>
+  <div class="section-block">
+    <div class="section-head">
+      <h2>习题分类</h2>
+      <span class="more" id="wb-count"></span>
+    </div>
+    <div class="chip-wrap mb16" id="wb-filter" style="margin-bottom:16px"></div>
+    <div class="grid grid-3" id="wb-list"></div>
   </div>
 </section>
 
@@ -742,7 +770,7 @@ const PRACTICES = [
   {id:"P2", cat:"灵感", title:"如果……会怎样", desc:"用「如果……会怎样」造 5 个句子，把它变成故事核。例：如果一个人能听见植物的声音？", time:"15 分钟", level:"入门", hint:"越荒谬的组合，往往越有故事张力。"},
   {id:"P3", cat:"灵感", title:"主题一句话", desc:"从今天的新闻/见闻里，提炼一个你想表达的主题，用一句话说清楚。", time:"10 分钟", level:"入门", hint:"主题决定故事的方向，先有方向再动笔。"},
   {id:"P4", cat:"灵感", title:"旧物复活", desc:"写一件你身边的旧物（笔、杯子、旧照片），想象它见证过的三个瞬间。", time:"15 分钟", level:"进阶", hint:"旧物是时间的容器，也是情感的入口。"},
-  {id:"P5", cat:"灵感", title:"新闻改写成故事", desc:"找一条真实新闻，只保留事实骨架，把它改写成一个小说的开头（200 字）。", time:"20 分钟", level:"进阶", hint:"现实往往是最好的虚构蓝本。"},
+  {id:"P5", cat:"灵感", title:"新闻改写成故事", desc:"找一条真实新闻，只保留事实骨架，把它改写成一个小说的开头（200 字）。", time:"20 分钟", level:"进阶", hint:"现实往往是最好的虚构蓝本。", material:"昨日上午九时许，城东菜市场内发生一起纠纷。一名摊主与顾客因称重问题产生争执，随后双方由口角升级为肢体冲突。周边群众见状纷纷围观并报警，警方接警后迅速到场处置，将两人带回所内调解，事件未造成人员重伤。"},
   {id:"P6", cat:"灵感", title:"反义词世界", desc:"把你的世界观反过来写：如果谎言是美德，诚实是犯罪？写 3 个随之而来的场景。", time:"20 分钟", level:"挑战", hint:"反常规设定最能激发想象。"},
 
   {id:"P7", cat:"人物", title:"人物速写", desc:"观察你身边一个人（或陌生人），用 100 字写出他的欲望和秘密。", time:"10 分钟", level:"入门", hint:"欲望写在行动里，秘密藏在细节里。"},
@@ -760,20 +788,20 @@ const PRACTICES = [
   {id:"P18", cat:"情节", title:"结局倒推", desc:"先写下故事的结局，再倒推：为了这个结局，故事必须发生哪 3 件事？", time:"20 分钟", level:"挑战", hint:"结局决定布局，倒推让结构更稳。"},
 
   {id:"P19", cat:"场景", title:"五感速写", desc:"写你此刻所在的空间，动用视觉+听觉+触觉+嗅觉，150 字。", time:"10 分钟", level:"入门", hint:"两种感官起步，三种更好。"},
-  {id:"P20", cat:"场景", title:"展示非讲述", desc:"把「他很紧张」改写成一段 150 字、只用动作和细节展示的场景。", time:"15 分钟", level:"入门", hint:"动作、细节、对话——别用形容词下结论。"},
+  {id:"P20", cat:"场景", title:"展示非讲述", desc:"把「他很紧张」改写成一段 150 字、只用动作和细节展示的场景。", time:"15 分钟", level:"入门", hint:"动作、细节、对话——别用形容词下结论。", material:"李经理非常生气，因为他觉得小王的工作做得很糟糕，而且完全没有把他说过的话放在心上，这让他感到十分失望和恼火，整个下午都阴沉着脸。"},
   {id:"P21", cat:"场景", title:"场景卡", desc:"为故事写一个场景卡：目标（要什么）/冲突（谁挡着）/变化（出去时状态）。", time:"15 分钟", level:"进阶", hint:"没有变化的场景，是过场戏。"},
   {id:"P22", cat:"场景", title:"一物见人", desc:"用一件物品写一个人物：他的旧外套、磨破的鞋、总是翻到同一页的书。", time:"20 分钟", level:"进阶", hint:"细节能同时透露环境+人物+情绪。"},
-  {id:"P23", cat:"场景", title:"慢镜头", desc:"把「他推开门」这一秒，写成 150 字的慢镜头：手的迟疑、门轴的声音、光线的涌入。", time:"20 分钟", level:"挑战", hint:"慢下来，读者才能进入现场。"},
+  {id:"P23", cat:"场景", title:"慢镜头", desc:"把「他推开门」这一秒，写成 150 字的慢镜头：手的迟疑、门轴的声音、光线的涌入。", time:"20 分钟", level:"挑战", hint:"慢下来，读者才能进入现场。", material:"他推开门，走了进去，心里其实很紧张。"},
   {id:"P24", cat:"场景", title:"天气即情绪", desc:"让天气/光线映照人物情绪：写一个悲伤的人走在晴朗的街上（反差），150 字。", time:"15 分钟", level:"挑战", hint:"用环境写情绪，比直接写情绪高级。"},
 
-  {id:"P25", cat:"对话", title:"潜台词对话", desc:"写一段对话：两人都不说心里话，但读者能读出真正的意思（200 字）。", time:"20 分钟", level:"挑战", hint:"「你几点回来」往往不是问时间。"},
+  {id:"P25", cat:"对话", title:"潜台词对话", desc:"写一段对话：两人都不说心里话，但读者能读出真正的意思（200 字）。", time:"20 分钟", level:"挑战", hint:"「你几点回来」往往不是问时间。", material:"「你回来了。」「嗯。」「吃饭了没？」「吃过了。」「早点睡。」「知道了。」"},
   {id:"P26", cat:"对话", title:"三声自我介绍", desc:"给 3 个不同人物各写一句自我介绍，让人一眼看出性格。", time:"10 分钟", level:"入门", hint:"句式、用词、口吻都要因人而异。"},
   {id:"P27", cat:"对话", title:"沉默的力量", desc:"写一段对话，其中一人全程沉默，但用动作和反应参与对话（200 字）。", time:"20 分钟", level:"挑战", hint:"沉默也是一种台词。"},
   {id:"P28", cat:"对话", title:"动作打断", desc:"写一段 200 字对话，用 3 个动作打断对话节奏（喝水、移开视线、攥紧拳头）。", time:"20 分钟", level:"进阶", hint:"动作让对话「立体」，也泄露真实情绪。"},
 
-  {id:"P29", cat:"文笔", title:"删繁就简", desc:"把一段 150 字写得啰嗦的文字，删到 80 字且意思不变。", time:"15 分钟", level:"进阶", hint:"删掉「的」「很」「非常」开始。"},
-  {id:"P30", cat:"文笔", title:"短句的力量", desc:"用一个连续的短句段（每句不超过 8 字）写一段紧张场景（100 字）。", time:"15 分钟", level:"进阶", hint:"短句=紧张、干脆、呼吸急促。"},
-  {id:"P31", cat:"文笔", title:"动词锤炼", desc:"把一段 100 字里所有「走/看/说/拿」换成更精准的动词（踱、瞥、嘟囔、攥）。", time:"15 分钟", level:"进阶", hint:"精准的动词胜过一堆形容词。"},
+  {id:"P29", cat:"文笔", title:"删繁就简", desc:"把一段 150 字写得啰嗦的文字，删到 80 字且意思不变。", time:"15 分钟", level:"进阶", hint:"删掉「的」「很」「非常」开始。", material:"在那天清晨的时候，当太阳刚刚从东边的地平线缓缓升起，把金色的光芒洒向大地，他慢慢地、一步一步地走向那家他每天都会去光顾的小店，心里怀着一种说不清道不明的、隐隐约约的期待，想要买一杯温热的豆浆和几个刚出锅还冒着热气的包子当早餐。"},
+  {id:"P30", cat:"文笔", title:"短句的力量", desc:"用一个连续的短句段（每句不超过 8 字）写一段紧张场景（100 字）。", time:"15 分钟", level:"进阶", hint:"短句=紧张、干脆、呼吸急促。", material:"因为突然下起了倾盆大雨，所以街道上的人群开始惊慌失措地四处奔跑，想要寻找任何一个可以避雨的地方，而她站在屋檐下，心跳得很快，不知道该怎么办才好，只能眼看着雨水把整条街都淹没了。"},
+  {id:"P31", cat:"文笔", title:"动词锤炼", desc:"把一段 100 字里所有「走/看/说/拿」换成更精准的动词（踱、瞥、嘟囔、攥）。", time:"15 分钟", level:"进阶", hint:"精准的动词胜过一堆形容词。", material:"他走到桌子前面，看见桌子上放着一个信封，就拿起来，看了看，然后走到门口，跟我说了一声他要走了，说完就走出门去，把门也带上了。"},
   {id:"P32", cat:"文笔", title:"风格三写", desc:"同一件小事（如等雨停）用三种风格各写 50 字：极简、诗意、冷峻。", time:"20 分钟", level:"挑战", hint:"找手感，也找自己的声音。"}
 ];
 
@@ -830,6 +858,201 @@ const ASSESS_DIMS = [
   {id:"A5", name:"对话文笔", desc:"对话性格化与语言质感", q:"你的对话符合人设、文字有味道吗？"},
   {id:"A6", name:"节奏悬念", desc:"叙事张弛与钩子设计", q:"读者会想一直翻页吗？"}
 ];
+
+/* 习题册：每类 30 题 */
+const WORKBOOK = [
+  /* —— 人物（30） —— */
+  {id:"W-人物-01",cat:"人物",title:"秘密清单",desc:"给主角写一份「秘密清单」：三件他绝不会对任何人说的事。",hint:"秘密越具体，人物越立体。"},
+  {id:"W-人物-02",cat:"人物",title:"最想要的东西",desc:"用一句话写出配角最想要的那样东西，以及他愿意为此付出的代价。",hint:"代价揭示人物底线。"},
+  {id:"W-人物-03",cat:"人物",title:"表里不一",desc:"设计一个「表面性格」与「真实性格」相反的配角。",hint:"反差制造记忆点。"},
+  {id:"W-人物-04",cat:"人物",title:"压力小动作",desc:"写出主角在压力下的一个习惯性小动作（不写情绪词）。",hint:"动作比形容词更有说服力。"},
+  {id:"W-人物-05",cat:"人物",title:"反派的自我",desc:"给反派写一段「他认为自己才是好人」的自述。",hint:"让反派自洽，故事才立得住。"},
+  {id:"W-人物-06",cat:"人物",title:"疲惫的细节",desc:"用三个细节（不带形容词）说明一个人很疲惫。",hint:"展示，不要讲述。"},
+  {id:"W-人物-07",cat:"人物",title:"优点即弱点",desc:"设计一个角色，他的致命弱点是他最骄傲的优点。",hint:"性格缺陷常源于优势。"},
+  {id:"W-人物-08",cat:"人物",title:"独处怪癖",desc:"写一段主角独处时才会暴露的怪癖。",hint:"私密处见真性情。"},
+  {id:"W-人物-09",cat:"人物",title:"同一个误会",desc:"让两个角色因同一个误会而互相误解。",hint:"误会驱动戏剧冲突。"},
+  {id:"W-人物-10",cat:"人物",title:"无关执念",desc:"给配角一个「与主线无关的执念」，让它显得真实。",hint:"支线让人物像活人。"},
+  {id:"W-人物-11",cat:"人物",title:"童年恐惧",desc:"写出角色童年的一段记忆，解释他成年后的某个恐惧。",hint:"现在的行为要有来处。"},
+  {id:"W-人物-12",cat:"人物",title:"话少句重",desc:"设计一个「话少但每句都重」的角色。",hint:"沉默的人开口才有力。"},
+  {id:"W-人物-13",cat:"人物",title:"信念动摇",desc:"让主角在 100 字内完成一次信念动摇。",hint:"转折要小而真。"},
+  {id:"W-人物-14",cat:"人物",title:"人前人后",desc:"写角色「表里不一」的对照场景：人前/人后各一句。",hint:"一句话照出两面。"},
+  {id:"W-人物-15",cat:"人物",title:"缺点即伏笔",desc:"给主角一个看似缺点、实为伏笔的特质。",hint:"前期弱点后期可兑现。"},
+  {id:"W-人物-16",cat:"人物",title:"评价与行为",desc:"用「他人评价」与「真实行为」的落差塑造一个角色。",hint:"行为比评价更可信。"},
+  {id:"W-人物-17",cat:"人物",title:"因爱而盲",desc:"设计一个因爱而盲的角色，并写出他盲在哪。",hint:"爱能让人看不见显而易见的事。"},
+  {id:"W-人物-18",cat:"人物",title:"旧伤反应",desc:"写一段角色面对旧伤时的生理反应。",hint:"身体会替记忆说话。"},
+  {id:"W-人物-19",cat:"人物",title:"身份暴露",desc:"让配角用一个动作暴露他的身份或来历。",hint:"一个动作胜过百字交代。"},
+  {id:"W-人物-20",cat:"人物",title:"不敢说的目标",desc:"给主角设定一个「不敢告诉身边人的目标」。",hint:"隐瞒制造内在张力。"},
+  {id:"W-人物-21",cat:"人物",title:"初次误判",desc:"写两个角色第一次见面时彼此的误判。",hint:"第一印象常被推翻。"},
+  {id:"W-人物-22",cat:"人物",title:"越帮越忙",desc:"设计一个「越帮越忙」的善意配角。",hint:"好心也能制造麻烦。"},
+  {id:"W-人物-23",cat:"人物",title:"随身之物",desc:"用一件随身物品写活一个角色（来历加意义）。",hint:"物是人物的延伸。"},
+  {id:"W-人物-24",cat:"人物",title:"道德两难",desc:"让主角在道德两难里选，并写出他选后的微表情。",hint:"选择见人品。"},
+  {id:"W-人物-25",cat:"人物",title:"口是心非",desc:"写一个角色「口是心非」的对话片段（三回合）。",hint:"说与想不一样才真实。"},
+  {id:"W-人物-26",cat:"人物",title:"共情反派",desc:"给反派一个读者会共情的理由。",hint:"可恨之人常有可怜处。"},
+  {id:"W-人物-27",cat:"人物",title:"恐惧清单",desc:"用「恐惧清单」反推一个角色的软肋。",hint:"怕什么，就缺什么。"},
+  {id:"W-人物-28",cat:"人物",title:"沉默表态",desc:"让配角用沉默完成一次表态。",hint:"不说话也是回答。"},
+  {id:"W-人物-29",cat:"人物",title:"转变触发",desc:"设计一个角色的转变触发点（一句话事件）。",hint:"转变要有一个开关。"},
+  {id:"W-人物-30",cat:"人物",title:"信条打脸",desc:"写主角的「人生信条」与一次它被现实打脸的瞬间。",hint:"信念崩塌最有戏。"},
+
+  /* —— 情节（30） —— */
+  {id:"W-情节-01",cat:"情节",title:"核心冲突",desc:"用「目标—阻碍—代价」三要素写清主角的核心冲突。",hint:"三件套缺一不可。"},
+  {id:"W-情节-02",cat:"情节",title:"偶然与必然",desc:"设计一个「看似偶然、实为必然」的巧合。",hint:"巧合要早埋伏笔。"},
+  {id:"W-情节-03",cat:"情节",title:"章节钩子",desc:"写一个能让读者立刻追问「然后呢」的章节结尾。",hint:"结尾即下一个开头。"},
+  {id:"W-情节-04",cat:"情节",title:"第三幕反转",desc:"让主线在第三幕出现一次方向反转。",hint:"反转要可逆推。"},
+  {id:"W-情节-05",cat:"情节",title:"层层障碍",desc:"设计三个层层升级的障碍，难度递增。",hint:"压力阶梯式上升。"},
+  {id:"W-情节-06",cat:"情节",title:"错误选择",desc:"写一个「错误的选择」如何把故事推向高潮。",hint:"坏决定是好情节的燃料。"},
+  {id:"W-情节-07",cat:"情节",title:"麦高芬",desc:"用「麦高芬」制造一个众人争夺但读者不知为何的东西。",hint:"追逐本身比目标重要。"},
+  {id:"W-情节-08",cat:"情节",title:"私欲推主线",desc:"让配角的私欲意外推动主线前进。",hint:"次要动机也能搅动全局。"},
+  {id:"W-情节-09",cat:"情节",title:"伏笔回收",desc:"设计一个伏笔，在前三分之一埋下、后三分之一回收。",hint:"埋得巧，收得稳。"},
+  {id:"W-情节-10",cat:"情节",title:"信任崩塌",desc:"写一个「信任崩塌」的瞬间（谁背叛了谁，为什么）。",hint:"背叛要有动机。"},
+  {id:"W-情节-11",cat:"情节",title:"时间炸弹",desc:"用「时间炸弹」给故事加一个倒计时。",hint:" deadline 制造紧迫。"},
+  {id:"W-情节-12",cat:"情节",title:"两难取舍",desc:"让主角在两种「都对」的价值间做取舍。",hint:"没有坏选项才痛苦。"},
+  {id:"W-情节-13",cat:"情节",title:"更努力的反派",desc:"设计一个「反派比主角更努力」的设定。",hint:"强敌才有压迫感。"},
+  {id:"W-情节-14",cat:"情节",title:"欺骗性叙述",desc:"写出一个让读者后知后觉的欺骗性叙述。",hint:"叙述者也会撒谎。"},
+  {id:"W-情节-15",cat:"情节",title:"关键闲笔",desc:"让配角完成一次「看似无关、实是关键」的行动。",hint:"闲笔往往不闲。"},
+  {id:"W-情节-16",cat:"情节",title:"线索链",desc:"写一段「线索链」：A→B→C 指向真相。",hint:"逻辑链要咬合。"},
+  {id:"W-情节-17",cat:"情节",title:"误会推动",desc:"用「误会」替代「巧合」来推动情节，写出差别。",hint:"误会比巧合更高级。"},
+  {id:"W-情节-18",cat:"情节",title:"自入陷阱",desc:"设计一个「主角主动走入陷阱」的动机。",hint:"主动比被动更有张力。"},
+  {id:"W-情节-19",cat:"情节",title:"钩子与回报",desc:"写一个章节的「钩子+payoff」闭环。",hint:"抛出也要收回。"},
+  {id:"W-情节-20",cat:"情节",title:"环境推手",desc:"让外部环境（天气、局势）成为情节的推手。",hint:"世界也在参与叙事。"},
+  {id:"W-情节-21",cat:"情节",title:"计划失控",desc:"写一次「计划赶不上变化」的失控场景。",hint:"失控才好看。"},
+  {id:"W-情节-22",cat:"情节",title:"身份错位",desc:"设计一个「身份错位」带来的连续误会。",hint:"错位是喜剧与悬疑的母题。"},
+  {id:"W-情节-23",cat:"情节",title:"一念之差",desc:"用「一念之差」写出命运的岔路。",hint:"小选择撬动大走向。"},
+  {id:"W-情节-24",cat:"情节",title:"代价超所得",desc:"让主角在胜利一刻发现代价远超所得。",hint:"惨胜也是输。"},
+  {id:"W-情节-25",cat:"情节",title:"局中局",desc:"写一个「局中局」：谁在利用谁。",hint:"层层套叠才烧脑。"},
+  {id:"W-情节-26",cat:"情节",title:"小高潮",desc:"设计三个「小高潮」支撑一个大高潮。",hint:"节奏靠积累。"},
+  {id:"W-情节-27",cat:"情节",title:"配角之死",desc:"让配角的死亡成为主角的转折点。",hint:"死亡要有重量。"},
+  {id:"W-情节-28",cat:"情节",title:"延迟揭示",desc:"写一个「真相延迟揭示」的结构（分三次给）。",hint:"分次给药更上头。"},
+  {id:"W-情节-29",cat:"情节",title:"失而复得",desc:"用「物品的失而复得」串起一条暗线。",hint:"物是线索的载体。"},
+  {id:"W-情节-30",cat:"情节",title:"意象闭环",desc:"让结局回归开头那个意象，完成闭环。",hint:"首尾呼应显匠心。"},
+
+  /* —— 场景（30） —— */
+  {id:"W-场景-01",cat:"场景",title:"五感房间",desc:"用五感写一个你熟悉的房间，不写情绪词。",hint:"感官即氛围。"},
+  {id:"W-场景-02",cat:"场景",title:"雨夜心境",desc:"写一个「雨夜」场景，让天气成为角色心境的延伸。",hint:"天色是心情的外衣。"},
+  {id:"W-场景-03",cat:"场景",title:"空镜头开场",desc:"用一个「空镜头」开场一个场景，再切到人。",hint:"先立境，后立人。"},
+  {id:"W-场景-04",cat:"场景",title:"拥挤里的孤独",desc:"写一个拥挤场景里，主角却感到孤独的瞬间。",hint:"反差放大情绪。"},
+  {id:"W-场景-05",cat:"场景",title:"光线流逝",desc:"用光线变化（晨/午/暮）暗示时间流逝与情绪。",hint:"光会讲故事。"},
+  {id:"W-场景-06",cat:"场景",title:"等待",desc:"写一个「等待」场景，靠动作而非对白撑起来。",hint:"等的过程最煎熬。"},
+  {id:"W-场景-07",cat:"场景",title:"声音细节",desc:"用一处声音细节（钟摆、滴水）写活紧张氛围。",hint:"声音能制造心跳。"},
+  {id:"W-场景-08",cat:"场景",title:"重逢调度",desc:"写「久别重逢」的空间调度：谁先动、谁停在哪儿。",hint:"身体比语言诚实。"},
+  {id:"W-场景-09",cat:"场景",title:"气味闪回",desc:"用「气味」触发一段回忆闪回。",hint:"嗅觉连着记忆。"},
+  {id:"W-场景-10",cat:"场景",title:"平静假象",desc:"写一个战场或冲突前的「平静假象」。",hint:"暴风雨前的安静。"},
+  {id:"W-场景-11",cat:"场景",title:"镜像内心",desc:"用「镜面/水面」映射角色的内心。",hint:"倒影是潜意识的窗。"},
+  {id:"W-场景-12",cat:"场景",title:"沉默晚餐",desc:"写一个沉默的晚餐场景，让关系尽在不言中。",hint:"不说话也能吵架。"},
+  {id:"W-场景-13",cat:"场景",title:"门即转折",desc:"用「门」作为场景的阈限意象（进出即转折）。",hint:"门是故事的开关。"},
+  {id:"W-场景-14",cat:"场景",title:"拥挤善意",desc:"写一个「拥挤地铁」里的一次微小善意。",hint:"小善意在窄处发光。"},
+  {id:"W-场景-15",cat:"场景",title:"季节凉暖",desc:"用「季节」写一段关系的由暖转凉。",hint:"时令是感情的刻度。"},
+  {id:"W-场景-16",cat:"场景",title:"废墟对照",desc:"写一个「废墟/旧址」场景，承载往昔与当下对照。",hint:"旧物会说话。"},
+  {id:"W-场景-17",cat:"场景",title:"镜头语言",desc:"用「特写→全景」的镜头语言写一个动作。",hint:"拉远才见全貌。"},
+  {id:"W-场景-18",cat:"场景",title:"无对话告别",desc:"写一个「无对话」的告别场景。",hint:"沉默的告别最重。"},
+  {id:"W-场景-19",cat:"场景",title:"温度渐变",desc:"用「温度」写一个从温暖到疏离的渐变。",hint:"冷暖是关系的体感。"},
+  {id:"W-场景-20",cat:"场景",title:"高处视域",desc:"写一个「高处」场景，用视域写角色野心或恐惧。",hint:"站得多高，看见多怕。"},
+  {id:"W-场景-21",cat:"场景",title:"食物关系",desc:"用「食物」写一场戏的氛围与人物关系。",hint:"饭桌是人性的舞台。"},
+  {id:"W-场景-22",cat:"场景",title:"停电瞬间",desc:"写一个「停电」瞬间，黑暗如何改变互动。",hint:"黑暗卸下伪装。"},
+  {id:"W-场景-23",cat:"场景",title:"重复动作",desc:"用「重复动作」写一个人的执念场景。",hint:"重复即偏执。"},
+  {id:"W-场景-24",cat:"场景",title:"月台离愁",desc:"写一个「车站/月台」的离愁场景。",hint:"站台是离合的容器。"},
+  {id:"W-场景-25",cat:"场景",title:"孩童视角",desc:"用「小孩视角」写一个成人世界的荒诞场景。",hint:"童眼照出成人荒诞。"},
+  {id:"W-场景-26",cat:"场景",title:"镜中无人",desc:"写一个「镜中无人」的诡异场景。",hint:"缺失感最惊悚。"},
+  {id:"W-场景-27",cat:"场景",title:"风之场景",desc:"用「风」写一个荒凉或自由的场景。",hint:"风是情绪的信使。"},
+  {id:"W-场景-28",cat:"场景",title:"医院走廊",desc:"写一个「医院走廊」里的时间凝固感。",hint:"等待在此被拉长。"},
+  {id:"W-场景-29",cat:"场景",title:"喧闹落单",desc:"用「节日喧闹」反衬一个人的落单。",hint:"热闹里最孤独。"},
+  {id:"W-场景-30",cat:"场景",title:"海边收束",desc:"写一个「海边/天台」的收束场景，给故事一个呼吸口。",hint:"开阔处让情绪落地。"},
+
+  /* —— 对话（30） —— */
+  {id:"W-对话-01",cat:"对话",title:"都在说谎",desc:"写一段对话，两人都在说谎但读者能听出来。",hint:"读者比角色知道得多。"},
+  {id:"W-对话-02",cat:"对话",title:"我想你留下",desc:"用「潜台词」写「我想你留下」而不说出口。",hint:"不说破更有力。"},
+  {id:"W-对话-03",cat:"对话",title:"无声争执",desc:"写一段只有动作提示、没有对白的争执。",hint:"动作也能吵架。"},
+  {id:"W-对话-04",cat:"对话",title:"岔开话题",desc:"让一个角色用「岔开话题」暴露心虚。",hint:"逃避即答案。"},
+  {id:"W-对话-05",cat:"对话",title:"各说各话",desc:"写一段「各说各话」的对话，体现沟通错位。",hint:"错位制造喜感与悲凉。"},
+  {id:"W-对话-06",cat:"对话",title:"打断",desc:"用「打断」写人物关系的权力高低。",hint:"谁打断谁，谁就 dominant。"},
+  {id:"W-对话-07",cat:"对话",title:"信息对话",desc:"写一段「电话/信息」对话，靠文字节奏制造张力。",hint:"看不见脸时，字句变重。"},
+  {id:"W-对话-08",cat:"对话",title:"玩笑真相",desc:"让配角用一句玩笑话说出最残忍的真相。",hint:"玩笑是真相的盾牌。"},
+  {id:"W-对话-09",cat:"对话",title:"久别重逢",desc:"写一段「久别重逢」的对话，先冷后热。",hint:"温度要慢慢升。"},
+  {id:"W-对话-10",cat:"对话",title:"沉默最重",desc:"用「沉默」作为对话里最重的一句话。",hint:"留白处最震耳。"},
+  {id:"W-对话-11",cat:"对话",title:"审讯",desc:"写一段「审讯」式对话，问者步步紧逼。",hint:"问比答更凶。"},
+  {id:"W-对话-12",cat:"对话",title:"反问代替",desc:"让角色用「反问」代替回答，写出性格。",hint:"反问是一种防御。"},
+  {id:"W-对话-13",cat:"对话",title:"爷孙对话",desc:"写一段「爷孙」对话，用代际语言差异制造温度。",hint:"代沟里也有爱。"},
+  {id:"W-对话-14",cat:"对话",title:"术语隔阂",desc:"用「专业术语」制造外行与主角的隔阂。",hint:"术语是圈子的墙。"},
+  {id:"W-对话-15",cat:"对话",title:"吵架和好",desc:"写一段「吵架后和好」的欲言又止。",hint:"和好比吵更难写。"},
+  {id:"W-对话-16",cat:"对话",title:"咽下三次",desc:"让一个角色「话到嘴边又咽下」三次。",hint:"咽下的是戏。"},
+  {id:"W-对话-17",cat:"对话",title:"谈判",desc:"写一段「谈判」对话，双方都在虚张声势。",hint:"谈判是表演。"},
+  {id:"W-对话-18",cat:"对话",title:"重复对方",desc:"用「重复对方的话」写角色的迟疑或震惊。",hint:"复读泄露情绪。"},
+  {id:"W-对话-19",cat:"对话",title:"临终对话",desc:"写一段「临终」对话，言简意深。",hint:"最后的话要轻而重。"},
+  {id:"W-对话-20",cat:"对话",title:"奉承算计",desc:"让配角用「奉承」掩盖算计。",hint:"甜言常裹刀。"},
+  {id:"W-对话-21",cat:"对话",title:"暗号对话",desc:"写一段「暗号/密码」式对话，敌人听不懂。",hint:"密码藏亲密。"},
+  {id:"W-对话-22",cat:"对话",title:"童言戳破",desc:"用「孩子童言」戳破成人伪装。",hint:"孩子不说谎。"},
+  {id:"W-对话-23",cat:"对话",title:"借酒真话",desc:"写一段「借酒」说真话的场景对话。",hint:"酒是真话的钥匙。"},
+  {id:"W-对话-24",cat:"对话",title:"比喻拒绝",desc:"让角色用「比喻」代替直白的拒绝。",hint:"绕弯子也是态度。"},
+  {id:"W-对话-25",cat:"对话",title:"误接电话",desc:"写一段「误接电话」式乌龙对话。",hint:"错位引发笑与险。"},
+  {id:"W-对话-26",cat:"对话",title:"方言身份",desc:"用「方言/口音」给角色贴一层身份。",hint:"口音是出身的印章。"},
+  {id:"W-对话-27",cat:"对话",title:"自言自语",desc:"写一段「自言自语」暴露内心分裂。",hint:"对自己说话最真。"},
+  {id:"W-对话-28",cat:"对话",title:"说与不说",desc:"让对话在「说与不说」之间推进关系。",hint:"边界处最有戏。"},
+  {id:"W-对话-29",cat:"对话",title:"告别留白",desc:"写一段「告别」的对话，留白比话语多。",hint:"不说的比说的重。"},
+  {id:"W-对话-30",cat:"对话",title:"同句异味",desc:"用「同一句话」在不同场合写出不同意味。",hint:"语境决定含义。"},
+
+  /* —— 文笔（30） —— */
+  {id:"W-文笔-01",cat:"文笔",title:"删繁就简",desc:"把一段约 150 字写得啰嗦的文字，删到 80 字且意思不变。",hint:"先删「的」「很」「非常」。",material:"在那天清晨的时候，当太阳刚刚从东边的地平线缓缓升起，把金色的光芒洒向大地，他慢慢地、一步一步地走向那家他每天都会去光顾的小店，心里怀着一种说不清道不明的、隐隐约约的期待，想要买一杯温热的豆浆和几个刚出锅还冒着热气的包子当早餐。"},
+  {id:"W-文笔-02",cat:"文笔",title:"短句的力量",desc:"用一个连续的短句段（每句不超过 8 字）写一段紧张场景（100 字）。",hint:"短句=紧张、干脆、呼吸急促。",material:"因为突然下起了倾盆大雨，所以街道上的人群开始惊慌失措地四处奔跑，想要寻找任何一个可以避雨的地方，而她站在屋檐下，心跳得很快，不知道该怎么办才好，只能眼看着雨水把整条街都淹没了。"},
+  {id:"W-文笔-03",cat:"文笔",title:"动词锤炼",desc:"把一段约 100 字里所有「走/看/说/拿」换成更精准的动词。",hint:"精准的动词胜过一堆形容词。",material:"他走到桌子前面，看见桌子上放着一个信封，就拿起来，看了看，然后走到门口，跟我说了一声他要走了，说完就走出门去，把门也带上了。"},
+  {id:"W-文笔-04",cat:"文笔",title:"展示恐惧",desc:"把「他很害怕」改写成只用动作和细节展示的段落。",hint:"别用形容词下结论。"},
+  {id:"W-文笔-05",cat:"文笔",title:"大胆比喻",desc:"写一个比喻，本体与喻体跨度越大越好。",hint:"远取譬更有惊喜。"},
+  {id:"W-文笔-06",cat:"文笔",title:"通感味道",desc:"用「通感」写一个味道（让味道有颜色或形状）。",hint:"感官可以打通。"},
+  {id:"W-文笔-07",cat:"文笔",title:"删掉所有「的」",desc:"删掉一段里所有的「的」，看是否更利落。",hint:"「的」常是赘肉。"},
+  {id:"W-文笔-08",cat:"文笔",title:"具体名词",desc:"用「具体名词」替换「抽象形容词」。",hint:"名词比形容词更扎实。"},
+  {id:"W-文笔-09",cat:"文笔",title:"由远及近",desc:"写一个「镜头由远及近」的开头。",hint:"拉近距离即进入故事。"},
+  {id:"W-文笔-10",cat:"文笔",title:"对比反差",desc:"用「对比」写出人物或处境的反差。",hint:"对照凸显差异。"},
+  {id:"W-文笔-11",cat:"文笔",title:"陈述变画面",desc:"把一句陈述改成「画面+动作」呈现。",hint:"让读者看见。"},
+  {id:"W-文笔-12",cat:"文笔",title:"长句收短",desc:"用「节奏」：长句铺垫后接一个短句收尾。",hint:"短句落点最狠。"},
+  {id:"W-文笔-13",cat:"文笔",title:"白描",desc:"写一个「白描」段落，不用任何修饰词。",hint:"白描见真功。"},
+  {id:"W-文笔-14",cat:"文笔",title:"拟人静物",desc:"用「拟人」给一处静物注入情绪。",hint:"物也能有心情。"},
+  {id:"W-文笔-15",cat:"文笔",title:"说明变叙事",desc:"把一段说明性文字改写成叙事。",hint:"讲故事胜过讲道理。"},
+  {id:"W-文笔-16",cat:"文笔",title:"双关收尾",desc:"用「一词多义」的双关收尾一句。",hint:"双关留余味。"},
+  {id:"W-文笔-17",cat:"文笔",title:"无形容词之美",desc:"写一段「无形容词」却让人觉得美的文字。",hint:"名词与动词足够。"},
+  {id:"W-文笔-18",cat:"文笔",title:"重复韵律",desc:"用「重复」制造韵律或执念感。",hint:"重复即强调。"},
+  {id:"W-文笔-19",cat:"文笔",title:"高兴三动",desc:"把「很高兴」写成三个递进的动作。",hint:"情绪要外化。"},
+  {id:"W-文笔-20",cat:"文笔",title:"冷暖两写",desc:"用「冷色调/暖色调」词汇写同一场景两次。",hint:"词色定基调。"},
+  {id:"W-文笔-21",cat:"文笔",title:"破折转折",desc:"写一个「破折号」引导的情绪转折句。",hint:"破折号后是真相。"},
+  {id:"W-文笔-22",cat:"文笔",title:"数字真实",desc:"用「数据/数字」替代模糊的量词增强真实感。",hint:"具体数打败大概。"},
+  {id:"W-文笔-23",cat:"文笔",title:"旁白口吻",desc:"把一段对话改写成「全知旁白」看笑话的口吻。",hint:"视角决定味道。"},
+  {id:"W-文笔-24",cat:"文笔",title:"省略未尽",desc:"用「省略号」写未尽之意。",hint:"不写完才诱人想。"},
+  {id:"W-文笔-25",cat:"文笔",title:"一词立骨",desc:"写一个「一词立骨」的段落，全段围绕一个字。",hint:"中心词串全场。"},
+  {id:"W-文笔-26",cat:"文笔",title:"排比压迫",desc:"用「排比」写出气势或压迫。",hint:"排比推高潮。"},
+  {id:"W-文笔-27",cat:"文笔",title:"时间可感",desc:"把「时间流逝」写得可感（不写「过了很久」）。",hint:"用变化代时长。"},
+  {id:"W-文笔-28",cat:"文笔",title:"身体外化",desc:"用「身体感受」外化情绪（心跳、发冷、喉咙发紧）。",hint:"身体是情绪的显示器。"},
+  {id:"W-文笔-29",cat:"文笔",title:"留白结尾",desc:"写一个「留白」结尾，让读者自己补全。",hint:"不写完更高级。"},
+  {id:"W-文笔-30",cat:"文笔",title:"动词开头",desc:"用「动词开头」的句子写活一个场景。",hint:"动词带出动态。"},
+
+  /* —— 灵感（30） —— */
+  {id:"W-灵感-01",cat:"灵感",title:"如果会怎样",desc:"从一个「如果……会怎样」出发，写 200 字设定。",hint:"假设是一切故事的起点。"},
+  {id:"W-灵感-02",cat:"灵感",title:"反用俗语",desc:"把一句俗语反着用，生成一个故事核。",hint:"反转常识出新鲜。"},
+  {id:"W-灵感-03",cat:"灵感",title:"最后一个",desc:"用「最后一个……」开头写一个开篇。",hint:"限定词制造悬念。"},
+  {id:"W-灵感-04",cat:"灵感",title:"物件超能力",desc:"把一个日常物件赋予超能力，写它的代价。",hint:"能力必带代价。"},
+  {id:"W-灵感-05",cat:"灵感",title:"改一条规则",desc:"写「世界规则只改一条」的设定。",hint:"小改动撬大世界。"},
+  {id:"W-灵感-06",cat:"灵感",title:"老照片",desc:"从一张老照片虚构它背后的故事。",hint:"照片是时间的裂缝。"},
+  {id:"W-灵感-07",cat:"灵感",title:"同一封信",desc:"用「三个人同一天收到同一封信」生成悬念。",hint:"同因异果最抓人。"},
+  {id:"W-灵感-08",cat:"灵感",title:"暗黑童话",desc:"把一个童话改写成人性暗黑版。",hint:"经典重构出新意。"},
+  {id:"W-灵感-09",cat:"灵感",title:"记忆买卖",desc:"写「记忆可以买卖」的世界雏形。",hint:"设定要自洽。"},
+  {id:"W-灵感-10",cat:"灵感",title:"反向穿越",desc:"写「古人来到今天」的反向穿越。",hint:"错位即笑与思。"},
+  {id:"W-灵感-11",cat:"灵感",title:"成语扩写",desc:"把一个成语扩写成一个完整情境。",hint:"四字里藏着戏。"},
+  {id:"W-灵感-12",cat:"灵感",title:"不睡之人",desc:"写「城市里唯一不会睡的人」的一天。",hint:"例外者最有趣。"},
+  {id:"W-灵感-13",cat:"灵感",title:"未寄出的信",desc:"用「一封没寄出的信」做故事引子。",hint:"未寄出才意味深。"},
+  {id:"W-灵感-14",cat:"灵感",title:"天气异象",desc:"让「天气」成为某种超自然现象的表征。",hint:"自然可拟人。"},
+  {id:"W-灵感-15",cat:"灵感",title:"镜中无人",desc:"写「所有镜子都照不出人」的世界。",hint:"缺失即恐怖。"},
+  {id:"W-灵感-16",cat:"灵感",title:"13½",desc:"从「门牌号 13½」生出一个设定。",hint:"怪地址藏怪事。"},
+  {id:"W-灵感-17",cat:"灵感",title:"动物视角",desc:"用「动物视角」重写一个熟悉场景。",hint:"换眼即换世界。"},
+  {id:"W-灵感-18",cat:"灵感",title:"时间停摆",desc:"写「时间停在某个下午」的后果。",hint:"停滞放大日常。"},
+  {id:"W-灵感-19",cat:"灵感",title:"概念拟人",desc:"把一个科学概念拟人化成角色。",hint:"抽象可成角。"},
+  {id:"W-灵感-20",cat:"灵感",title:"另一个我",desc:"用「平行世界的另一个我」制造对照。",hint:"对照见真我。"},
+  {id:"W-灵感-21",cat:"灵感",title:"会说话的影子",desc:"写「会说话的影子」牵出一段往事。",hint:"影子是潜意识的嘴。"},
+  {id:"W-灵感-22",cat:"灵感",title:"历史一处错",desc:"从一个「错误」出发：如果历史某处错了。",hint:"what if 最迷人。"},
+  {id:"W-灵感-23",cat:"灵感",title:"梦境商品化",desc:"写「梦境商品化」的一段设定。",hint:"设定要可想象。"},
+  {id:"W-灵感-24",cat:"灵感",title:"心声可读",desc:"写「所有人突然能听见彼此心声」的一天。",hint:"透明即灾难。"},
+  {id:"W-灵感-25",cat:"灵感",title:"谣言改变城",desc:"把「一句谣言」写成它如何改变一座城。",hint:"言语能成事。"},
+  {id:"W-灵感-26",cat:"灵感",title:"失物招领",desc:"用「失物招领处」收拢几段人生。",hint:"物归原主亦归故事。"},
+  {id:"W-灵感-27",cat:"灵感",title:"不存在的层",desc:"写「图书馆里第 7 层不存在」的诡秘设定。",hint:"缺失处最诱人探索。"},
+  {id:"W-灵感-28",cat:"灵感",title:"禁忌词汇",desc:"从一个「禁忌词汇」展开一个世界。",hint:"禁即引力。"},
+  {id:"W-灵感-29",cat:"灵感",title:"归零无事",desc:"用「倒计时归零却无事发生」写悬疑。",hint:"落空最吓人。"},
+  {id:"W-灵感-30",cat:"灵感",title:"年末抉择",desc:"写「年末最后一天」的一个微小抉择。",hint:"小选择见大年。"}
+];
 </script>
 <script>
 /* ===================== 应用逻辑 ===================== */
@@ -859,7 +1082,7 @@ function toast(msg){
   const t = $("toast"); t.textContent = msg; t.classList.add("show");
   clearTimeout(t._timer); t._timer = setTimeout(()=>t.classList.remove("show"), 2200);
 }
-function go(route){ location.hash = "#/" + route; }
+function go(route){ location.hash = "#/" + route; router(); }
 function esc(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 function svgCheck(){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'; }
 function closeModal(){ $("modal-mask").classList.remove("show"); }
@@ -883,6 +1106,7 @@ function router(){
   else if(route==="practice") renderPractice();
   else if(route==="template") renderTemplate();
   else if(route==="assess") renderAssess();
+  else if(route==="workbook") renderWorkbook();
 }
 
 /* ===================== 视图：首页 ===================== */
@@ -1018,6 +1242,7 @@ function renderDaily(){
     <div class="d-hint">${p.hint} · 建议用时 ${p.time}</div>
     <div class="daily-actions">
       <button class="btn btn-primary" onclick="markPractice('${p.id}')">${state.donePractices.includes(p.id)?"✓ 已完成":"标记完成"}</button>
+      <button class="btn btn-soft" onclick="openWorksheet('${p.id}')">做今日习题册</button>
       <button class="btn btn-ghost" onclick="pickDaily()">换一个练习</button>
     </div>`;
 }
@@ -1050,6 +1275,7 @@ function renderPracticeCount(){
 }
 function renderPracticeList(){
   renderPracticeCount();
+  const wb = loadWorkbook();
   const list = state.filter==="全部" ? PRACTICES : PRACTICES.filter(p=>p.cat===state.filter);
   $("practice-list").innerHTML = list.length? list.map(p=>`
     <div class="practice-card ${state.donePractices.includes(p.id)?"done-pc":""}">
@@ -1064,11 +1290,73 @@ function renderPracticeList(){
       </div>
       <div class="pc-foot">
         <button class="btn btn-sm ${state.donePractices.includes(p.id)?"btn-soft":""}" onclick="markPractice('${p.id}')">${state.donePractices.includes(p.id)?"已完成":"标记完成"}</button>
+        <button class="btn btn-sm btn-ghost" onclick="openWorksheet('${p.id}')">写习题</button>
+        ${wb[p.id]?'<span class="ws-done">✓ 已写</span>':''}
         ${state.dailyPicked===p.id?'<span class="tag tag-cin">今日</span>':''}
       </div>
     </div>`).join("")
     : `<div class="empty-hint">暂无该分类的练习</div>`;
 }
+
+/* ===================== 习题册（可填写 · 本地保存） ===================== */
+const WB_KEY = "novel_workbook";
+let curSheetId = null;
+function loadWorkbook(){ try{ return JSON.parse(localStorage.getItem(WB_KEY)||"{}"); }catch(e){ return {}; } }
+function saveWorkbookStore(obj){ try{ localStorage.setItem(WB_KEY, JSON.stringify(obj)); }catch(e){} }
+function openModal(){ $("modal-mask").classList.add("show"); }
+function showSheet(p){
+  if(!p) return;
+  curSheetId = p.id;
+  const wb = loadWorkbook();
+  $("modal-title").textContent = p.title;
+  $("modal-sub").textContent = [p.cat, p.level, p.time].filter(Boolean).join(" · ");
+  $("modal-body").innerHTML = `
+    <p><b>练习要求：</b>${p.desc}</p>
+    ${p.material?`<div class="ws-hint">💡 ${p.hint}</div><div class="blk-title">练习素材</div><div class="ws-material">${p.material}</div>`:`<div class="ws-hint">💡 ${p.hint}</div>`}
+    <div class="blk-title">我的习题册</div>
+    <textarea class="ws-text" id="ws-text" placeholder="在这里完成练习，写下来才算练过。内容会自动保存在本机，下次打开还在。">${(wb[p.id]||"").replace(/</g,"&lt;")}</textarea>
+    <div class="ws-foot">
+      <button class="btn btn-primary" onclick="saveWorksheet()">保存到习题册</button>
+      ${wb[p.id]?'<span class="ws-saved">上次已保存</span>':''}
+    </div>`;
+  openModal();
+}
+function findWB(id){ return WORKBOOK.find(x=>x.id===id); }
+function openWorksheet(id){ const p = PRACTICES.find(x=>x.id===id); if(p) showSheet(p); }
+function openSheet(id){ const p = findWB(id); if(p) showSheet(p); }
+function saveWorksheet(){
+  const el = $("ws-text"); if(!el || !curSheetId) return;
+  const wb = loadWorkbook();
+  wb[curSheetId] = el.value;
+  saveWorkbookStore(wb);
+  if(state.route==="workbook") renderWorkbook();
+  else if(state.route==="practice") renderPracticeList();
+  toast("已存入习题册 · 本机保存成功");
+}
+/* 习题册浏览：每类 30 题 */
+const WB_CATS = [...new Set(WORKBOOK.map(p=>p.cat))];
+function renderWorkbook(){
+  const wb = loadWorkbook();
+  const f = state.wbFilter || "全部";
+  $("wb-count").textContent = `共 ${WORKBOOK.length} 题`;
+  $("wb-filter").innerHTML = ["全部",...WB_CATS].map(c=>
+    `<span class="chip ${f===c?"active":""}" onclick="setWbFilter('${c}')">${c}</span>`).join("");
+  const list = f==="全部" ? WORKBOOK : WORKBOOK.filter(p=>p.cat===f);
+  $("wb-list").innerHTML = list.map(p=>`
+    <div class="practice-card">
+      <div class="pc-top">
+        <span class="tag tag-line">${p.cat}</span>
+        ${p.level?`<span class="text-muted" style="font-size:12px">${p.level}</span>`:""}
+      </div>
+      <h4>${p.title}</h4>
+      <p>${p.desc}</p>
+      <div class="pc-foot">
+        <button class="btn btn-sm btn-ghost" onclick="openSheet('${p.id}')">写习题</button>
+        ${wb[p.id]?'<span class="ws-done">✓ 已写</span>':''}
+      </div>
+    </div>`).join("");
+}
+function setWbFilter(c){ state.wbFilter = c; renderWorkbook(); }
 
 /* ===================== 视图：模板 ===================== */
 function renderTemplate(){
@@ -1196,6 +1484,13 @@ function radarSVG(vals){
 /* ===================== 初始化 ===================== */
 window.addEventListener("hashchange", router);
 $("hamburger").addEventListener("click", ()=>$("nav").classList.toggle("open"));
+// 显式绑定 header 导航点击，确保链接在所有环境下都可切换
+document.querySelectorAll('#nav a').forEach(a=>{
+  a.addEventListener('click', e=>{
+    e.preventDefault();
+    go(a.dataset.route);
+  });
+});
 loadState();
 router();
 </script>
