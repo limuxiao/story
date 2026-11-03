@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>老周故事创作示范 · 从设定卡到正文到分析</title>
+    <style>
+      :root {
+        --accent: #2563eb;
+        --green: #16a34a;
+        --amber: #d97706;
+        --red: #dc2626;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+          system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        letter-spacing: 0.01em;
+        background: #f1f5f9;
+        color: #1e293b;
+        margin: 0;
+        line-height: 1.85;
+      }
+      .wrap {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 4rem;
+      }
+      header.top {
+        background: linear-gradient(135deg, #1e293b, #334155);
+        color: #fff;
+        border-radius: 1rem;
+        padding: 2rem 1.75rem;
+        margin-bottom: 2rem;
+      }
+      header.top h1 {
+        margin: 0 0 0.4rem;
+        font-size: 1.6rem;
+      }
+      header.top p {
+        margin: 0;
+        color: #cbd5e1;
+        font-size: 0.95rem;
+      }
+      .toc {
+        background: #fff;
+        border-radius: 0.8rem;
+        padding: 1rem 1.25rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      }
+      .toc h2 {
+        font-size: 1rem;
+        margin: 0 0 0.5rem;
+      }
+      .toc a {
+        color: var(--accent);
+        text-decoration: none;
+        margin-right: 1rem;
+        font-size: 0.9rem;
+      }
+      .toc a:hover {
+        text-decoration: underline;
+      }
+      section {
+        background: #fff;
+        border-radius: 0.8rem;
+        padding: 1.5rem 1.6rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      }
+      section > h2 {
+        font-size: 1.25rem;
+        margin: 0 0 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--accent);
+      }
+      h3 {
+        font-size: 1.05rem;
+        margin: 1.3rem 0 0.5rem;
+        color: #0f172a;
+      }
+      p {
+        margin: 0 0 0.9rem;
+      }
+      ul,
+      ol {
+        margin: 0 0 0.9rem;
+        padding-left: 1.4rem;
+      }
+      li {
+        margin-bottom: 0.4rem;
+      }
+      strong {
+        color: #0f172a;
+      }
+      /* 设定卡：左侧色条 */
+      .card {
+        border: 1px solid #e2e8f0;
+        border-left: 4px solid var(--accent);
+        border-radius: 0.6rem;
+        padding: 0.9rem 1.1rem;
+        margin: 0.8rem 0;
+        background: #f8fafc;
+      }
+      .card.green {
+        border-left-color: var(--green);
+        background: #f0fdf4;
+      }
+      .card.amber {
+        border-left-color: var(--amber);
+        background: #fffbeb;
+      }
+      .card p {
+        margin-bottom: 0.4rem;
+      }
+      .label {
+        display: inline-block;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #fff;
+        background: var(--accent);
+        border-radius: 0.35rem;
+        padding: 0.05rem 0.5rem;
+        margin-right: 0.4rem;
+      }
+      .label.green {
+        background: var(--green);
+      }
+      .label.amber {
+        background: var(--amber);
+      }
+      .label.red {
+        background: var(--red);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0.6rem 0 1rem;
+        font-size: 0.92rem;
+      }
+      th,
+      td {
+        border: 1px solid #e2e8f0;
+        padding: 0.5rem 0.7rem;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: #f1f5f9;
+        font-weight: 700;
+      }
+      /* 正文 */
+      .story {
+        background: #fffdf7;
+        border: 1px solid #fde68a;
+        border-radius: 0.8rem;
+        padding: 1.6rem 1.8rem;
+        font-size: 1.02rem;
+      }
+      .story h4 {
+        text-align: center;
+        font-size: 1.2rem;
+        margin: 0 0 0.3rem;
+      }
+      .story .sub {
+        text-align: center;
+        color: #94a3b8;
+        font-size: 0.85rem;
+        margin-bottom: 1.2rem;
+      }
+      .story p {
+        text-indent: 2rem;
+        margin-bottom: 1rem;
+      }
+      .pros {
+        border-left: 4px solid var(--green);
+      }
+      .cons {
+        border-left: 4px solid var(--red);
+      }
+      footer {
+        text-align: center;
+        color: #94a3b8;
+        font-size: 0.82rem;
+        margin-top: 2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="top">
+        <h1>老周的故事 · 创作示范全记录</h1>
+        <p>
+          从一颗新闻种子 → 第1–8章设定卡 → 正文《老周的三万块》 →
+          优缺点分析。可对照《两月故事创作学习.html》逐章参考。
+        </p>
+      </header>
+
+      <nav class="toc">
+        <h2>目录</h2>
+        <a href="#c1">1 欲望目标阻碍</a>
+        <a href="#c2">2 冲突悬念</a>
+        <a href="#c3">3 人物小传</a>
+        <a href="#c4">4 主题立意</a>
+        <a href="#c5">5 三幕结构</a>
+        <a href="#c6">6 伏笔反转</a>
+        <a href="#c7">7 视角对白</a>
+        <a href="#c8">8 自检修改</a>
+        <a href="#story">正文</a>
+        <a href="#analysis">分析</a>
+      </nav>
+
+      <!-- ===== 第1章 ===== -->
+      <section id="c1">
+        <h2>第1章 · 欲望、目标与阻碍（角色设定卡）</h2>
+        <div class="card">
+          <p>
+            <span class="label">角色</span
+            >老周，47岁，离异，外卖骑手，女儿小满读初二。
+          </p>
+          <p>
+            <span class="label green">欲望（为什么动）</span
+            >不是"想赚钱"，而是情感层面：想被女儿看成"有本事的爸爸"，怕自己"果然只是个没用的废物父亲"。
+          </p>
+          <p>
+            <span class="label">目标（动得可被看见）</span>
+            <strong>主动目标：</strong>今年攒够 3 万，给小满报市里最好的私立初中冲刺班。<br />
+            <strong>被动目标：</strong>保住平台"金牌骑手"评级——掉了就没优先派单，钱就不够。<br />
+            <em>（一主动一被动，构成"保级才能攒钱"的因果链）</em>
+          </p>
+          <p>
+            <span class="label amber">阻碍（动得艰难，且能拍成一场戏）</span>
+            <strong>外部（别人造成的）：</strong
+            >平台新算法把老周常跑的老校区片区划给年轻骑手，单量一夜掉三成。→可拍的戏：某晚他蹲在马路牙子上狂刷接单页，数字一直停在 0。<br />
+            <strong>内部（自己造成的）：</strong
+            >前妻放话，只要老周去她新丈夫的饭局"服个软"就同意让小满去私立；老周宁可少赚也不肯低头，卡在"宁可穷死也不求前妻"的倔里。
+          </p>
+          <p>
+            <span class="label red">代价（动得牵动人心）</span
+            >小满去不了好学校，离"不像爸爸"的命更近一步；老周和女儿之间唯一的联接（"爸在努力"）彻底断掉。
+          </p>
+        </div>
+        <p>
+          <strong>自检：</strong
+          >"如果这三条都成立，我作为读者会替他担心吗？"——会。代价是具体、个人的，不是远处的"世界毁灭"。读者冷漠通常因为主角"输了也无所谓"；老周输了是真疼，所以这卡立住了。
+        </p>
+      </section>
+
+      <!-- ===== 第2章 ===== -->
+      <section id="c2">
+        <h2>第2章 · 冲突与悬念（三级升级链 + 悬念线）</h2>
+        <div class="card">
+          <p>
+            <span class="label">第一级（小败·生存压力）</span
+            >算法改派后单量掉三成，他每天多跑3小时补回，体力透支但没伤根本。
+          </p>
+          <p>
+            <span class="label">第二级（损失重要之物·关系破裂）</span
+            >报名截止前一周，前妻下通牒"去饭局服软 or 放弃私立"，老周拒，前妻直接给小满报了公立——他"失去"了为女儿争更好未来的可能。
+          </p>
+          <p>
+            <span class="label red">第三级（二选一·尊严 vs 所爱）</span
+            >前妻丈夫愿暗中资助学费，条件是老周在家族聚餐"认个错、喊声哥"。他必须在"不做软骨头（目标）"和"给女儿争这笔钱（所爱）"之间二选一。
+          </p>
+        </div>
+        <div class="card amber">
+          <p>
+            <span class="label amber">悬念线（第三章结尾埋"未爆弹"）</span
+            >老周帮前妻搬东西时，瞥见她手机屏保还是一家三口旧照。→
+            <strong>读者此时比老周多知道：</strong
+            >前妻并非铁石心肠，那顿饭局的"服软"可能远没他想的那么屈辱。这颗弹在第三级回收，逼他重新审视"尊严"到底是什么。
+          </p>
+        </div>
+        <p>
+          <strong>自检：</strong
+          >翻到第三级是否"倒吸一口凉气"？——会，因为无论选哪边都疼，且冲突类型逐级换了（生存→关系→自我认知）。
+        </p>
+      </section>
+
+      <!-- ===== 第3章 ===== -->
+      <section id="c3">
+        <h2>第3章 · 人物塑造（小传 + 五问体检）</h2>
+        <div class="card">
+          <p><span class="label">旧伤口</span>年轻时厂里下岗，老婆跟着厂里技术员走了。他认定"向人低头=被抛弃"，从此把硬扛当铠甲。</p>
+          <p><span class="label">公开面貌</span>话少、爱帮同行、嘴上"我一个人带大闺女挺好"的硬汉骑手。</p>
+          <p><span class="label">秘密自我</span>每晚偷偷刷小满朋友圈不敢点赞，怕女儿嫌他穷嫌他土。</p>
+          <p><span class="label green">弧光终点（信了什么/失去什么）</span>信了"示弱不是丢人，是为了闺女"；失去了死撑的那层面子，换回和女儿真实的联结。</p>
+        </div>
+        <div class="card green">
+          <p><span class="label green">五问体检</span></p>
+          <p>①最想要 = 被女儿当有用的人　②最怕 = 自己是废物 / 再被抛弃　③伤 = 下岗被妻离　④公开硬汉 / 秘密脆弱　⑤结尾信了"低头也可"，失去了面子。<em>每条都有具体画面，人物立住。</em></p>
+        </div>
+      </section>
+
+      <!-- ===== 第4章 ===== -->
+      <section id="c4">
+        <h2>第4章 · 主题与立意（主控思想三角 + 两层主题）</h2>
+        <div class="card">
+          <p><span class="label">人物（鲜明性格）</span>把"不低头"当尊严的倔强底层父亲。</p>
+          <p><span class="label">情境（推进去的压力）</span>被算法和前妻同时逼到"要么丢脸要么丢女儿"。</p>
+          <p><span class="label red">结论（这种人走向何结局）</span>死撑到底会失去唯一在乎他的人；唯有放下虚妄的硬，才接得住爱。</p>
+          <p><span class="label">埃格里前提</span>一个宁折不弯的父亲，在被逼到绝路后，终将明白柔软才是真正的撑。</p>
+        </div>
+        <div class="card amber">
+          <p><span class="label amber">显性主题（读者一眼说的）</span>一个底层父亲为女儿拼命的温情故事。</p>
+          <p><span class="label amber">隐性主题（真正想戳的）</span>底层男性的"硬撑尊严"是一层壳，戳破它才接得住爱。<em>藏在结尾那句"爸错了"里，不靠台词明说。</em></p>
+        </div>
+      </section>
+
+      <!-- ===== 第5章 ===== -->
+      <section id="c5">
+        <h2>第5章 · 情节结构（三幕节拍表）</h2>
+        <table>
+          <tr><th>节拍</th><th>内容</th><th>难度</th></tr>
+          <tr><td>激励事件</td><td>算法改派，单量骤降，3万目标突然够不着</td><td>—</td></tr>
+          <tr><td>第一幕转折</td><td>前妻通牒"服软 or 放弃私立"，老周拒，冲突公开</td><td>↑</td></tr>
+          <tr><td>中点（假胜）</td><td>他以为硬扛守住了骨气，其实小满开始不理他</td><td>↑</td></tr>
+          <tr><td>第二幕转折（谷底）</td><td>小满说"爸你别来学校接我"，他才发现女儿以他为耻，联结真断</td><td>↑↑</td></tr>
+          <tr><td>高潮（新自我获胜）</td><td>面对"喊哥"条件，他不当众向丈夫低头，而是蹲下给女儿系鞋带说"爸以前太轴了"——用刚柔并济的新自我接住了爱</td><td>峰值</td></tr>
+        </table>
+        <p><em>每两段之间难度递增，且中段/谷底/高潮换了冲突类型。</em></p>
+      </section>
+
+      <!-- ===== 第6章 ===== -->
+      <section id="c6">
+        <h2>第6章 · 节奏、伏笔与反转</h2>
+        <h3>伏笔 — 回收表</h3>
+        <table>
+          <tr><th>伏笔（轻描淡写地埋）</th><th>回收（关键时刻显分量）</th></tr>
+          <tr><td>第1章：老周手机里存着小满周岁照，却从不发、只自己看</td><td>谷底时他翻出照片，下定决心"为她低头"</td></tr>
+          <tr><td>第2章：老周帮前妻搬东西，瞥见她屏保还是一家三口旧照</td><td>第三级聚餐前回收——前妻并非铁石心肠，服软没他想的屈辱</td></tr>
+          <tr><td>日常：年轻骑手小吴总抢他单，但后来主动说"周哥你闺女的事我听说了"</td><td>老周去处理家事那晚，小吴默默帮他顶了一整晚单</td></tr>
+        </table>
+        <h3>公平反转</h3>
+        <div class="card amber">
+          <p>
+            <span class="label amber">反转设计</span
+            >读者以为前妻丈夫是"施舍者的反派"，反转——他真心欣赏老周（自己也离异带娃，懂这种拼），资助是真心的，条件"喊哥"只是想给前妻一个台阶。<strong>公平性：</strong>前面埋过"丈夫主动提资助""小吴转述丈夫的评价"等线索，回头看全都成立，不是作者突然变卦。
+          </p>
+        </div>
+      </section>
+
+      <!-- ===== 第7章 ===== -->
+      <section id="c7">
+        <h2>第7章 · 视角、对白与细节（展示而非告知）</h2>
+        <h3>视角体检</h3>
+        <p>全程<strong>第三人称限知</strong>，只进老周的脑内。小满的内心（怕同学笑）不擅自进入，而通过她的动作/对白外显——这保持了视角的统一与老周"猜不透女儿"的疏离感。</p>
+        <h3>告知 → 展示 改写</h3>
+        <div class="card">
+          <p><span class="label red">告知（初稿常犯）</span>"老周很爱女儿，但为了尊严不肯低头，他很矛盾。"</p>
+          <p><span class="label green">展示（修订后）</span>他蹲在马路牙子上，把刚抢到的热乎包子掰一半塞进保温袋——那是留给小满晚自习的加餐；手指冻得发紫，却先哈气暖了袋子才系口。然后他点开朋友圈，小满发了"今天食堂的菜好难吃"，他打了"想吃爸做的？"又一个个字删掉，最后只点了个赞，秒撤。</p>
+        </div>
+        <h3>对白示范</h3>
+        <div class="card">
+          <p>前妻："你非要这么轴？"</p>
+          <p>老周："我不是轴，我是不想让她觉得她爸是个谁都能使唤的人。"</p>
+          <p>前妻："……她现在觉得她爸是个连饭局都不来的窝囊废。"</p>
+        </div>
+      </section>
+
+      <!-- ===== 第8章 ===== -->
+      <section id="c8">
+        <h2>第8章 · 打磨、自检与修改</h2>
+        <h3>自检清单打分</h3>
+        <table>
+          <tr><th>检查项</th><th>结果</th></tr>
+          <tr><td>欲望是否具体可感知？</td><td>✓ 被女儿当有用的人（非"想赚钱"空话）</td></tr>
+          <tr><td>冲突是否不可退让？</td><td>✓ 尊严 vs 所爱，二选一</td></tr>
+          <tr><td>代价是否个人且痛？</td><td>✓ 失去父女联结</td></tr>
+          <tr><td>视角是否统一？</td><td>~ 中段需谨慎小满镜头，避免偷换视角</td></tr>
+          <tr><td>伏笔是否全部回收？</td><td>✓ 照片 / 屏保 / 小吴 三处闭合</td></tr>
+          <tr><td>隐性主题是否织进情节？</td><td>✓ 结尾"系鞋带+爸错了"承载，无说教</td></tr>
+        </table>
+        <h3>两轮修改法</h3>
+        <div class="card">
+          <p><span class="label">第一轮（结构）</span>原中点"假胜"偏软，改为小满主动说"爸你别来学校接我"——让假胜更痛、更成立，谷底落差更大。</p>
+          <p><span class="label green">第二轮（文字）</span>删形容词，强化动作：把"他很矛盾地看了很久"改为"他看了很久，没点赞，也没撤"。</p>
+        </div>
+      </section>
+
+      <!-- ===== 正文 ===== -->
+      <section id="story" class="story">
+        <h4>老周的三万块</h4>
+        <div class="sub">—— 根据第1–8章设定卡写成的短篇正文</div>
+
+        <p>老周把手机搁在车把上，接单页的数字停了整整四十秒。往常这个点，老校区片区单子能刷满屏；今天算法一改，他常跑的那几栋教学楼，全划给了新来的小吴。</p>
+
+        <p>他没骂人，只是把保温袋往怀里拢了拢——里面一个热乎包子，是留给小满晚自习的加餐。手指冻得发紫，他先哈了口气暖袋子，才慢慢系上口。</p>
+
+        <p>小满初二，离中考还有一年半。老周算过，攒够三万，就能给她报市里最好的私立冲刺班。他跑单十四年，金牌骑手徽章亮在 app 头像上，靠的就是"别人不愿接的远单他接，别人嫌冷的夜单他跑"。可这枚徽章掉了，优先派单就没了，三万就悬。</p>
+
+        <p>那天前妻发来微信："私立报名截止前一周。你来他饭局上服个软，我就让小满去。不然，公立定了。"</p>
+
+        <p>老周盯着"服个软"三个字，指节发白。当年厂里下岗，老婆跟了技术员走，他这辈子把"向人低头"和"被抛弃"画了等号。他回："我不去。"</p>
+
+        <p>小满妈没再回。截止那天，老周特意绕远去学校门口接闺女，想显摆显摆——小满却隔着栏杆喊："爸你别来了，同学笑我爸是送外卖的。"</p>
+
+        <p>老周站在校门口的梧桐影里，第一次觉得那枚金牌徽章轻得像张纸。</p>
+
+        <p>帮老周顶单的小吴后来跟他说："周哥，你闺女的事我听说了。人前妻那口子，其实跟人聊起过你，说你'是个真父亲'。"老周没接话，夜里却翻出手机里存的小满周岁照——他从不发，只自己看。</p>
+
+        <p>谷底来得安静。小满的朋友圈设了对他不可见。老周每天照常跑单、照常留半个包子，只是再没人接。</p>
+
+        <p>转机是前妻丈夫主动提的："三万学费我出，条件就一个——家宴上你喊我一声哥，给个台阶。"</p>
+
+        <p>老周去了。饭桌上众人举杯，前妻丈夫举着酒等那声"哥"。老周没看他，却忽然蹲下身，给旁边低头玩手机的小满系鞋带——鞋带散着，她一直没发现。</p>
+
+        <p>"爸错了，"他声音很轻，"以前太轴，光想着不能让人看不起，忘了你才是最重要的。"</p>
+
+        <p>小满的脚在他手心里顿了一下。</p>
+
+        <p>散席时老周没喊那声哥，前妻丈夫也没再逼。出门老周瞥见前妻手机亮着，屏保还是一家三口那张旧照。</p>
+
+        <p>后来小满把朋友圈对他重新打开，第一条是："今天我爸来系鞋带，手很糙。"</p>
+
+        <p>老周看了很久，没点赞，也没撤。</p>
+      </section>
+
+      <!-- ===== 分析 ===== -->
+      <section id="analysis">
+        <h2>对这个故事的分析</h2>
+
+        <div class="card green pros">
+          <p><span class="label green">优点</span></p>
+          <ol>
+            <li><strong>发动机齐活。</strong>欲望（被女儿当有用的人）+ 目标（3万 / 保级）+ 阻碍（外部算法 + 内部倔）+ 代价（失去父女联结）四样都具体，没有"想赚钱"这类空话。</li>
+            <li><strong>冲突不可退让。</strong>尊严 vs 所爱，第三级逼到二选一，无论选哪边都疼，读者自然替他揪心。</li>
+            <li><strong>隐性主题织进情节。</strong>"硬撑的尊严是一层壳"这个点，靠结尾"系鞋带 + 爸错了"的动作承载，没有用台词硬讲道理，回看才品出味道。</li>
+            <li><strong>伏笔闭环。</strong>周岁照、前妻屏保、小吴三条线全部回收，且埋设时都"看起来只是日常"，回收有雷霆感。</li>
+            <li><strong>公平反转。</strong>前妻丈夫不是脸谱反派，前文给了"主动提资助""小吴转述"等线索，反转经得起回看。</li>
+            <li><strong>展示优于告知。</strong>开场用"掰包子、暖袋子、删又打的字、秒撤的赞"把爱而不敢表达写出来，比"他很爱女儿"有力得多。</li>
+          </ol>
+        </div>
+
+        <div class="card cons">
+          <p><span class="label red">可改进（缺点 / 下一步打磨方向）</span></p>
+          <ol>
+            <li><strong>小满视角缺失，父女和解略单方。</strong>读者只透过老周看女儿，"怕同学笑"目前还是概念。建议加一场小满独处的戏（如她偷偷把爸的保温袋照片设成屏保又赶紧关掉），让她立住，和解才不空心。</li>
+            <li><strong>中段"假胜"转得太快。</strong>老周"以为守住骨气"到"小满不理他"之间缺一场让他真正相信"我没错"的戏（如跟小吴喝酒吐真言），假胜才更成立、谷底落差更大。</li>
+            <li><strong>外部阻碍偏抽象。</strong>"算法"是无脸的系统，难拍成对手戏。可具象成一个具体调度员的一次误判罚单，或一个把单子全抢走的真人，让外部冲突可视觉化。</li>
+            <li><strong>情绪曲线还可更弯。</strong>谷底到高潮之间缺少一次"短暂虚假希望再跌落"（如丈夫先答应全出，又临时加码），让读者心再提再坠，节奏更富呼吸。</li>
+            <li><strong>语言仍有告知残留。</strong>如"谷底来得安静""转机是……主动提的"，属叙述者代劳。二轮可改成动作外显：让"安静"通过老周一连几天对着暗掉的头像发呆来呈现。</li>
+            <li><strong>代价可再痛一点。</strong>当前代价是"父女疏远"，已是好的痛点；若想更狠，可让小满一度赌气说"我不要你这样的爸"，把老周推到"赢了骨气、彻底失去女儿"的边缘，再拉回。</li>
+          </ol>
+        </div>
+
+        <h3>小结</h3>
+        <p>
+          这个故事示范了手册的核心主张：<strong>先有种子，再用每一章的练习卡去填充同一个故事</strong>。第1章给出角色发动机，第2–5章搭起冲突、人物、主题、结构四梁八柱，第6–8章补节奏伏笔、笔法细节与修改。最终正文不过一千多字，但每一笔都能在设定卡里找到来处——这就是"想清楚再写"和"边写边想"的区别。
+        </p>
+        <p>
+          现在轮到你了：把你找到的那条新闻，按第1章卡片填出第一张"欲望—目标—阻碍卡"，保存，再顺着本文件的目录一路填到正文。卡住时，回看对应章节的设定卡和这里的优缺点清单，逐条对照即可。
+        </p>
+      </section>
+
+      <footer>
+        老周故事创作示范 · 离线 HTML · 配合《两月故事创作学习.html》使用
+      </footer>
+    </div>
+  </body>
+</html>
