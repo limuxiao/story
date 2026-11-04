@@ -1,0 +1,845 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI 聊天 · GPT 客户端</title>
+    <style>
+      :root {
+        --bg: #f4f6f9;
+        --panel: #ffffff;
+        --panel-2: #eef1f5;
+        --border: #dfe3ea;
+        --text: #1f2530;
+        --muted: #69727f;
+        --accent: #3b73e8;
+        --accent-2: #2c5bc4;
+        --ok: #16a34a;
+        --err: #dc2626;
+        --user: #e7f0ff;
+        --ai: #f3f5f8;
+        --radius: 14px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        overflow: hidden;
+      }
+      /* 侧边设置 */
+      .sidebar {
+        width: 320px;
+        min-width: 320px;
+        background: var(--panel);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        padding: 18px;
+        gap: 14px;
+        overflow-y: auto;
+      }
+      .sidebar h1 {
+        font-size: 18px;
+        margin: 0 0 4px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .sidebar h1 .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--accent);
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .field label {
+        font-size: 12px;
+        color: var(--muted);
+        letter-spacing: 0.3px;
+      }
+      .input-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+      input[type="text"],
+      input[type="password"],
+      textarea,
+      select {
+        width: 100%;
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 13px;
+        outline: none;
+        transition: border 0.15s;
+        font-family: inherit;
+      }
+      select {
+        appearance: none;
+        cursor: pointer;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2369727f' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        padding-right: 34px;
+      }
+      input:focus,
+      textarea:focus,
+      select:focus {
+        border-color: var(--accent);
+      }
+      .toggle {
+        position: absolute;
+        right: 8px;
+        background: none;
+        border: none;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 12px;
+      }
+      .hint {
+        font-size: 11px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+      }
+      .row .field {
+        flex: 1;
+      }
+      button {
+        cursor: pointer;
+        border: none;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 10px 14px;
+        transition:
+          filter 0.15s,
+          opacity 0.15s;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+      }
+      .btn-primary:hover:not(:disabled) {
+        filter: brightness(1.08);
+      }
+      .btn-ghost {
+        background: var(--panel-2);
+        color: var(--text);
+        border: 1px solid var(--border);
+      }
+      .btn-ghost:hover {
+        filter: brightness(1.15);
+      }
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+      }
+      .status .led {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--muted);
+      }
+      .status.ok .led {
+        background: var(--ok);
+        box-shadow: 0 0 8px var(--ok);
+      }
+      .status.err .led {
+        background: var(--err);
+        box-shadow: 0 0 8px var(--err);
+      }
+      .spinner {
+        width: 14px;
+        height: 14px;
+        border: 2px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .divider {
+        height: 1px;
+        background: var(--border);
+        margin: 4px 0;
+      }
+
+      /* 主聊天区 */
+      .main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .topbar {
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        border-bottom: 1px solid var(--border);
+        background: var(--panel);
+      }
+      .topbar .title {
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .topbar .title b {
+        color: var(--text);
+      }
+      .messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .msg {
+        display: flex;
+        gap: 12px;
+        max-width: 82%;
+      }
+      .msg .av {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .msg.user {
+        align-self: flex-end;
+        flex-direction: row-reverse;
+      }
+      .msg.user .av {
+        background: var(--accent);
+      }
+      .msg.ai .av {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+      }
+      .bubble {
+        padding: 12px 14px;
+        border-radius: 12px;
+        font-size: 14px;
+        line-height: 1.65;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .msg.user .bubble {
+        background: var(--user);
+        border: 1px solid #c3d6f5;
+      }
+      .msg.ai .bubble {
+        background: var(--ai);
+        border: 1px solid var(--border);
+      }
+      .bubble pre {
+        background: #eef1f5;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px;
+        overflow: auto;
+        font-size: 12.5px;
+        color: var(--text);
+      }
+      .bubble code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      .bubble p {
+        margin: 0 0 8px;
+      }
+      .bubble p:last-child {
+        margin: 0;
+      }
+      .composer {
+        border-top: 1px solid var(--border);
+        padding: 14px 20px;
+        background: var(--panel);
+        display: flex;
+        gap: 12px;
+        align-items: flex-end;
+      }
+      .composer textarea {
+        resize: none;
+        max-height: 160px;
+        min-height: 44px;
+        line-height: 1.5;
+      }
+      .composer .send {
+        height: 44px;
+        flex-shrink: 0;
+      }
+      .empty {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        gap: 10px;
+        text-align: center;
+      }
+      .empty .big {
+        font-size: 40px;
+      }
+      .note {
+        font-size: 11px;
+        color: #6b7280;
+        padding: 0 20px 6px;
+        text-align: center;
+      }
+      @media (max-width: 720px) {
+        .sidebar {
+          position: fixed;
+          z-index: 20;
+          height: 100%;
+          transform: translateX(-100%);
+          transition: transform 0.2s;
+        }
+        .sidebar.open {
+          transform: none;
+        }
+        .menu-btn {
+          display: inline-flex !important;
+        }
+      }
+      .menu-btn {
+        display: none;
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 8px;
+        padding: 6px 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 侧边设置 -->
+    <aside class="sidebar" id="sidebar">
+      <h1><span class="dot"></span>AI 聊天客户端</h1>
+      <div class="hint">
+        可直接对接 OpenAI、OpenRouter、Ollama、DeepSeek 等任意 OpenAI 兼容接口。
+      </div>
+
+      <div class="field">
+        <label>API Key</label>
+        <div class="input-wrap">
+          <input
+            type="password"
+            id="apiKey"
+            placeholder="sk-..."
+            autocomplete="off" />
+          <button class="toggle" id="toggleKey" type="button">显示</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>服务商</label>
+        <select id="provider"></select>
+      </div>
+      <div class="field">
+        <label>接口地址 (Base URL，可手动修改)</label>
+        <input
+          type="text"
+          id="baseUrl"
+          placeholder="https://api.openai.com/v1" />
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>模型</label>
+          <input type="text" id="model" placeholder="gpt-4o-mini" />
+        </div>
+        <div class="field" style="flex: 0 0 96px">
+          <label>温度</label>
+          <input type="text" id="temperature" value="0.8" />
+        </div>
+      </div>
+
+      <button class="btn-primary" id="testBtn" type="button">测试连接</button>
+      <div class="status" id="status">
+        <span class="led"></span><span id="statusText">未测试</span>
+      </div>
+
+      <div class="divider"></div>
+      <button class="btn-ghost" id="saveBtn" type="button">保存设置</button>
+      <button class="btn-ghost" id="clearBtn" type="button">清空对话</button>
+      <div class="hint" id="saveHint"></div>
+    </aside>
+
+    <!-- 主聊天区 -->
+    <main class="main">
+      <div class="topbar">
+        <button class="menu-btn" id="menuBtn" type="button">☰ 设置</button>
+        <div class="title">对话中 · 模型 <b id="modelTag">—</b></div>
+        <div class="status" id="miniStatus" style="padding: 6px 10px">
+          <span class="led"></span
+          ><span id="miniText" style="font-size: 12px">未连接</span>
+        </div>
+      </div>
+
+      <div class="messages" id="messages">
+        <div class="empty" id="empty">
+          <div class="big">💬</div>
+          <div>
+            先在左侧填写 API Key 并「测试连接」<br />然后就可以和 AI 聊天了
+          </div>
+        </div>
+      </div>
+
+      <div class="composer">
+        <textarea
+          id="input"
+          placeholder="输入消息…（Enter 发送，Shift+Enter 换行）"
+          disabled></textarea>
+        <button class="btn-primary send" id="sendBtn" type="button" disabled>
+          发送
+        </button>
+      </div>
+      <div class="note">
+        提示：浏览器直连可能因 CORS 被拦截。若测试失败，可将「接口地址」改为带
+        CORS 代理的地址或本地代理（如 Ollama 的 http://localhost:11434/v1）。
+      </div>
+    </main>
+
+    <script>
+      (function () {
+        "use strict";
+        const $ = (id) => document.getElementById(id);
+        const els = {
+          apiKey: $("apiKey"),
+          provider: $("provider"),
+          baseUrl: $("baseUrl"),
+          model: $("model"),
+          temperature: $("temperature"),
+          testBtn: $("testBtn"),
+          status: $("status"),
+          statusText: $("statusText"),
+          saveBtn: $("saveBtn"),
+          clearBtn: $("clearBtn"),
+          saveHint: $("saveHint"),
+          messages: $("messages"),
+          empty: $("empty"),
+          input: $("input"),
+          sendBtn: $("sendBtn"),
+          modelTag: $("modelTag"),
+          miniStatus: $("miniStatus"),
+          miniText: $("miniText"),
+          toggleKey: $("toggleKey"),
+          menuBtn: $("menuBtn"),
+          sidebar: $("sidebar"),
+        };
+
+        const LS = "ai-chat-config";
+        let status = "idle"; // idle | testing | ok | err
+        let busy = false;
+
+        // ---- 服务商预设（选一个即自动填好接口地址与推荐模型）----
+        const PROVIDERS = [
+          {
+            key: "openai",
+            label: "OpenAI (GPT)",
+            url: "https://api.openai.com/v1",
+            model: "gpt-4o-mini",
+          },
+          {
+            key: "deepseek",
+            label: "DeepSeek",
+            url: "https://api.deepseek.com/v1",
+            model: "deepseek-chat",
+          },
+          {
+            key: "openrouter",
+            label: "OpenRouter",
+            url: "https://openrouter.ai/api/v1",
+            model: "openai/gpt-4o-mini",
+          },
+          {
+            key: "siliconflow",
+            label: "硅基流动 SiliconFlow",
+            url: "https://api.siliconflow.cn/v1",
+            model: "deepseek-ai/DeepSeek-V3",
+          },
+          {
+            key: "moonshot",
+            label: "月之暗面 Kimi",
+            url: "https://api.moonshot.cn/v1",
+            model: "moonshot-v1-8k",
+          },
+          {
+            key: "zhipu",
+            label: "智谱 GLM",
+            url: "https://open.bigmodel.cn/api/paas/v4",
+            model: "glm-4-flash",
+          },
+          {
+            key: "qwen",
+            label: "通义千问 Qwen (阿里云)",
+            url: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+            model: "qwen-plus",
+          },
+          {
+            key: "yi",
+            label: "零一万物 Yi",
+            url: "https://api.lingyiwanwu.com/v1",
+            model: "yi-lightning",
+          },
+          {
+            key: "ollama",
+            label: "本地 Ollama (免费)",
+            url: "http://localhost:11434/v1",
+            model: "llama3",
+          },
+          { key: "custom", label: "自定义 / 其他", url: "", model: "" },
+        ];
+        function initProviderSelect() {
+          els.provider.innerHTML = "";
+          PROVIDERS.forEach((p) => {
+            const o = document.createElement("option");
+            o.value = p.key;
+            o.textContent = p.label;
+            els.provider.appendChild(o);
+          });
+        }
+        function applyProvider(key, onlyIfEmpty) {
+          const p = PROVIDERS.find((x) => x.key === key);
+          if (!p) return;
+          if (!onlyIfEmpty || !els.baseUrl.value.trim())
+            els.baseUrl.value = p.url;
+          if (!onlyIfEmpty || !els.model.value.trim())
+            els.model.value = p.model;
+          updateModelTag();
+        }
+
+        // ---- 配置读写 ----
+        function load() {
+          try {
+            const c = JSON.parse(localStorage.getItem(LS) || "{}");
+            els.apiKey.value = c.apiKey || "";
+            initProviderSelect();
+            const pk =
+              c.provider && PROVIDERS.some((p) => p.key === c.provider)
+                ? c.provider
+                : "openai";
+            els.provider.value = pk;
+            els.baseUrl.value =
+              c.baseUrl ||
+              (PROVIDERS.find((p) => p.key === pk) || {}).url ||
+              "https://api.openai.com/v1";
+            els.model.value =
+              c.model ||
+              (PROVIDERS.find((p) => p.key === pk) || {}).model ||
+              "gpt-4o-mini";
+            els.temperature.value =
+              c.temperature !== undefined ? c.temperature : "0.8";
+          } catch (e) {
+            initProviderSelect();
+          }
+          updateModelTag();
+        }
+        function save() {
+          const c = {
+            apiKey: els.apiKey.value.trim(),
+            provider: els.provider.value,
+            baseUrl: els.baseUrl.value.trim().replace(/\/+$/, ""),
+            model: els.model.value.trim(),
+            temperature: parseFloat(els.temperature.value) || 0.8,
+          };
+          localStorage.setItem(LS, JSON.stringify(c));
+          els.saveHint.textContent =
+            "已保存 ✓ " + new Date().toLocaleTimeString();
+          setTimeout(() => (els.saveHint.textContent = ""), 2000);
+          updateModelTag();
+        }
+        function cfg() {
+          return {
+            apiKey: els.apiKey.value.trim(),
+            baseUrl: (
+              els.baseUrl.value.trim() || "https://api.openai.com/v1"
+            ).replace(/\/+$/, ""),
+            model: els.model.value.trim() || "gpt-4o-mini",
+            temperature: parseFloat(els.temperature.value) || 0.8,
+          };
+        }
+        function authHeaders(c) {
+          const h = { "Content-Type": "application/json" };
+          if (c.apiKey) h["Authorization"] = "Bearer " + c.apiKey;
+          return h;
+        }
+        function updateModelTag() {
+          els.modelTag.textContent = els.model.value.trim() || "—";
+        }
+
+        // ---- 状态显示 ----
+        function setStatus(state, text) {
+          status = state;
+          els.status.className =
+            "status" + (state === "ok" ? " ok" : state === "err" ? " err" : "");
+          els.miniStatus.className =
+            "status" + (state === "ok" ? " ok" : state === "err" ? " err" : "");
+          els.statusText.textContent = text;
+          els.miniText.textContent =
+            state === "ok"
+              ? "已连接"
+              : state === "err"
+                ? "连接失败"
+                : state === "testing"
+                  ? "测试中…"
+                  : "未连接";
+          const enabled = state === "ok" && !busy;
+          els.input.disabled = !enabled;
+          els.sendBtn.disabled = !enabled;
+        }
+
+        // ---- 测试连接 ----
+        async function testConnection() {
+          const c = cfg();
+          if (!c.apiKey && els.provider.value !== "ollama") {
+            setStatus("err", "请先填写 API Key");
+            return;
+          }
+          setStatus("testing", "正在测试…");
+          els.testBtn.disabled = true;
+          try {
+            const r = await fetch(c.baseUrl + "/chat/completions", {
+              method: "POST",
+              headers: authHeaders(c),
+              body: JSON.stringify({
+                model: c.model,
+                stream: false,
+                max_tokens: 1,
+                temperature: 0,
+                messages: [{ role: "user", content: "hi" }],
+              }),
+            });
+            if (!r.ok) {
+              let detail = "";
+              try {
+                const j = await r.json();
+                if (j.error && j.error.message) detail = j.error.message;
+              } catch (e) {}
+              let msg = "HTTP " + r.status;
+              if (detail) msg += " · " + detail;
+              if (r.status === 429) {
+                msg +=
+                  "（请求过多 / 配额不足：请到平台确认账单与额度，或稍后重试；若是免费额度过低，建议换付费账户或降低测试频率）";
+              } else if (r.status === 401) {
+                msg += "（API Key 无效或已失效）";
+              } else if (r.status === 404) {
+                msg += "（模型名或接口地址不正确）";
+              } else if (r.status === 403) {
+                msg += "（无该模型权限，或被地区/组织策略拦截）";
+              }
+              setStatus("err", msg);
+            } else {
+              setStatus("ok", "连接成功 · " + c.model);
+            }
+          } catch (e) {
+            setStatus(
+              "err",
+              "请求失败：" + (e.message || e) + "（可能 CORS 被拦截）",
+            );
+          } finally {
+            els.testBtn.disabled = false;
+          }
+        }
+
+        // ---- 消息渲染 ----
+        function escapeHtml(s) {
+          return s.replace(
+            /[&<>]/g,
+            (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[m],
+          );
+        }
+        // 极简 markdown：段落、```代码块```、**粗体**
+        function render(text) {
+          let out = escapeHtml(text);
+          // 代码块
+          out = out.replace(
+            /```([\s\S]*?)```/g,
+            (m, code) =>
+              "<pre><code>" + code.replace(/^\n/, "") + "</code></pre>",
+          );
+          // 行内代码
+          out = out.replace(/`([^`]+?)`/g, "<code>$1</code>");
+          // 粗体
+          out = out.replace(/\*\*([^*]+?)\*\*/g, "<b>$1</b>");
+          // 段落
+          out = out
+            .split(/\n{2,}/)
+            .map((p) => "<p>" + p.replace(/\n/g, "<br/>") + "</p>")
+            .join("");
+          return out;
+        }
+        function addMessage(role, text, streaming) {
+          if (els.empty) {
+            els.empty.remove();
+            els.empty = null;
+          }
+          const wrap = document.createElement("div");
+          wrap.className = "msg " + role;
+          const av = document.createElement("div");
+          av.className = "av";
+          av.textContent = role === "user" ? "你" : "AI";
+          const bubble = document.createElement("div");
+          bubble.className = "bubble";
+          bubble.innerHTML = text ? render(text) : "";
+          wrap.appendChild(av);
+          wrap.appendChild(bubble);
+          els.messages.appendChild(wrap);
+          els.messages.scrollTop = els.messages.scrollHeight;
+          return { wrap, bubble };
+        }
+
+        // ---- 发送 ----
+        async function send() {
+          const c = cfg();
+          const text = els.input.value.trim();
+          if (!text || busy || status !== "ok") return;
+          addMessage("user", text);
+          els.input.value = "";
+          busy = true;
+          setStatus("ok", "已连接"); // 保持 enabled 但用 busy 拦截
+          els.sendBtn.disabled = true;
+          els.input.disabled = true;
+
+          const ai = addMessage("ai", "");
+          let acc = "";
+          try {
+            const r = await fetch(c.baseUrl + "/chat/completions", {
+              method: "POST",
+              headers: authHeaders(c),
+              body: JSON.stringify({
+                model: c.model,
+                stream: true,
+                temperature: c.temperature,
+                messages: [{ role: "user", content: text }],
+              }),
+            });
+            if (!r.ok) {
+              let msg = "HTTP " + r.status;
+              try {
+                const j = await r.json();
+                if (j.error && j.error.message) msg += " · " + j.error.message;
+              } catch (e) {}
+              ai.bubble.innerHTML =
+                '<span style="color:var(--err)">' + escapeHtml(msg) + "</span>";
+              busy = false;
+              els.input.disabled = false;
+              els.sendBtn.disabled = false;
+              return;
+            }
+            const reader = r.body.getReader();
+            const dec = new TextDecoder();
+            let buf = "";
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              buf += dec.decode(value, { stream: true });
+              const lines = buf.split("\n");
+              buf = lines.pop();
+              for (const line of lines) {
+                const t = line.trim();
+                if (!t || !t.startsWith("data:")) continue;
+                const data = t.slice(5).trim();
+                if (data === "[DONE]") continue;
+                try {
+                  const j = JSON.parse(data);
+                  const delta = j.choices && j.choices[0] && j.choices[0].delta;
+                  if (delta && delta.content) {
+                    acc += delta.content;
+                    ai.bubble.innerHTML = render(acc);
+                    els.messages.scrollTop = els.messages.scrollHeight;
+                  }
+                } catch (e) {}
+              }
+            }
+            if (!acc)
+              ai.bubble.innerHTML =
+                '<span style="color:var(--muted)">（无内容返回）</span>';
+          } catch (e) {
+            ai.bubble.innerHTML =
+              '<span style="color:var(--err)">请求出错：' +
+              (e.message || e) +
+              "</span>";
+          } finally {
+            busy = false;
+            if (status === "ok") {
+              els.input.disabled = false;
+              els.sendBtn.disabled = false;
+            }
+          }
+        }
+
+        // ---- 事件 ----
+        els.testBtn.addEventListener("click", testConnection);
+        els.saveBtn.addEventListener("click", save);
+        els.sendBtn.addEventListener("click", send);
+        els.input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            send();
+          }
+        });
+        els.toggleKey.addEventListener("click", () => {
+          const t = els.apiKey.type === "password" ? "text" : "password";
+          els.apiKey.type = t;
+          els.toggleKey.textContent = t === "text" ? "隐藏" : "显示";
+        });
+        els.clearBtn.addEventListener("click", () => {
+          els.messages.innerHTML =
+            '<div class="empty" id="empty"><div class="big">💬</div><div>先在左侧填写 API Key 并「测试连接」<br/>然后就可以和 AI 聊天了</div></div>';
+          els.empty = $("empty");
+        });
+        els.menuBtn.addEventListener("click", () =>
+          els.sidebar.classList.toggle("open"),
+        );
+        els.provider.addEventListener("change", () =>
+          applyProvider(els.provider.value, false),
+        );
+
+        load();
+      })();
+    </script>
+  </body>
+</html>
