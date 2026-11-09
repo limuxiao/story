@@ -79,6 +79,14 @@ export class Compositor {
     this.tracks = tracks;
   }
 
+  // 汇总所有素材源的帧池版本号。暂停时工程状态不变，但 Worker 仍在异步送达
+  // seek 后新段的帧；预览循环据此标脏重绘，否则画面会一直停在空窗期的旧帧。
+  get frameRevision(): number {
+    let rev = 0;
+    for (const s of this.sources.values()) rev += s.frameRevision;
+    return rev;
+  }
+
   private ensureSource(c: Clip): Mp4Source | null {
     const src0 = this.sourceMap.get(c.sourceId);
     if (!src0) return null;

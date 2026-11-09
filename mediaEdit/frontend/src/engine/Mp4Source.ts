@@ -14,7 +14,8 @@ export interface AudioSeg {
 // 单个素材源：持有一个解码 Worker + 主线程「5 秒段」帧池 / 音频缓冲。
 // 段号不变就完全不发请求（静置零 churn）；每次只请求当前段与预取下一段，
 // Worker 对每个段各发一次 HTTP Range，只拉该 5 秒的字节。
-// 始终保留第一帧作为 anchor，避免任何情况下黑屏。
+// anchor 首帧只在「素材刚加载、尚未绘制过任何帧」时兜底防黑屏；
+// seek 空窗期一律保持 holdKey（最后绘制帧），绝不把画面跳回素材首帧。
 export class Mp4Source {
   readonly id: string;
   readonly url: string;
@@ -95,11 +96,14 @@ export class Mp4Source {
         if (existing) existing.close();
         this.pool.set(key, msg.frame);
         if (this.anchorKey === null) this.anchorKey = key;
-        // 硬上界：关掉最旧的帧；anchor（首帧兜底）永不回收。
+        // 新帧入池 → 通知合成器：即使暂停也要重绘一次，否则 seek 后画面会
+        // 一直停在空窗期的旧帧（首帧 anchor）上。
+        this.frameRevision++;
+        // 硬上界：关掉最旧的帧；anchor 与 hold（最后绘制帧）永不回收。
         while (this.pool.size > MAX_POOL_FRAMES) {
           let oldest: number | null = null;
           for (const k of this.pool.keys()) {
-            if (k === this.anchorKey) continue;
+            if (k === this.anchorKey || k === this.holdKey) continue;
             if (oldest === null || k < oldest) oldest = k;
           }
           if (oldest === null) break;
@@ -148,14 +152,14 @@ export class Mp4Source {
     const prev = this.currentSeg;
     this.currentSeg = seg;
 
-    // 只保留播放头前 1 秒 + 当前段 + 预取段；anchor 首帧永不回收。
+    // 只保留播放头前 1 秒 + 当前段 + 预取段；anchor 与 hold 永不回收。
     // 旧逻辑保留前后各一段（15 秒 ≈ 450 帧）会触发帧池硬上界，
     // 把当前段尚未播放的帧关掉，画面卡在 anchor 上。
     const keepFrom = Math.max(seg * AUDIO_SEG - 0.5, lo - 1.0);
     const keepTo = (seg + 2) * AUDIO_SEG + 0.5;
     for (const [k, f] of this.pool) {
       const ft = k / 1000;
-      if (k !== this.anchorKey && (ft < keepFrom || ft > keepTo)) {
+      if (k !== this.anchorKey && k !== this.holdKey && (ft < keepFrom || ft > keepTo)) {
         f.close();
         this.pool.delete(k);
       }
@@ -198,24 +202,27 @@ export class Mp4Source {
   }
 
   getFrameAt(t: number): VideoFrame | null {
-    if (this.pool.size === 0) return null;
     let best: VideoFrame | null = null;
     let bestT = -1;
-    let earliest: VideoFrame | null = null;
-    let earT = Infinity;
     for (const [k, f] of this.pool) {
+      // anchor 是素材首帧：播放头已远离起点时不能拿它充当「播放头之前最近帧」，
+      // 否则 seek 后新段帧尚未就绪时画面会跳回第一帧。
+      if (k === this.anchorKey && t > 1) continue;
       const ft = k / 1000;
       if (ft <= t && ft > bestT) {
         bestT = ft;
         best = f;
       }
-      if (ft < earT) {
-        earT = ft;
-        earliest = f;
-      }
     }
-    // 优先播放头之前最近帧；无则取最早帧（anchor 兜底，绝不黑屏）。
-    return best || earliest;
+    if (best) {
+      this.holdKey = Math.round(bestT * 1000);
+      return best;
+    }
+    // 空窗（seek 后新段尚未解码完）：保持最后实际绘制的帧，而不是回退到首帧。
+    const hold = this.holdKey !== null ? this.pool.get(this.holdKey) : null;
+    if (hold) return hold;
+    // 仅在从未绘制过任何帧时（素材刚加载）用 anchor 防黑屏。
+    return this.anchorKey !== null ? this.pool.get(this.anchorKey) ?? null : null;
   }
 
   dispose() {
@@ -226,6 +233,7 @@ export class Mp4Source {
     for (const f of this.pool.values()) f.close();
     this.pool.clear();
     this.anchorKey = null;
+    this.holdKey = null;
     this.audioSegments.clear();
     this.doneSegs.clear();
     this.inFlight.clear();

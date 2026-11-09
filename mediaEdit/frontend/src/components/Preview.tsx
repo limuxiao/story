@@ -31,6 +31,7 @@ export default function Preview() {
     });
     let raf = 0;
     let last = performance.now();
+    let lastFrameRev = 0;
     // 后台标签的 rAF 会被冻结，恢复时 now-last 可能是几分钟。
     // 不 clamp 会让播放头一次跳到极远处，触发超大解码窗口。
     const onVisibility = () => { last = performance.now(); };
@@ -51,6 +52,13 @@ export default function Preview() {
           st.setPlaying(false);
         }
         st.setTime(t);
+        dirty = true;
+      }
+      // Worker 送达新帧不经过工程状态订阅；暂停时也要据此重绘一次，
+      // 让 seek 后异步解码出的正确帧替换掉空窗期的暂存画面。
+      const rev = compRef.current?.frameRevision ?? 0;
+      if (rev !== lastFrameRev) {
+        lastFrameRev = rev;
         dirty = true;
       }
       if (dirty) {
