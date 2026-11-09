@@ -27,6 +27,11 @@ export class Mp4Source {
   private worker: Worker;
   private pool = new Map<number, VideoFrame>();
   private anchorKey: number | null = null;
+  // 最后实际用于绘制的帧：seek 后新段尚未解码完成时用它兜底，
+  // 避免帧池只剩 anchor 时把画面跳回素材首帧。
+  private holdKey: number | null = null;
+  // 每次有新帧入池 +1；合成器据此在暂停状态下也触发一次重绘。
+  frameRevision = 0;
   // 段驱动：当前段 + 预取下一段；段号不变时零请求（静置不 churn）。
   private currentSeg = -1;
   private doneSegs = new Set<number>();
