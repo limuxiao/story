@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>人物对白 · 学习教程与训练手册</title>
+<style>
+:root{
+  --paper:#F6F0E3;--paper-2:#FBF7EC;--paper-deep:#EDE4CF;
+  --ink:#2B2620;--ink-2:#55503F;--ink-3:#8A8174;
+  --cinnabar:#C1492F;--cinnabar-deep:#9C3722;--teal:#3E5C5B;
+  --teal-soft:#E4ECE8;--gold:#B98A3E;--green:#4A7C59;
+  --line:#D8CDB4;--line-soft:#E5DCC7;
+  --shadow:0 10px 30px rgba(43,38,32,.08);--shadow-sm:0 3px 12px rgba(43,38,32,.07);
+  --radius:14px;--serif:"Noto Serif SC","Songti SC","STSong","SimSun",serif;
+  --sans:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);color:var(--ink);background:var(--paper);line-height:1.8;-webkit-font-smoothing:antialiased;background-image:repeating-linear-gradient(0deg,rgba(43,38,32,.018) 0px,rgba(43,38,32,.018) 1px,transparent 1px,transparent 34px),radial-gradient(circle at 15% 10%,rgba(185,138,62,.06),transparent 40%);min-height:100vh}
+::selection{background:rgba(193,73,47,.18)}
+button,input,textarea,select{font-family:var(--sans);font-size:14px}
+button{cursor:pointer}a{color:var(--teal)}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(246,240,227,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line-soft)}
+.topbar-inner{max-width:1160px;margin:0 auto;padding:0 24px;height:62px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+.brand{font-family:var(--serif);font-weight:700;font-size:19px;display:flex;align-items:center;gap:10px;white-space:nowrap}
+.brand-mark{width:32px;height:32px;border-radius:8px;flex:none;background:var(--cinnabar);color:#FBF7EC;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:17px}
+.nav{display:flex;align-items:center;gap:3px;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav button{white-space:nowrap;background:none;border:none;border-bottom:2px solid transparent;color:var(--ink-2);font-weight:500;font-size:14px;padding:8px 13px;border-radius:9px 9px 0 0;transition:.18s}
+.nav button:hover{color:var(--cinnabar);background:rgba(193,73,47,.06)}
+.nav button.active{color:var(--cinnabar);background:rgba(193,73,47,.08);border-bottom-color:var(--cinnabar)}
+.progress-chip{flex:none;font-size:12.5px;color:var(--ink-2);background:var(--paper-2);border:1px solid var(--line);border-radius:99px;padding:5px 13px;white-space:nowrap}
+.progress-chip b{color:var(--cinnabar);font-size:14px}
+main{max-width:1160px;margin:0 auto;padding:30px 24px 100px}
+.view{display:none;animation:fadeIn .32s ease}.view.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:3px;color:var(--cinnabar);margin-bottom:12px}
+.eyebrow::before{content:"";width:24px;height:2px;background:var(--cinnabar);border-radius:2px}
+.page-title{font-family:var(--serif);font-weight:700;font-size:34px;line-height:1.3;margin-bottom:12px}
+.page-desc{color:var(--ink-2);max-width:840px;margin-bottom:26px}
+.hero{background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:34px 36px;margin-bottom:26px;position:relative;overflow:hidden}
+.hero::after{content:"对白";position:absolute;right:-14px;bottom:-42px;font-family:var(--serif);font-size:150px;font-weight:700;color:rgba(193,73,47,.045);pointer-events:none}
+.hero h1{font-family:var(--serif);font-size:40px;line-height:1.25;margin-bottom:12px}
+.hero p{color:var(--ink-2);max-width:700px}
+.formula{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:26px;position:relative;z-index:1}
+.formula div{background:var(--paper);border:1px solid var(--line-soft);border-radius:10px;padding:16px 18px}
+.formula b{display:block;font-family:var(--serif);font-size:18px;color:var(--cinnabar);margin-bottom:4px}
+.formula span{font-size:13.5px;color:var(--ink-2);line-height:1.7}
+.card{background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-sm);padding:24px 26px;margin-bottom:18px}
+.card h2,.card h3{font-family:var(--serif)}.card h3{font-size:19px;margin-bottom:10px}
+.card p{margin-bottom:10px;color:var(--ink-2)}
+.card ul,.card ol{padding-left:22px;color:var(--ink-2);margin-bottom:10px}
+.card li{margin-bottom:5px}.card strong{color:var(--ink)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.stat{background:var(--paper);border:1px solid var(--line-soft);border-radius:10px;padding:16px;text-align:center}
+.stat b{display:block;font-family:var(--serif);font-size:26px;color:var(--cinnabar);line-height:1.3}
+.stat span{font-size:12.5px;color:var(--ink-3)}
+.bar{height:9px;border-radius:99px;background:var(--paper-deep);overflow:hidden;margin:10px 0 6px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--cinnabar));border-radius:99px;transition:width .35s}
+.hint{font-size:12.5px;color:var(--ink-3)}
+.chapter-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.chapter-nav a{font-size:13px;padding:6px 12px;border:1px solid var(--line);border-radius:99px;background:var(--paper-2);color:var(--ink-2);text-decoration:none}
+.chapter-nav a:hover{border-color:var(--cinnabar);color:var(--cinnabar)}
+.dialog{background:var(--paper);border:1px solid var(--line-soft);border-radius:9px;padding:15px 18px;margin:12px 0;font-size:14.5px;line-height:2}
+.dialog p{margin:0 0 2px;color:var(--ink)}
+.dialog .who{display:inline-block;min-width:62px;color:var(--cinnabar-deep);font-size:12.5px;font-weight:600}
+.dialog .stage{color:var(--ink-3);font-size:13px;margin:5px 0}
+.ex{background:var(--paper-2);border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:0 10px 10px 0;padding:16px 20px;margin:14px 0}
+.ex h4{font-family:var(--serif);font-size:16.5px;margin-bottom:3px}
+.ex .dialog{margin:10px 0}
+.ex .look{font-size:13px;color:var(--ink-2);background:var(--teal-soft);border-radius:7px;padding:9px 12px;margin-top:9px}
+.ex .look b{color:var(--teal)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.chip{border:1px solid var(--line);background:var(--paper-2);border-radius:99px;padding:6px 14px;font-size:13px;color:var(--ink-2);transition:.18s}
+.chip:hover{border-color:var(--cinnabar);color:var(--cinnabar)}
+.chip.active{background:var(--cinnabar);border-color:var(--cinnabar);color:#fff}
+.ex-item.hidden{display:none}
+.tri{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}
+.tri>div{border-radius:9px;padding:13px 15px;font-size:13.5px;line-height:1.8}
+.tri .v1{background:#FBF0EC;border:1px solid #E8C9BE;color:#7B3A2C}
+.tri .v2{background:#FFF8E8;border:1px solid #E8D9B0;color:#6B5A2E}
+.tri .v3{background:var(--teal-soft);border:1px solid #C6D8D1;color:#2F4A48}
+.tri b{display:block;font-size:12px;letter-spacing:1px;margin-bottom:6px;color:var(--ink-3)}
+.mini{font-size:13px;color:var(--ink-3)}
+.classic-item{background:var(--paper-2);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:0 10px 10px 0;padding:15px 19px;margin:12px 0}
+.classic-item h4{font-family:var(--serif);font-size:16.5px;margin-bottom:3px}
+.classic-item .ctx{font-size:12.5px;color:var(--ink-3)}
+.classic-item .line{font-family:var(--serif);font-size:17px;color:var(--ink);background:var(--paper);border:1px dashed var(--line);border-radius:8px;padding:9px 14px;margin:9px 0;line-height:1.9}
+.classic-item .line em{font-style:normal;color:var(--ink-3);font-size:13px;display:block;font-family:var(--sans);margin-top:4px}
+.classic-item .why{font-size:13.5px;color:var(--ink-2);line-height:1.8}
+.classic-item .why b{color:var(--cinnabar-deep)}
+.chapter{scroll-margin-top:80px}
+.ch-head{display:flex;align-items:flex-start;gap:13px;border-bottom:1px solid var(--line-soft);padding-bottom:12px;margin-bottom:16px}
+.ch-num{flex:none;width:34px;height:34px;border-radius:9px;background:var(--teal);color:#fff;font-family:var(--serif);display:flex;align-items:center;justify-content:center;font-size:16px}
+.ch-head h3{flex:1;font-size:21px;line-height:1.5}
+.ch-head .sub{font-size:12.5px;color:var(--ink-3);font-weight:400;display:block;font-family:var(--sans)}
+label.check{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-3);white-space:nowrap;cursor:pointer;margin-top:4px}
+input[type=checkbox]{accent-color:var(--cinnabar);width:15px;height:15px;cursor:pointer}
+.quote{background:var(--paper);border-left:3px solid var(--cinnabar);border-radius:0 8px 8px 0;padding:14px 18px;margin:14px 0;color:var(--ink-2);font-family:var(--serif);font-size:15.5px;line-height:1.9}
+.quote cite{display:block;font-family:var(--sans);font-style:normal;font-size:12px;color:var(--ink-3);margin-top:7px}
+.case{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.case>div{border-radius:9px;padding:14px 16px;font-size:14px;line-height:1.8}
+.case .bad{background:#FBF0EC;border:1px solid #E8C9BE;color:#7B3A2C}
+.case .good{background:var(--teal-soft);border:1px solid #C6D8D1;color:#2F4A48}
+.case b{display:block;font-size:12px;letter-spacing:1px;margin-bottom:6px;opacity:.75}
+table{width:100%;border-collapse:collapse;font-size:14px;margin:12px 0}
+th,td{border:1px solid var(--line-soft);padding:10px 12px;text-align:left;vertical-align:top;line-height:1.7}
+th{background:var(--paper-deep);font-weight:600;color:var(--ink);font-size:13.5px}
+tbody tr:nth-child(even){background:rgba(237,228,207,.32)}
+td:first-child{white-space:nowrap;font-weight:600;color:var(--cinnabar-deep)}
+.tag{display:inline-block;font-size:11.5px;padding:2px 9px;border-radius:99px;background:var(--paper-deep);color:var(--ink-2);margin-right:6px;white-space:nowrap}
+.tag.red{background:#F6E2DB;color:var(--cinnabar-deep)}.tag.green{background:var(--teal-soft);color:var(--teal)}
+.btn{border:1px solid var(--line);background:var(--paper-2);color:var(--ink-2);border-radius:8px;padding:7px 14px;font-size:13px;transition:.18s;white-space:nowrap}
+.btn:hover{border-color:var(--cinnabar);color:var(--cinnabar);background:#fff}
+.btn.primary{background:var(--cinnabar);border-color:var(--cinnabar);color:#fff}
+.btn.primary:hover{background:var(--cinnabar-deep);color:#fff}
+.btn.ghost{background:transparent}.btn.sm{padding:5px 10px;font-size:12px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:18px}
+.timer-box{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:var(--teal-soft);border:1px solid #C6D8D1;border-radius:12px;padding:16px 20px;margin-bottom:20px}
+.timer-time{font-family:var(--serif);font-size:34px;font-weight:700;color:var(--teal);font-variant-numeric:tabular-nums;min-width:112px}
+.timer-box .bar{flex:1;min-width:120px;margin:0}
+.drill{scroll-margin-top:80px}
+.drill-head{display:flex;align-items:flex-start;gap:13px;flex-wrap:wrap;margin-bottom:12px}
+.drill-id{flex:none;width:40px;height:40px;border-radius:10px;background:var(--cinnabar);color:#fff;font-family:var(--serif);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:15px}
+.drill-head h3{flex:1;min-width:200px;font-size:20px;line-height:1.5}
+.drill-head .sub{display:block;font-size:12.5px;color:var(--ink-3);font-weight:400;font-family:var(--sans)}
+.steps{counter-reset:s;padding-left:0;list-style:none;margin:10px 0}
+.steps li{position:relative;padding-left:28px;margin-bottom:7px;color:var(--ink-2)}
+.steps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:3px;width:19px;height:19px;border-radius:50%;background:var(--paper-deep);color:var(--ink-2);font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700}
+.metrics{background:var(--paper);border:1px dashed var(--line);border-radius:9px;padding:12px 16px;margin:12px 0;font-size:13.5px;color:var(--ink-2)}
+.metrics b{color:var(--green)}
+textarea{width:100%;min-height:150px;resize:vertical;border:1px solid var(--line);border-radius:9px;background:#FFFDF7;color:var(--ink);padding:13px 15px;line-height:1.9;font-size:14.5px;display:block}
+textarea:focus,input:focus,select:focus{outline:none;border-color:var(--cinnabar);box-shadow:0 0 0 3px rgba(193,73,47,.12)}
+textarea,input,select{transition:border-color .2s,box-shadow .2s}
+.field-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:9px;font-size:12.5px;color:var(--ink-3)}
+.print-only{display:none}
+.plan-row td:first-child{white-space:normal}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:12.5px;color:var(--ink-3)}
+.field input,.field select{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#FFFDF7;color:var(--ink)}
+.form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
+.rate-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:12.5px;color:var(--ink-3)}
+.rate-row .name{width:150px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rate-track{flex:1;height:12px;background:var(--paper-deep);border-radius:99px;overflow:hidden}
+.rate-track i{display:block;height:100%;border-radius:99px}
+.rate-row b{width:42px;text-align:right;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.empty{color:var(--ink-3);font-size:13.5px;padding:18px 0;text-align:center}
+.checklist{list-style:none;padding:0}
+.checklist li{display:flex;align-items:flex-start;gap:9px;padding:8px 0;border-bottom:1px dashed var(--line-soft);font-size:14px;color:var(--ink-2)}
+.checklist li:last-child{border-bottom:none}.checklist input{margin-top:5px;flex:none}
+.sources{font-size:13px;color:var(--ink-3);line-height:2}
+.sources code,.footer code{font-family:var(--sans);background:var(--paper-deep);padding:1px 6px;border-radius:4px;color:var(--ink-2)}
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);background:var(--ink);color:#FBF7EC;padding:10px 20px;border-radius:99px;font-size:13.5px;opacity:0;pointer-events:none;transition:.28s;z-index:300;box-shadow:var(--shadow)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.footer{text-align:center;color:var(--ink-3);font-size:12.5px;padding:30px 0 0;border-top:1px dashed var(--line);margin-top:34px}
+@media(max-width:820px){
+  .grid-2,.grid-3,.case,.formula,.tri{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr 1fr}
+  .hero{padding:26px 22px}.hero h1{font-size:30px}
+  .topbar-inner{padding:0 14px;gap:10px}.brand{font-size:16px}.progress-chip{display:none}
+  main{padding:22px 14px 80px}.card{padding:20px 18px}
+  .page-title{font-size:27px}table{font-size:13px}th,td{padding:8px}
+}
+@media print{
+  .topbar,.no-print,.toolbar,.timer-box,.field-tools,.toast,.chapter-nav{display:none!important}
+  .view{display:block!important;page-break-before:always;animation:none}
+  .view:first-of-type{page-break-before:auto}
+  body{background:#fff;color:#000}
+  .card,.hero{box-shadow:none;border:1px solid #ccc;page-break-inside:avoid}
+  .ex-item.hidden{display:block!important}
+  textarea{display:none}
+  .print-only{display:block;white-space:pre-wrap;border:1px solid #ddd;border-radius:8px;padding:12px;margin-top:9px;font-size:13px;line-height:1.8;min-height:40px}
+  a{color:#000;text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="topbar no-print">
+  <div class="topbar-inner">
+    <div class="brand"><span class="brand-mark">白</span>人物对白 · 教程与训练</div>
+    <nav class="nav" id="nav">
+      <button data-view="home" class="active">总览</button>
+      <button data-view="course">教程 · 六章 + 示例库</button>
+      <button data-view="drill">专项训练 · 六项</button>
+      <button data-view="plan">四周计划</button>
+      <button data-view="blind">盲测记录</button>
+      <button data-view="quick">速查与自检</button>
+    </nav>
+    <div class="progress-chip">总进度 <b id="topProgress">0%</b></div>
+  </div>
+</div>
+<main>
+
+<section class="view active" id="v-home">
+  <div class="hero">
+    <div class="eyebrow">DIALOGUE LAB · 离线单文件</div>
+    <h1>把对白从「写台词」<br>练成「写人」</h1>
+    <p>这份手册把原理、病例、练习、量化验收合在一处。核心判断只有一句：<strong>对白不是人物把信息说出来，而是人物带着目的、用只有他会用的方式，说的和想的不完全一致。</strong></p>
+    <div class="formula">
+      <div><b>目的</b><span>每句台词都是一个动作：逼问、拖延、试探、掩饰、示弱。写之前先问「他想让对方做什么」。</span></div>
+      <div><b>声音</b><span>遮住名字仍能认出谁在说。差别在句长、回避方式、谁打断谁，而不是口头禅。</span></div>
+      <div><b>潜台词</b><span>字面之下有第二层。寒暄、沉默、答非所问，往往比直说更有信息量。</span></div>
+    </div>
+  </div>
+  <div class="grid-3" style="margin-bottom:18px">
+    <div class="stat"><b id="statRead">0/6</b><span>教程章节已读</span></div>
+    <div class="stat"><b id="statDrill">0/6</b><span>专项训练已完成</span></div>
+    <div class="stat"><b id="statBlind">0</b><span>盲测记录条数</span></div>
+  </div>
+  <div class="card">
+    <h3>学习进度</h3>
+    <div class="bar"><i id="mainBar" style="width:0%"></i></div>
+    <p class="hint" id="progressHint">勾选章节「已读」、练习「完成」、周计划任务，进度会自动保存在本机浏览器。</p>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>怎么用这份手册</h3>
+      <ol>
+        <li>先读<strong>教程六章</strong>与<strong>附 A 场景示例库（24 段）</strong>建立判断标准；再看<strong>附 C 的 15 条经典对白</strong>短引与拆解。自拟示例覆盖日常、亲密关系、悬疑、职场、古风、群像、喜剧与网文。</li>
+        <li>按<strong>四周计划</strong>顺序做<strong>六个专项训练</strong>，每个都有写作框和量化验收标准。</li>
+        <li>每次练完找人做<strong>盲测</strong>：遮住说话人名字，让他猜谁在说、什么情绪、谁占上风，把猜对率记进「盲测记录」。</li>
+        <li>写完任何一段对白，用<strong>速查与自检</strong>过一遍清单。</li>
+      </ol>
+      <p class="hint">量不用大：每周 500 字对白 + 一次盲测。关键是有别人读、有分数，自己改自己的对白几乎永远觉得挺好。</p>
+    </div>
+    <div class="card">
+      <h3>一条可衡量的成长线</h3>
+      <table>
+        <thead><tr><th>指标</th><th>基线</th><th>四周目标</th></tr></thead>
+        <tbody>
+          <tr><td>盲测猜对率</td><td>第一次记录</td><td>≥ 80%</td></tr>
+          <tr><td>情绪标签数 / 300 字</td><td>数一遍旧稿</td><td>下降 50% 以上</td></tr>
+          <tr><td>平均句长</td><td>数一遍旧稿</td><td>紧张场面明显变短</td></tr>
+          <tr><td>无职能台词</td><td>删改前统计</td><td>每一句都改变了点什么</td></tr>
+        </tbody>
+      </table>
+      <p class="hint">数据全部存于浏览器 localStorage，不上传。可用「速查与自检」页的导出/导入做备份。</p>
+    </div>
+  </div>
+</section>
+
+<section class="view" id="v-course">
+  <div class="eyebrow">PART 01 · THEORY & EXAMPLES</div>
+  <h1 class="page-title">教程 · 六章与场景示例库</h1>
+  <p class="page-desc">从「对白在做什么」到「怎么改掉自己的习惯」。示例覆盖都市日常、亲密关系、悬疑审讯、职场权力、古风、群像、喜剧与网文爽点等场景；除注明外均为<strong>自拟示范文本</strong>，可直接拿去仿写。<strong>附 C 收录可确证的经典对白短引与逐句技法拆解</strong>；当代作品与外国译本只给拆解任务、不转录原文，以免版权与译文版本差异。自己稿子的实战诊断放在「附 D」。</p>
+  <div class="chapter-nav no-print">
+    <a href="#ch1">01 四个职能</a><a href="#ch2">02 三条标准</a><a href="#ch3">03 声音的七个参数</a>
+    <a href="#ch4">04 潜台词与信息倾倒</a><a href="#ch5">05 标签与人格化动作</a><a href="#ch6">06 病症速查与朗读</a>
+    <a href="#exlib">附 A 示例库 24 段</a><a href="#classic">附 B 拆解清单</a><a href="#classicLines">附 C 经典对白</a><a href="#local">附 D 实战诊断</a>
+  </div>
+
+  <article class="card chapter" id="ch1">
+    <div class="ch-head"><div class="ch-num">1</div>
+      <h3>对白到底在做什么：四个职能<span class="sub">判断一句台词该不该留，只需看它有没有占到至少一项</span></h3>
+      <label class="check"><input type="checkbox" data-read="ch1"> 已读</label></div>
+    <table>
+      <thead><tr><th>职能</th><th>具体表现</th><th>失效的样子</th></tr></thead>
+      <tbody>
+        <tr><td>推进情节</td><td>说完之后局势变了：谁占上风、信息差、决定、下一步动作</td><td>两人聊完，场面和之前一模一样</td></tr>
+        <tr><td>揭示人物</td><td>靠「他选择说什么、不说什么、对什么敏感」，而非自述性格</td><td>「我这个人就是心软」</td></tr>
+        <tr><td>建立关系与权力</td><td>称谓、敬语、谁打断谁、谁先沉默、谁换话题、谁解释得更多</td><td>所有人互相都客客气气、句式一样长</td></tr>
+        <tr><td>控制节奏与信息</td><td>短句短词提速、长句降温；信息分批给，不一次倒完</td><td>一段对白把前情全交代了</td></tr>
+      </tbody>
+    </table>
+    <p><strong>删句测试：</strong>把某句台词遮住，若情节、人物、关系、信息四项都没变化，那句就是可以删的。这是最省事的一条编辑规则。</p>
+    <div class="tri">
+      <div class="v1"><b>劣版 · 零职能（家庭场景）</b>「爸，你上次来是三个月前了，自从妈走后你就没进过这个门，我知道你一个人住也挺不容易的。」<br><span class="mini">双方都知道的事，说给读者听。信息给全了，局势一点没变。</span></div>
+      <div class="v2"><b>改法 · 一句顶三句</b>「鞋柜最下层还摆着你的拖鞋。」女儿说，没起身。<br><span class="mini">旧拖鞋交代了「久未来」，一直留着交代了关系，「没起身」交代了她的克制。</span></div>
+      <div class="v3"><b>原理</b>让物件、处境、动作替人物交代前情；若非要让人物说破，就让他<strong>因说破付出代价</strong>——暴露虚弱、被抓住话柄、把场面弄僵，这句台词才算有目的。</div>
+    </div>
+    <h3>四职能速判：一段合租厨房的对话</h3>
+    <div class="dialog">
+      <p class="stage">晚上十一点，水槽里泡着一口锅。示范文本 · 自拟</p>
+      <p><span class="who">林岸</span>「锅你又没洗。」</p>
+      <p><span class="who">周叙</span>「明天。」</p>
+      <p><span class="who">林岸</span>「上个月也是明天。」</p>
+      <p><span class="who">周叙</span>「那你别用。」</p>
+      <p><span class="who">林岸</span>「行。下个月水电我不管了。」</p>
+      <p><span class="who">周叙</span>「……我洗。」</p>
+    </div>
+    <table>
+      <thead><tr><th>台词</th><th>主要职能</th><th>局势变化</th></tr></thead>
+      <tbody>
+        <tr><td>「锅你又没洗。」</td><td>推进 + 关系</td><td>平静 → 对峙，一个「又」带出旧账</td></tr>
+        <tr><td>「明天。」</td><td>揭示人物</td><td>两字写出回避型人格，且拒绝接招</td></tr>
+        <tr><td>「上个月也是明天。」</td><td>控制信息</td><td>前情只给一句，不解释、不倒完</td></tr>
+        <tr><td>「那你别用。」</td><td>权力</td><td>反咬，冲突升级</td></tr>
+        <tr><td>「行。下个月水电我不管了。」</td><td>推进</td><td>换筹码，攻守易位</td></tr>
+        <tr><td>「……我洗。」</td><td>收束 + 揭示</td><td>省略号单独承担了不情愿</td></tr>
+      </tbody>
+    </table>
+    <p class="hint">六句话、不到七十字，局面翻了两次。可以试着遮住任意一句：如果局势照样走得通，那句就该删。</p>
+    <h3>不同题材，四职能的侧重不一样</h3>
+    <table>
+      <thead><tr><th>题材</th><th>最吃紧的职能</th><th>最容易犯的错</th></tr></thead>
+      <tbody>
+        <tr><td>网文爽点</td><td>推进 + 权力反转</td><td>反派长篇解释计划，主角听完了才动手</td></tr>
+        <tr><td>悬疑 / 刑侦</td><td>控制信息</td><td>角色一次把线索全说圆，读者没得猜</td></tr>
+        <tr><td>言情 / 亲密关系</td><td>潜台词 + 关系</td><td>两人把感受说得像心理咨询记录</td></tr>
+        <tr><td>群像 / 多人场面</td><td>声音区分 + 调度</td><td>四人一个腔，全靠名字分辨谁在说</td></tr>
+        <tr><td>喜剧</td><td>节奏 + 误解</td><td>把笑点再解释一遍，怕读者没看懂</td></tr>
+        <tr><td>历史 / 古风</td><td>称谓 + 权力</td><td>古人满口现代白话，或互致客套把冲突磨平</td></tr>
+      </tbody>
+    </table>
+    <div class="quote">小说中人物的言语，一方面负着故事开展的职责，另一方面也是品格的体现——某个人遇到某种事必说某种话。……咱们替他说一句话，正像社会上某种人遇到某种事必定说的那一句。<cite>老舍谈人物语言｜据本地资料《技巧/【大神说法】如何写好一部小说（十分经典）.txt》整理，原文件为转码文本，已顺文</cite></div>
+  </article>
+
+  <article class="card chapter" id="ch2">
+    <div class="ch-head"><div class="ch-num">2</div>
+      <h3>三条标准：目的 / 声音 / 潜台词<span class="sub">写完一段，按这个顺序各查一遍</span></h3>
+      <label class="check"><input type="checkbox" data-read="ch2"> 已读</label></div>
+    <h3>① 目的：说话是一个动作</h3>
+    <p>写草稿时，在每句台词前用括号写下<strong>「他想让对方做什么」</strong>，成稿时删掉括号。写不出这句话，说明人物还不知道自己为什么要开口。常用的言语动作大致这十二种：<strong>逼问、试探、拖延、掩饰、示弱、示威、挑拨、求和、转移、下台阶、留后路、逼表态</strong>。目的可以非常小，不必句句是阴谋。</p>
+    <div class="dialog">
+      <p class="stage">项目延期，会议室只剩两人。括号是草稿标注，成稿必须删掉。示范文本 · 自拟</p>
+      <p><span class="who">主管</span>「（试探）上周不是说没问题？」</p>
+      <p><span class="who">下属</span>「（拖延）数据今天刚到。」</p>
+      <p><span class="who">主管</span>「（逼表态）我问的是能不能周五交。」</p>
+      <p><span class="who">下属</span>「（留后路）我尽力。」</p>
+      <p><span class="who">主管</span>「（下台阶）行，我按交不了报。」</p>
+      <p><span class="who">下属</span>「（求和）……我今晚再排一遍。」</p>
+    </div>
+    <p class="hint">同样一场戏，如果把括号里的目的连起来读，就是这次对话的骨架：试探 → 拖延 → 逼表态 → 留后路 → 施压 → 求和。<strong>骨架不成立，台词再漂亮也散。</strong></p>
+
+    <h3>② 声音：遮名测试与「一句话三写法」</h3>
+    <p>把说话人名字全抹掉，请一个没看过上下文的人读，让他标出每句是谁说的、依据是什么。猜不对，不是读者笨，是几个角色共用了作者的同一副嗓子。练手时可以用下面这组：同一个信息「这事我办不了」，交给四个人说。</p>
+    <table>
+      <thead><tr><th>谁在说</th><th>说法</th><th>靠什么区分</th><th>顺带透露了什么</th></tr></thead>
+      <tbody>
+        <tr><td>掌控型上司</td><td>「这个口径，周五之前别往外发。」</td><td>命令句、不给理由、把话题换成别的</td><td>他根本不打算讨论「能不能」</td></tr>
+        <tr><td>市井老邻居</td><td>「哎哟，这事儿我可插不上手。」</td><td>语气词、自贬、留人情</td><td>关系比事情重要</td></tr>
+        <tr><td>古风幕僚</td><td>「此事，下官不敢担。」</td><td>身份自称、把风险推回去</td><td>层级与自保</td></tr>
+        <tr><td>十三岁小孩</td><td>「我不知道。」</td><td>极短、直接关门</td><td>不想被追问，也不打算解释</td></tr>
+      </tbody>
+    </table>
+
+    <h3>③ 潜台词：三层结构与一段完整示范</h3>
+    <table>
+      <thead><tr><th>层次</th><th>内容</th><th>常用承载方式</th></tr></thead>
+      <tbody>
+        <tr><td>字面</td><td>人物说出口的话</td><td>谈天气、谈物件、谈一件不相干的小事</td></tr>
+        <tr><td>意图</td><td>他真正想让对方做的事</td><td>重复追问、突然换话题、过度解释</td></tr>
+        <tr><td>不敢说的</td><td>关系里没挑明的那件事</td><td>答非所问、停顿、打断、沉默、说反话</td></tr>
+      </tbody>
+    </table>
+    <div class="dialog">
+      <p class="stage">搬家前夜，纸箱堆在客厅。全程只谈空调，实际在谈分开。示范文本 · 自拟</p>
+      <p><span class="who">她</span>「空调你定几度？」</p>
+      <p><span class="who">他</span>「你定吧，我随便。」</p>
+      <p><span class="who">她</span>「以前你总说二十四度太冷。」</p>
+      <p><span class="who">他</span>「那是以前。」</p>
+      <p><span class="who">她</span>「遥控器放抽屉里，还是老地方。」</p>
+      <p><span class="who">他</span>「嗯。」</p>
+      <p><span class="who">她</span>「那我关了。」</p>
+      <p><span class="who">他</span>「……关吧。」</p>
+    </div>
+    <table>
+      <thead><tr><th>台词</th><th>字面上</th><th>底下那层</th></tr></thead>
+      <tbody>
+        <tr><td>「你定吧，我随便。」</td><td>不挑温度</td><td>放弃参与共同生活，也不争</td></tr>
+        <tr><td>「以前你总说……」</td><td>回忆</td><td>最后一次确认：你还记不记得</td></tr>
+        <tr><td>「那是以前。」</td><td>纠正事实</td><td>承认变了，且不打算挽回</td></tr>
+        <tr><td>「还是老地方。」</td><td>交代物件</td><td>把最后一点共同习惯留给他</td></tr>
+        <tr><td>「……关吧。」</td><td>关空调</td><td>同意结束，省略号是不舍</td></tr>
+      </tbody>
+    </table>
+    <p class="hint">全篇没有「分手」「舍不得」「我们完了」。读者读懂的是<strong>两个人都在客气地退场</strong>。把这类段落念给没看过设定的人听，能复述出底下的意思，就算写成了。</p>
+    <h3>三个常见误判</h3>
+    <table>
+      <thead><tr><th>误以为</th><th>其实是</th></tr></thead>
+      <tbody>
+        <tr><td>有目的 = 人人话里带机锋</td><td>「把话题岔开」「让对方别走」这样的小动作也算目的</td></tr>
+        <tr><td>潜台词 = 阴阳怪气</td><td>更多时候是客气、琐事和沉默；越平静越有张力</td></tr>
+        <tr><td>声音 = 口音加口头禅</td><td>是句长、句式、回避方式、谁打断谁</td></tr>
+        <tr><td>遮名测试只用于群像</td><td>两人对话更要测，亲密关系里的权力变化全靠这个听出来</td></tr>
+      </tbody>
+    </table>
+    <div class="metrics"><b>本章自检：</b>任取自己稿中连续 10 句对白，逐句写出职能与目的；再遮住名字让别人猜谁在说。两项都过，这一段才算立住。</div>
+  </article>
+
+  <article class="card chapter" id="ch3">
+    <div class="ch-head"><div class="ch-num">3</div>
+      <h3>让每个人说话不一样：七个可调参数<span class="sub">不靠「给他加个口头禅」，靠说话方式的结构差异</span></h3>
+      <label class="check"><input type="checkbox" data-read="ch3"> 已读</label></div>
+    <table>
+      <thead><tr><th>参数</th><th>怎么调</th><th>举例（同一句「你别过去」）</th></tr></thead>
+      <tbody>
+        <tr><td>句长</td><td>急躁者三到七字，掌控者长句带从句</td><td>「别过去。」／「你要是现在过去，前面那些人就都白等了。」</td></tr>
+        <tr><td>词汇层</td><td>书面／市井／行话／官腔／孩子话</td><td>「止步。」／「别去，那边不对劲。」／「大人留步。」</td></tr>
+        <tr><td>句式</td><td>陈述、反问、命令、把陈述说成疑问</td><td>「你非要这个时候过去？」</td></tr>
+        <tr><td>信息量</td><td>说半句、说全、故意多说</td><td>「你别——算了。」</td></tr>
+        <tr><td>回避方式</td><td>转移／开玩笑／沉默／反咬／讲道理</td><td>「先喝茶。」（不接话，直接换事）</td></tr>
+        <tr><td>节奏</td><td>抢话、打断、慢半拍、长时间不答</td><td>「我不是……」「你不是什么？」</td></tr>
+        <tr><td>称谓</td><td>叫全名、官职、绰号、干脆不叫</td><td>「李主任。」／「喂。」／不称呼</td></tr>
+      </tbody>
+    </table>
+    <p><strong>口头禅是最偷懒的参数。</strong>它只能当佐料，且最好用在「角色自己没意识到」的时候。真正区分人的是<strong>他如何回避</strong>：有人用玩笑挡，有人用沉默挡，有人直接攻击提问的人。</p>
+    <h3>四张声音配方卡</h3>
+    <p>动笔前给主要角色各填一行，比写到一半临时想「他该怎么说话」稳得多。下面四张卡可以直接借用。</p>
+    <table>
+      <thead><tr><th>角色</th><th>句长 / 句式</th><th>回避方式</th><th>称谓 / 节奏</th><th>他会怎么说</th></tr></thead>
+      <tbody>
+        <tr><td>急诊室医生</td><td>极短、命令句</td><td>不解释，直接给下一步</td><td>不称呼、抢话</td><td>「家属外面等。别拦车。」</td></tr>
+        <tr><td>房产中介</td><td>长句、先铺垫后转折</td><td>把问题变成另一套说法</td><td>「姐」「哥」、不停顿</td><td>「姐，这价格呢它其实不是涨，是房东把家具这块儿一并算进来了……」</td></tr>
+        <tr><td>十三岁小孩</td><td>短判断、只用具体名词</td><td>不接抽象问题，直接关门</td><td>不称呼、答得慢</td><td>「不知道。盒子我放桌上了。」</td></tr>
+        <tr><td>退休老教师</td><td>复句、爱纠正措辞</td><td>讲道理、把话题抬到原则</td><td>叫全名、慢半拍</td><td>「不是麻烦不麻烦，是这件事本来就该有个先来后到。」</td></tr>
+      </tbody>
+    </table>
+    <h3>三人同场景：遮住名字也认得出</h3>
+    <div class="dialog">
+      <p class="stage">凌晨两点，便利店，三个人围着一台冒过烟的关东煮机器。示范文本 · 自拟</p>
+      <p><span class="who">？</span>「别按了，昨天就报修了。」</p>
+      <p><span class="who">？</span>「那我这汤算谁的？钱都扫了。」</p>
+      <p><span class="who">？</span>「先别急。机器什么时候冒的烟？」</p>
+      <p><span class="who">？</span>「十一点多。我录了视频。」</p>
+      <p><span class="who">？</span>「我不管谁冒烟，我就问退不退。」</p>
+      <p><span class="who">？</span>「退。你先把小票留着。」</p>
+    </div>
+    <table>
+      <thead><tr><th>谁</th><th>判断依据</th><th>参数组合</th></tr></thead>
+      <tbody>
+        <tr><td>店员（1、4 句）</td><td>只关心流程与自保，主动亮出证据</td><td>短句 + 先堵住动作 + 不解释情绪</td></tr>
+        <tr><td>代驾司机（2、5 句）</td><td>只算自己那点损失，明确拒绝换话题</td><td>反问 + 重复「我就问」+ 不接别人的问题</td></tr>
+        <tr><td>巡警（3、6 句）</td><td>先稳场、再问事实、最后给决断</td><td>短命令 + 具体时间 + 结尾落到可执行的动作</td></tr>
+      </tbody>
+    </table>
+    <p class="hint">练法：把上面六句抄下来，改写成三种完全不同的身份（比如换成茶馆里的账房、镖师、县吏），但保持「遮名可辨」。题材换了，参数方法不变。</p>
+    <h3>方言、行话与时代语：克制三条</h3>
+    <ul>
+      <li><strong>一处点明即可。</strong>用一两个词或一句称谓提示地域／职业，剩下仍用通顺共同语，「俺们那旮旯」写满整段只会拖慢阅读。</li>
+      <li><strong>行话要能被上下文猜出来。</strong>「把片子调出来」读者能猜是影像；生造术语连写三句，读者就会跳读。</li>
+      <li><strong>古风别堆敬语。</strong>称谓、自称、句式各选一处点到即止；真正的「古」在等级和回避方式，不在「在下」「岂敢」的密度。</li>
+    </ul>
+  </article>
+
+  <article class="card chapter" id="ch4">
+    <div class="ch-head"><div class="ch-num">4</div>
+      <h3>潜台词与信息倾倒<span class="sub">新手最常见、也最容易一次改掉的问题</span></h3>
+      <label class="check"><input type="checkbox" data-read="ch4"> 已读</label></div>
+    <p><strong>「你也知道我也知道」测试：</strong>如果这句话里的事实，对话双方早就都清楚，那它就不是说给对方听的，是说给读者听的。这类句子的特征通常是：带时间、带身份、带前情、带解释。</p>
+    <h3>三种替代办法</h3>
+    <ul>
+      <li><strong>用动作和处境泄露：</strong>不写「她伤得很重」，写她把重心换到另一条腿、剑尖点在地面上。</li>
+      <li><strong>用误解：</strong>一方说的是 A，另一方听成 B，读者从错位里同时拿到信息和关系。</li>
+      <li><strong>用沉默与打断：</strong>该回答的地方不回答，本身就是最响的一句台词。</li>
+    </ul>
+    <h3>四个题材的同一处毛病</h3>
+    <p>信息倾倒不是某一类稿件的问题，换个题材它就换一身衣服。下面四组都是自拟示范文本，左栏是常见的写法，右栏是把信息还给动作、处境和后果。</p>
+    <table>
+      <thead><tr><th>场景</th><th>劣版 · 说给读者听</th><th>改法 · 让信息自己露出来</th></tr></thead>
+      <tbody>
+        <tr><td>悬疑审讯</td><td>「你是死者合伙人，案发当晚十一点还在公司，监控都拍到了。」</td><td>「十一点那趟电梯，你刷了两次卡。」<br><span class="mini">同一份信息，变成施压的筹码，还带出了「我查过你」。</span></td></tr>
+        <tr><td>家庭重逢</td><td>「自从爸走后，你三年没回来过年了。」</td><td>「碗筷还是摆四副。」她把多出来的那一副收进柜子。<br><span class="mini">数字、动作、克制，一次交代了时间、缺席和她的态度。</span></td></tr>
+        <tr><td>职场新人</td><td>「我们部门今年已经裁了两轮，你刚来可能不知道。」</td><td>「工位别收拾太满。」老同事说完就转回屏幕。<br><span class="mini">只给一句提醒，处境与寒意由读者自己补。</span></td></tr>
+        <tr><td>古风 / 玄幻</td><td>「城主有令，请您到府中一叙，实则是要取玄鹿之骨延寿。」</td><td>「抓活的，死了可就没用了。」<br><span class="mini">一句吩咐，动机自现，还省掉了反派自报计划。</span></td></tr>
+        <tr><td>网文爽点</td><td>「你可知我乃三年前血洗青云宗的那位……」</td><td>让旁人先变了脸色、让茶盏落在地上，主角一句不问。<br><span class="mini">身份靠后果写，不靠自我介绍。</span></td></tr>
+      </tbody>
+    </table>
+    <h3>三种替代办法，各配一例</h3>
+    <ul>
+      <li><strong>用动作和处境泄露：</strong>不写「她伤得很重」，写她把重心换到另一条腿、剑尖点在地面上；不写「他很紧张」，写他把已经收好的发票又摸了一遍。</li>
+      <li><strong>用误解：</strong>「你今天回来得早。」「嗯，车没油了。」——她问的是「你是不是有事瞒我」，他答的是车。读者同时拿到信息和关系。</li>
+      <li><strong>用沉默与打断：</strong>「所以那天晚上你到底——」「茶凉了。」该回答的地方不回答，本身就是最响的一句。</li>
+    </ul>
+    <h3>信息投放节奏：三档效果</h3>
+    <table>
+      <thead><tr><th>给法</th><th>同一桩案子的线索</th><th>读者感受</th></tr></thead>
+      <tbody>
+        <tr><td>一次倒完</td><td>「监控显示他十一点进楼、十二点离开，鞋底有红泥，红泥只有河滩有。」</td><td>被动接收，没有参与感，像在读报告</td></tr>
+        <tr><td>分批给</td><td>先「十一点那趟电梯，你刷了两次卡。」→ 再「河滩这几天封了。」→ 最后把鞋底照片推过去。</td><td>每句都改变一点局势，读者跟着推理</td></tr>
+        <tr><td>只给后果</td><td>「河滩封了。他还是去了。」</td><td>留白最大，适合收束或转场，但别全篇都用</td></tr>
+      </tbody>
+    </table>
+    <p class="hint">原则：信息跟着<strong>冲突</strong>走，谁需要谁知道；别让「全场最没资格知道的人」负责解释，也别在两人都不着急的时候交代设定。</p>
+    <div class="quote">当你对小说对白的真实性表示怀疑时，就大声读出你的对白，假装你是一名演员……人们用言语表达出来的思维总是未经加工修饰的，所以要让人物说的话短一些。情节紧张时，要选用言简意赅的短句、短词；气氛平缓时，才用较长的句子。<cite>据本地资料《技巧/【大神说法】如何写好一部小说（十分经典）.txt》整理，原文件为转码文本，已顺文</cite></div>
+    <div class="metrics"><b>本章自检：</b>数一数自己一段对白里，有几句是「双方已知却说出口」的，再看看信息是不是全挤在第一段。这两个数字就是第一轮删改指标。</div>
+  </article>
+
+  <article class="card chapter" id="ch5">
+    <div class="ch-head"><div class="ch-num">5</div>
+      <h3>说话标签与人格化动作<span class="sub">情绪不要「告诉」，让读者自己听出来</span></h3>
+      <label class="check"><input type="checkbox" data-read="ch5"> 已读</label></div>
+    <h3>标签的三条规矩</h3>
+    <ol>
+      <li>两人对话、语境清楚时，<strong>裸台词</strong>最干净，不必每句都挂「某某说」。</li>
+      <li>需要标明说话人，优先用中性的「说」「问」，少用「冷笑地」「不屑地」「戏谑地」。</li>
+      <li>副词不是绝对禁用，而是<strong>用在台词本身读不出情绪、且不值得为此加动作</strong>的少数地方。</li>
+    </ol>
+    <p>情绪应该由四样东西承载：台词内容、带态度的动作、节奏（短句／停顿／打断）、旁人的反应。标签只是最后一道兜底。</p>
+    <h3>同一句台词的三种写法（自拟 · 告别场景）</h3>
+    <div class="tri">
+      <div class="v1"><b>标签版 · 替读者判断</b>「我没事。」她冷笑地、故作轻松地说道，心里却一阵发紧。<br><span class="mini">情绪、内心、语气全由作者包办，读者只负责接收。</span></div>
+      <div class="v2"><b>去标签版 · 先做减法</b>「我没事。」<br><span class="mini">只剩台词时，情绪确实读不出了——这说明原稿的张力一直靠旁白在扛。</span></div>
+      <div class="v3"><b>加人格化动作 · 再补回来</b>「我没事。」她把杯子往里推了推，没抬头。<br><span class="mini">把杯子推远＝不想再被照顾；没抬头＝不愿被看见。一个动作带出两层态度。</span></div>
+    </div>
+    <p class="hint">顺序很重要：<strong>先删光标签，再只补一处带态度的动作</strong>。一上来就替换副词，很容易写成另一堆副词。训练 T2 练的就是这一步。</p>
+    <h3>人格化动作：动作要带态度</h3>
+    <p>「点头、耸肩、看、站起来、走过去」是<strong>无色彩动词</strong>，只说明身体移动，不说明态度。有效的动作要同时带出意图、姿势或表情，而且<strong>集中放在一段对话的开头或结尾</strong>，别夹在台词中间干扰信息传递。</p>
+    <div class="case">
+      <div class="bad"><b>无效</b>「他看着她，摇了摇头，说：『你走吧。』」<span class="hint">动作不表态，读者仍不知道他是赶人、求她留下，还是不敢看她。</span></div>
+      <div class="good"><b>有效</b>「他把门推开，没让开身子：『你走吧。』」<span class="hint">一个动作同时给出态度：嘴上放人，身体挡着。</span></div>
+    </div>
+    <table>
+      <thead><tr><th>动作落点</th><th>无效</th><th>带态度</th></tr></thead>
+      <tbody>
+        <tr><td>手部</td><td>「他捏了捏杯子。」</td><td>「他把杯子转了半圈，没喝。」（拖延、不想接话）</td></tr>
+        <tr><td>器物</td><td>「她放下手机。」</td><td>「她把手机扣在桌上，屏幕朝下。」（有东西要藏）</td></tr>
+        <tr><td>空间</td><td>「他走到窗边。」</td><td>「他绕到桌子另一侧才停下，隔着一张桌子说话。」（拉开距离）</td></tr>
+      </tbody>
+    </table>
+    <div class="quote">人格化的动作，能够创造生动鲜明的画面和使对白富有活力。……当人的活动与情感、态度、姿势或表情联系在一起的时候，它们才是有意义的动作。<cite>威廉·塔玻利｜据本地资料《技巧/【写作升华】小说写作中华，动作描写的意义所在.txt》整理</cite></div>
+    <p><strong>关键练习：</strong>台词一字不改，只改动作描写，把同一段写出几种基调。原文件里给了示范（霍金斯与卡拉瑟斯、比利与约翰尼两例），本手册把它列为训练 T3。用一句最普通的话练，效果最好——比如「这事明天再说吧。」</p>
+    <div class="tri">
+      <div class="v1"><b>基调 A · 压迫</b>「这事明天再说吧。」他把文件夹合上，没推回去。<br><span class="mini">合上＝结束讨论；不推回＝东西留在他手里，权力也在他手里。</span></div>
+      <div class="v2"><b>基调 B · 心虚</b>「这事明天再说吧。」他先看了眼门口，才把声音压下来。<br><span class="mini">台词不变，读者听到的却成了「现在不能谈」。</span></div>
+      <div class="v3"><b>基调 C · 调侃</b>「这事明天再说吧。」他笑着把两张电影票压在文件上。<br><span class="mini">同一句推脱，被一件小东西翻成了邀请。</span></div>
+    </div>
+    <h3>标点与版式：也参与「语气」</h3>
+    <table>
+      <thead><tr><th>记号 / 版式</th><th>作用</th><th>例子</th></tr></thead>
+      <tbody>
+        <tr><td>引号内句号</td><td>完整句收在引号里，标签另起</td><td>「我洗。」周叙说。</td></tr>
+        <tr><td>破折号</td><td>打断，比「打断道」更利落</td><td>「我不是——」「你不是什么？」</td></tr>
+        <tr><td>省略号</td><td>迟疑、不情愿；一段最多一两处</td><td>「……我洗。」</td></tr>
+        <tr><td>一人一段</td><td>换人即换段，长段中间插动作定位</td><td>连续 3–4 句后补一次归属</td></tr>
+        <tr><td>别堆符号</td><td>「！？」「……！！」是替台词喊情绪</td><td>改用短句和动作</td></tr>
+      </tbody>
+    </table>
+    <p class="hint">训练 T3 换了一句「我不问了。」让你从头练；方法不挑台词，也不挑题材。</p>
+  </article>
+
+  <article class="card chapter" id="ch6">
+    <div class="ch-head"><div class="ch-num">6</div>
+      <h3>十种常见病症 · 与朗读检验<span class="sub">改稿时按表索骥；可勾选版见「速查与自检」</span></h3>
+      <label class="check"><input type="checkbox" data-read="ch6"> 已读</label></div>
+    <table>
+      <thead><tr><th>症状</th><th>病因</th><th>改法</th></tr></thead>
+      <tbody>
+        <tr><td>全员一个腔调</td><td>七个参数全用默认值</td><td>给每人定「句长 + 回避方式」两个硬约束</td></tr>
+        <tr><td>信息倾倒</td><td>怕读者看不懂前情</td><td>过「你也知道我也知道」测试，改成动作或误解</td></tr>
+        <tr><td>寒暄太全</td><td>照搬真实生活的礼貌流程</td><td>从冲突点切入，第一句就带目的</td></tr>
+        <tr><td>情绪标签堆积</td><td>不信任读者</td><td>去标签练习 + 人格化动作</td></tr>
+        <tr><td>每问必答</td><td>把对白当问卷</td><td>答非所问、反问、沉默、打断</td></tr>
+        <tr><td>反派自报计划</td><td>用台词交代设定</td><td>让计划通过后果暴露，或只给半句</td></tr>
+        <tr><td>复述已写过的叙述</td><td>同一信息给两遍</td><td>叙述写过就别让角色再说</td></tr>
+        <tr><td>口号／书面腔</td><td>句子太完整、太工整</td><td>出声朗读，改短、改破、去掉总结句</td></tr>
+        <tr><td>说话人混乱</td><td>连续四五句无归属</td><td>每 3–4 句补一次归属，或用动作定位</td></tr>
+        <tr><td>段落过长无喘息</td><td>只有台词，没有节拍</td><td>插入停顿、动作、环境声，紧张处短句连击</td></tr>
+      </tbody>
+    </table>
+    <h3>朗读三步法（最便宜、最有效）</h3>
+    <ol>
+      <li><strong>默读一遍</strong>，只找「双方已知却说出口」的句子，先删。</li>
+      <li><strong>出声、分角色、带表演地念</strong>。凡是拗口、太完整、太书面、自己念着脸红的地方，就是要改的地方。</li>
+      <li><strong>只念引号里的字</strong>，把所有标签和动作跳过。如果情绪、身份、关系全没了，说明它们一直靠旁白在扛，回到第 5 章重做一遍。</li>
+    </ol>
+    <p class="hint">朗读还会顺带暴露标点毛病：引号内该收的句号别丢，逗号位置前后统一，别用「！？」替台词喊情绪。</p>
+    <h3>按题材看高发病症</h3>
+    <table>
+      <thead><tr><th>题材</th><th>最容易中的两条</th><th>一句话处方</th></tr></thead>
+      <tbody>
+        <tr><td>网文 / 爽文</td><td>反派自报计划、口号式书面腔</td><td>把解释换成旁人的反应，反击用短句</td></tr>
+        <tr><td>悬疑 / 刑侦</td><td>信息倾倒、每问必答</td><td>线索分批给，让关键问题被岔开</td></tr>
+        <tr><td>言情 / 家庭</td><td>情绪标签堆积、把感受说透</td><td>改谈一件琐事，让物件和沉默承担</td></tr>
+        <tr><td>历史 / 古风</td><td>全员一个腔调、敬语稀释冲突</td><td>用称谓与句长定等级，越紧张越短</td></tr>
+        <tr><td>群像 / 多人</td><td>说话人混乱、段落过长无喘息</td><td>一人一段，每 3–4 句用动作定位一次</td></tr>
+      </tbody>
+    </table>
+    <h3>改稿五步（按顺序，别跳）</h3>
+    <ol>
+      <li><strong>删寒暄</strong>：从冲突点切入。</li>
+      <li><strong>删信息倾倒</strong>：过「你也知道我也知道」测试。</li>
+      <li><strong>删解释性回答</strong>：把每问必答改成答非所问或打断。</li>
+      <li><strong>删情绪标签</strong>：只留「说」「问」，再补一处人格化动作。</li>
+      <li><strong>朗读 + 遮名盲测</strong>：出声改短，找人猜谁在说。</li>
+    </ol>
+    <div class="quote">不要概括，要具体：不是「一杯饮料」而是「一杯马丁尼」……<cite>契诃夫｜据本地资料《技巧/小说描写四大忌讳.txt》整理</cite></div>
+    <p>迁移到对白就是：别写「他安慰了她几句」，要写他具体说的那一句；别写「两人争执起来」，要写那两句互相顶回去的话。</p>
+  </article>
+
+  <article class="card chapter" id="exlib">
+    <div class="ch-head"><div class="ch-num">A</div>
+      <h3>附 A · 场景示例库<span class="sub">24 段自拟示范文本 · 点标签筛选 · 可直接仿写、改写或拿去做遮名盲测</span></h3></div>
+    <div class="chips no-print" id="exChips">
+      <button class="chip active" data-filter="all">全部 24</button>
+      <button class="chip" data-filter="life">日常 · 亲密</button>
+      <button class="chip" data-filter="suspense">悬疑</button>
+      <button class="chip" data-filter="work">职场</button>
+      <button class="chip" data-filter="period">古风</button>
+      <button class="chip" data-filter="group">群像</button>
+      <button class="chip" data-filter="comedy">喜剧 · 爽点</button>
+    </div>
+
+    <div class="ex ex-item" data-tags="life">
+      <h4>01 · 开篇第一句就带目的<span class="tag">日常</span></h4>
+      <div class="dialog">
+        <p class="stage">合租厨房，水槽里泡着一口锅</p>
+        <p><span class="who">林岸</span>「锅你又没洗。」</p>
+        <p><span class="who">周叙</span>「明天。」</p>
+        <p><span class="who">林岸</span>「上个月也是明天。」</p>
+      </div>
+      <p class="look"><b>看点：</b>没有「回来啦」「吃了吗」，第一句就是冲突；一个「又」把前情带出来。<br><b>练法：</b>给你下一个场景写三个不同的第一句，只留最不客气的那个。</p>
+    </div>
+
+    <div class="ex ex-item" data-tags="life">
+      <h4>02 · 寒暄删到只剩必要的过渡<span class="tag">日常</span></h4>
+      <div class="dialog">
+        <p class="stage">巷口面馆，上午十点半</p>
+        <p><span class="who">客人</span>「牛肉面，不要香菜。」</p>
+        <p><span class="who">老板</span>「今天这么早？」</p>
+        <p><span class="who">客人</span>「辞了。」</p>
+      </div>
+      <p class="look"><b>看点：</b>三句交代一场变故。第二句是唯一必要的过渡，所有问候全省。<br><b>练法：</b>把自己一段对话的开头两轮删掉，看场面是否更紧。</p>
+    </div>
+
+    <div class="ex ex-item" data-tags="life">
+      <h4>03 · 只谈一件物品，实际在谈要不要留<span class="tag">亲密关系</span></h4>
+      <div class="dialog">
+        <p class="stage">门已经开了一半，外面在下雨</p>
+        <p><span class="who">她</span>「伞在门后。」</p>
+        <p><span class="who">他</span>「留着吧，我打车。」</p>
+        <p><span class="who">她</span>「预报说后半夜还有。」</p>
+        <p><span class="who">他</span>「嗯。」</p>
+      </div>
+      <p class="look"><b>看点：</b>「留着吧」＝不回来拿；「还有」是最后一次把话递过去；「嗯」是接住了却不动。<br><b>练法：</b>把「你别走」改写成只谈一件物品的四轮对话，不许出现情绪词。</p>
+    </div>
+
+    <div class="ex ex-item" data-tags="life">
+      <h4>04 · 各说各的，读者却听懂了关系<span class="tag">亲密关系</span></h4>
+      <div class="dialog">
+        <p><span class="who">她</span>「你到底有没有在听？」</p>
+        <p><span class="who">他</span>「燃气费我交了。」</p>
+        <p><span class="who">她</span>「我说的是昨天。」</p>
+        <p><span class="who">他</span>「我知道。」</p>
+      </div>
+      <p class="look"><b>看点：</b>第二句拒绝进入她的议题；「我知道」既是和解也是敷衍，全靠读者判断。<br><b>练法：</b>写一段两人始终没接上话、却能让人看出谁在躲的对话。</p>
+    </div>
+
+    <div class="ex ex-item" data-tags="suspense">
+      <h4>05 · 沉默本身就是回答<span class="tag">悬疑</span></h4>
+      <div class="dialog">
+        <p class="stage">讯问室，桌上只有一部电梯记录</p>
+        <p><span class="who">警员</span>「十一点那趟电梯，你刷了两次卡。」</p>
+        <p><span class="who">对方</span>「……」</p>
+        <p><span class="who">警员</span>「第二次是空手上来的。」</p>
+        <p><span class="who">对方</span>「你们连这个也查。」</p>
+      </div>
+      <p class="look"><b>看点：</b>一句解释都没有，最后那句却把「他以为没查」全漏了出来。<br><b>练法：</b>把审讯段里所有解释性回答删掉，只留沉默、反问与半句。</p>
+    </div>
+
+    <div class="ex ex-item" data-tags="suspense">
+      <h4>06 · 线索只给半句<span class="tag">悬疑</span></h4>
+      <div class="dialog">
+        <p><span class="who">老刑警</span>「河滩封了。」</p>
+        <p><span class="who">徒弟</span>「他还是去了。」</p>
+        <p><span class="who">老刑警</span>「封之前。」</p>
+        <p><span class="who">徒弟</span>「那红泥……」</p>
+        <p><span class="who">老刑警</span>「别急着说。」</p>
+      </div>
+      <p class="look"><b>看点：</b>时间、行动、风险全在四个短句里，连「别急着说」都是在替作者按住信息。<br><b>练法：</b>把一段说明性线索压到 20 字以内，且不许任何人解释原因。</p>
+    </div>
+
+    <div class="ex ex-item" data-tags="work">
+      <h4>07 · 十轮内完成一次权力反转<span class="tag">职场</span></h4>
+      <div class="dialog">
+        <p><span class="who">前辈</span>「这个位置，本来是给小林的。」</p>
+        <p><span class="who">新人</span>「我知道。」</p>
+        <p><span class="who">前辈</span>「你还是接了。」</p>
+        <p><span class="who">新人</span>「您签的字。」</p>
+        <p><span class="who">前辈</span>「……下周一例会，你来讲。」</p>
+        <p><span class="who">新人</span>「讲哪部分？」</p>
+        <p><span class="who">前辈</span>「全部。」</p>
+      </div>
+      <p class="look"><b>看点：</b>开局被质问，结尾拿到全场话语权；「您签的字」把责任轻轻推回去，不带一点火气。<br><b>练法：</b>限 10 轮内完成攻守易位，且不许任何一方挑明意图。</p>
+    </div>
+
+    <div class="ex ex-item" data-tags="work">
+      <h4>08 · 称谓与打断就能写出等级<span class="tag">职场</span></h4>
+      <div class="dialog">
+        <p><span class="who">下属</span>「李主任，材料我放——」</p>
+        <p><span class="who">主任</span>「放小张那儿。」</p>
+        <p><span class="who">下属</span>「可这份是您上周——」</p>
+        <p><span class="who">主任</span>「小张那儿。」</p>
+      </div>
+      <p class="look"><b>看点：</b>两次打断、称谓不变，等级与不耐烦全在结构上，零情绪副词。<br><b>练法：</b>把同一段改写成「平级同事」版本，只准改称谓与打断方式。</p>
+    </div>
+
+    <div class="ex ex-item" data-tags="period">
+      <h4>09 · 敬语当刀：表面请示，实则逼表态<span class="tag">古风</span></h4>
+      <div class="dialog">
+        <p><span class="who">属官</span>「大人远来，下官未曾备茶。」</p>
+        <p><span class="who">来使</span>「不必。」</p>
+        <p><span class="who">属官</span>「城主的令，下官不敢不问一句：要活的，还是要个囫囵影子？」</p>
+        <p><span class="who">来使</span>「你猜。」</p>
+      </div>
+      <p class="look"><b>看点：</b>敬语既是礼数也是推责；「囫囵影子」把威胁说成请示；「你猜」把话头踢回去，冲突没有丝毫被客套磨平。<br><b>练法：</b>写一句「听着像请示、其实在逼对方担责」的台词。</p>
+    </div>
+
+    <div class="ex ex-item" data-tags="group">
+      <h4>10 · 四人饭桌：四种句长、四种目的<span class="tag">群像</span></h4>
+      <div class="dialog">
+        <p><span class="who">外婆</span>「汤咸了。」</p>
+        <p><span class="who">舅舅</span>「我尝着正好，妈您也是，少放半勺不就——」</p>
+        <p><span class="who">表妹</span>「我也要尝！」</p>
+        <p class="stage">勺子敲到碗沿上。</p>
+        <p><span class="who">妈</span>「坐着。」</p>
+      </div>
+      <p class="look"><b>看点：</b>挑刺／和稀泥／凑热闹／维持秩序，四个人的句长与目的各不相同，遮住名字也能认。<br><b>练法：</b>加第五个人，要求不靠口头禅、不靠外貌描写仍可辨。</p>
+    </div>
+
+    <div class="ex ex-item" data-tags="comedy">
+      <h4>11 · 误解与重复，谁解释谁破坏节奏<span class="tag">喜剧</span></h4>
+      <div class="dialog">
+        <p><span class="who">甲</span>「你把它放哪儿了？」</p>
+        <p><span class="who">乙</span>「哪个它？」</p>
+        <p><span class="who">甲</span>「就那个。」</p>
+        <p><span class="who">乙</span>「哪个那个？」</p>
+        <p><span class="who">甲</span>「……你手里那个。」</p>
+      </div>
+      <p class="look"><b>看点：</b>笑点来自错位与重复；一旦有人把话说清楚，节奏立刻塌掉。<br><b>练法：</b>把误解再延长两轮，但不许任何人解释。</p>
+    </div>
+
+    <div class="ex ex-item" data-tags="comedy">
+      <h4>12 · 爽点反击：不辩论、不自证<span class="tag">网文</span></h4>
+      <div class="dialog">
+        <p><span class="who">挑衅者</span>「你也配坐这把椅子？」</p>
+        <p><span class="who">来人</span>「椅子是空的。」</p>
+        <p><span class="who">挑衅者</span>「那是给——」</p>
+        <p class="stage">椅子被拉开，人已经坐下。</p>
+        <p><span class="who">来人</span>「你刚要说什么？」</p>
+      </div>
+      <p class="look"><b>看点：</b>短句提速，用动作替代宣言，最后一句把话头夺回来；没有一句自我介绍。<br><b>练法：</b>把主角 200 字的反击压到 4 句以内，且不许解释自己是谁。</p>
+    </div>
+    <div class="ex ex-item" data-tags="life">
+      <h4>13 · 不回消息，本身就是台词<span class="tag">日常 · 线上</span></h4>
+      <div class="dialog">
+        <p class="stage">微信，晚上九点</p>
+        <p><span class="who">她</span>「到家了吗」</p>
+        <p><span class="who">她</span>「看到回我一下」</p>
+        <p><span class="who">她</span>「不用回，我睡了」</p>
+        <p class="stage">对方正在输入……（停住）</p>
+      </div>
+      <p class="look"><b>看点：</b>三条没得到回复的消息自己形成了一条关系线；「正在输入」比任何回答都响。<br><b>练法：</b>写一段只有一方说话、靠界面状态推进的对话。</p>
+    </div>
+
+    <div class="ex ex-item" data-tags="life">
+      <h4>14 · 久别重逢，只敢谈旧物<span class="tag">日常</span></h4>
+      <div class="dialog">
+        <p><span class="who">甲</span>「你头发……」</p>
+        <p><span class="who">乙</span>「染的。遮白的。」</p>
+        <p><span class="who">甲</span>「哦。」</p>
+        <p><span class="who">乙</span>「你那杯子还在？」</p>
+        <p><span class="who">甲</span>「在。」</p>
+      </div>
+      <p class="look"><b>看点：</b>谁都不问「这些年过得怎样」，只谈头发和杯子；一个「在」把没说出口的全兜住了。<br><b>练法：</b>把「我很想你」改写成只确认三件旧物的对话。</p>
+    </div>
+
+    <div class="ex ex-item" data-tags="life">
+      <h4>15 · 夸奖里的刺<span class="tag">亲密关系</span></h4>
+      <div class="dialog">
+        <p><span class="who">她</span>「你现在挺会说话的。」</p>
+        <p><span class="who">他</span>「跟谁学的？」</p>
+        <p><span class="who">她</span>「谁知道呢。」</p>
+      </div>
+      <p class="look"><b>看点：</b>听着像夸，其实是试探；两句都不接「夸」这个定义，靠回避把醋意写足。<br><b>练法：</b>写一句听起来像赞美、其实在清算的话，且不许有人解释。</p>
+    </div>
+
+    <div class="ex ex-item" data-tags="suspense">
+      <h4>16 · 多说一句就露了馅<span class="tag">悬疑</span></h4>
+      <div class="dialog">
+        <p><span class="who">警员</span>「你那晚没去过河滩。」</p>
+        <p><span class="who">对方</span>「我没去过。」</p>
+        <p><span class="who">警员</span>「鞋我还没提。」</p>
+      </div>
+      <p class="look"><b>看点：</b>第二句答得太快太完整，反而成了破绽；第三句不追问，只亮出「我还没说」。<br><b>练法：</b>让角色因多说一句而露馅，作者全程不点破。</p>
+    </div>
+
+    <div class="ex ex-item" data-tags="suspense">
+      <h4>17 · 整段只有一个人在说<span class="tag">悬疑</span></h4>
+      <div class="dialog">
+        <p><span class="who">警员</span>「笔录上写的十一点。」</p>
+        <p><span class="who">对方</span>「……」</p>
+        <p><span class="who">警员</span>「你签了字。」</p>
+        <p><span class="who">对方</span>「……」</p>
+        <p><span class="who">警员</span>「那换个问法：十一点，谁给你开的门？」</p>
+      </div>
+      <p class="look"><b>看点：</b>沉默是第二个人唯一的台词，节奏全靠提问者换句推进，压力逐句加码。<br><b>练法：</b>写 8 轮对话，其中一方一句不说，但读者始终感到他在场。</p>
+    </div>
+
+    <div class="ex ex-item" data-tags="work">
+      <h4>18 · 不回答就是回答<span class="tag">职场</span></h4>
+      <div class="dialog">
+        <p><span class="who">主管</span>「周五能交吗？」</p>
+        <p><span class="who">下属</span>「小林那边也要一份。」</p>
+        <p><span class="who">主管</span>「我问的是你这份。」</p>
+        <p><span class="who">下属</span>「我让小林一起整理。」</p>
+      </div>
+      <p class="look"><b>看点：</b>两次岔开，答案已经是不行；全篇没有「不」「没法」「来不及」。<br><b>练法：</b>写一段拒绝，禁用所有否定词。</p>
+    </div>
+
+    <div class="ex ex-item" data-tags="work">
+      <h4>19 · 同一句重复两次，意思反了<span class="tag">职场 · 谈判</span></h4>
+      <div class="dialog">
+        <p><span class="who">甲方</span>「预算就这些。」</p>
+        <p><span class="who">乙方</span>「那范围呢？」</p>
+        <p><span class="who">甲方</span>「你定。」</p>
+        <p><span class="who">乙方</span>「定完不能改。」</p>
+        <p><span class="who">甲方</span>「你定。」</p>
+      </div>
+      <p class="look"><b>看点：</b>第一个「你定」是授权，第二个是甩责任；权力在重复里反转，不靠任何解释。<br><b>练法：</b>用一句重复三次的台词，写出三次不同的意思。</p>
+    </div>
+
+    <div class="ex ex-item" data-tags="period">
+      <h4>20 · 把既成事实说成请示<span class="tag">古风</span></h4>
+      <div class="dialog">
+        <p><span class="who">臣</span>「此事臣不敢专断。」</p>
+        <p><span class="who">上</span>「朕问的是断没断。」</p>
+        <p><span class="who">臣</span>「已断。」</p>
+        <p><span class="who">上</span>「那还请示什么？」</p>
+        <p><span class="who">臣</span>「请陛下知晓。」</p>
+      </div>
+      <p class="look"><b>看点：</b>「不敢专断」与「已断」自相矛盾，最后一句把先斩后奏包装成恭顺，等级与危险都在。<br><b>练法：</b>写一句把既成事实包装成请示的台词，不许人物解释自己。</p>
+    </div>
+
+    <div class="ex ex-item" data-tags="group">
+      <h4>21 · 五人会议：谁开场，谁收口<span class="tag">群像</span></h4>
+      <div class="dialog">
+        <p><span class="who">甲</span>「我先说两句。」</p>
+        <p><span class="who">乙</span>「数据还没到。」</p>
+        <p><span class="who">丙</span>「那就等。」</p>
+        <p><span class="who">丁</span>「等到什么时候？」</p>
+        <p class="stage">主任把本子合上。</p>
+        <p><span class="who">戊</span>「散会前。」</p>
+      </div>
+      <p class="look"><b>看点：</b>开场／刹车／附和／催逼／收口，五种功能五种句长；最后用动作代替决断。<br><b>练法：</b>写一场五人会议，不加外貌描写，仍让人分得清谁是谁。</p>
+    </div>
+
+    <div class="ex ex-item" data-tags="life">
+      <h4>22 · 儿童视角：用「睡几次觉」换算时间<span class="tag">日常</span></h4>
+      <div class="dialog">
+        <p><span class="who">孩子</span>「妈妈什么时候回来？」</p>
+        <p><span class="who">大人</span>「说过两天。」</p>
+        <p><span class="who">孩子</span>「两天是睡几次觉？」</p>
+        <p><span class="who">大人</span>「两次。」</p>
+        <p><span class="who">孩子</span>「那我今天不睡了。」</p>
+      </div>
+      <p class="look"><b>看点：</b>孩子只用自己的单位换算世界，最后一句是整段最锋利的心疼，却没有任何情绪词。<br><b>练法：</b>用一个孩子能理解的具体单位（睡几次觉、几集动画片）写一次等待。</p>
+    </div>
+
+    <div class="ex ex-item" data-tags="comedy">
+      <h4>23 · 憋屈到反转，六句内收工<span class="tag">网文</span></h4>
+      <div class="dialog">
+        <p><span class="who">管事</span>「这单算你头上。」</p>
+        <p><span class="who">来人</span>「好。」</p>
+        <p><span class="who">管事</span>「不问问为什么？」</p>
+        <p><span class="who">来人</span>「问了会改吗？」</p>
+        <p><span class="who">管事</span>「……」</p>
+        <p><span class="who">来人</span>「那就不问了。签字吧。」</p>
+      </div>
+      <p class="look"><b>看点：</b>不吵不辩，两问把对方架住；「签字吧」夺回主动权，短句提速，没有一句自证。<br><b>练法：</b>把 300 字的憋屈戏压到 6 句以内，主角不许解释自己。</p>
+    </div>
+
+    <div class="ex ex-item" data-tags="life">
+      <h4>24 · 告别，只谈房间里的一样东西<span class="tag">留白</span></h4>
+      <div class="dialog">
+        <p><span class="who">他</span>「灯……」</p>
+        <p><span class="who">她</span>「开着呢。」</p>
+        <p><span class="who">他</span>「别关。」</p>
+        <p><span class="who">她</span>「不关。」</p>
+      </div>
+      <p class="look"><b>看点：</b>全篇十来个字，不提病、不提怕、不提走；「别关」是唯一一次把愿望说出口。<br><b>练法：</b>写一场告别，只准谈房间里的一样东西。</p>
+    </div>
+
+    <p class="hint">二十四段全部自拟，只为演示方法。任选一段抄进训练 T5 的写作框做遮名测试，或改写成自己的题材，是最快的迁移练法。<strong>想看真实作品的逐字对照，往下翻附 C「经典对白」。</strong></p>
+  </article>
+
+  <article class="card chapter" id="classic">
+    <div class="ch-head"><div class="ch-num">B</div>
+      <h3>附 B · 经典作品拆解清单<span class="sub">只列「看什么」和拆解动作；可确证的逐字短引见附 C</span></h3></div>
+    <p class="hint">附 C 已收 15 条公版经典对白的短引与逐句拆解；这里补的是「还想读哪些、每本该看什么」，尤其覆盖仍在版权期或中译受保护、不便转录原文的作品。</p>
+    <table>
+      <thead><tr><th>作品</th><th>看什么</th><th>拆解动作</th></tr></thead>
+      <tbody>
+        <tr><td>海明威《杀人者》《白象似的群山》</td><td>几乎全靠对话推进，关键的事始终不说破</td><td>抄一段，写出「没说出口的那件事」是什么</td></tr>
+        <tr><td>老舍《骆驼祥子》《茶馆》</td><td>一人一腔的市井声口</td><td>遮名猜身份，列出作者用了哪几个参数</td></tr>
+        <tr><td>鲁迅《孔乙己》</td><td>一句话同时见身份、自欺与处境</td><td>找出人物替自己辩解的那句，分析它如何暴露他自己</td></tr>
+        <tr><td>曹雪芹《红楼梦》</td><td>称谓、机锋、话里有话</td><td>数一段对话里有多少句答非所问</td></tr>
+        <tr><td>张爱玲《倾城之恋》</td><td>试探、算计、谁先退半步</td><td>标出每次「换话题」发生在谁吃亏之后</td></tr>
+        <tr><td>钱钟书《围城》</td><td>智性机锋的密度与节奏</td><td>找一段，删掉比喻看还剩什么</td></tr>
+        <tr><td>简·奥斯汀《傲慢与偏见》</td><td>礼貌底下的攻击，反讽</td><td>找出「听着像赞美、其实是刺」的句子</td></tr>
+        <tr><td>金庸《笑傲江湖》等</td><td>多人场面的调度，不糊不乱</td><td>数一场多人对话里谁打断谁、谁最后收口</td></tr>
+        <tr><td>契诃夫戏剧与短篇</td><td>潜流、停顿、无疾而终</td><td>找出所有「该回答却没回答」的地方</td></tr>
+        <tr><td>本地 <code>书单/20261103网文书单.html</code></td><td>当下网文的对话节奏与爽点密度</td><td>挑三本风格差异最大的，各抄一段并排对照</td></tr>
+      </tbody>
+    </table>
+    <p><strong>统一拆解三步：</strong>① 抄一段（不超过 300 字）；② 逐句标出职能与说话人的目的；③ 删掉 30%，看场面是否仍成立。三步做完，比读十篇泛泛的技法文有用。</p>
+    <p class="hint">本地资料 <code>技巧/网络小说创作技巧（长篇幅）.txt</code> 里也提到海明威《杀人者》通篇几乎全是对话，可以一并回看。</p>
+  </article>
+
+  <article class="card chapter" id="classicLines">
+    <div class="ch-head"><div class="ch-num">C</div>
+      <h3>附 C · 经典对白：短引与技法拆解<span class="sub">15 条 · 每条含出处、情境、原文、好在哪、怎么迁移</span></h3></div>
+    <p><strong>选材说明：</strong>① 中文部分取古典小说与已进入公有领域的现代作品，按常见整理本作<strong>极短引用</strong>用于技法讨论，各本字句偶有差异，以你手上的版本为准；② 外国部分只引<strong>公版英文原著</strong>，中文为自译，不用任何现有中译本译文；③ 仍在版权期内的当代作品与中译本，只在附 B 给「去读哪一段」的任务，不转录。</p>
+
+    <h3>一、中文经典 · 12 条</h3>
+
+    <div class="classic-item">
+      <h4>01 先声夺人：一句定地位</h4>
+      <p class="ctx">《红楼梦》第三回，黛玉初进贾府，众人敛声屏气，人未到声先到。</p>
+      <div class="line">「我来迟了，不曾迎接远客！」</div>
+      <p class="why"><b>好在哪：</b>这句不是对某个人说的，是对全场宣布自己的位置。出场、地位、性格、与贾母的关系一次交齐，而且<strong>没有一句实际寒暄内容</strong>，只有姿态。<br><b>练法：</b>给你的人物写第一句台词，不许自我介绍、不许问候，却要让读者立刻知道他在这屋里排第几。</p>
+    </div>
+
+    <div class="classic-item">
+      <h4>02 不准确，但真</h4>
+      <p class="ctx">《红楼梦》第三回，宝玉初见黛玉。</p>
+      <div class="line">「这个妹妹我曾见过的。」</div>
+      <p class="why"><b>好在哪：</b>事实是没见过，但这句话比任何客套都准——它写的是宝玉怎么感知世界，不是记录事实。好对白常常「不准确，但真」。<br><b>练法：</b>写一句事实上有误、却只有这个角色会说的台词。</p>
+    </div>
+
+    <div class="classic-item">
+      <h4>03 三个字的潜台词</h4>
+      <p class="ctx">《红楼梦》，宝玉对黛玉。</p>
+      <div class="line">「你放心。」</div>
+      <p class="why"><b>好在哪：</b>没说放心什么，也没解释凭什么保证。正因说得太少，黛玉和读者都把自己最怕的那件事填了进去。扩成五十字的安慰，力量立刻散掉。<br><b>练法：</b>把一段 100 字的安慰压到 5 字以内，只准用一个具体动作补余下的意思。</p>
+    </div>
+
+    <div class="classic-item">
+      <h4>04 一个称谓写完关系断裂</h4>
+      <p class="ctx">鲁迅《故乡》，阔别二十多年的少年好友重逢。</p>
+      <div class="line">「老爷！……」</div>
+      <p class="why"><b>好在哪：</b>称呼从「迅哥儿」变成「老爷」，省略号里是他说不出口的全部。全篇最痛的一句只有三个字加一个标点，作者没加任何情绪说明。<br><b>练法：</b>写久别重逢，只准改一个称呼，不许写心理。</p>
+    </div>
+
+    <div class="classic-item">
+      <h4>05 辩解反而暴露自己</h4>
+      <p class="ctx">鲁迅《孔乙己》，旁人揭发他偷书，他涨红了脸争辩。</p>
+      <div class="line">「窃书不能算偷……窃书！读书人的事，能算偷么？」</div>
+      <p class="why"><b>好在哪：</b>他越辩，读者越看清他的处境。「窃」与「读书人」两个词把阶层、自欺、羞耻一次交齐——这句不是在说服酒馆里的人，是在替自己守住最后一点身份。<br><b>练法：</b>让人物替自己辩解一句，要求这句反而暴露他最想藏的东西。</p>
+    </div>
+
+    <div class="classic-item">
+      <h4>06 声口就是处境</h4>
+      <p class="ctx">鲁迅《孔乙己》，分茴香豆给孩子时的一句（节引）。</p>
+      <div class="line">「多乎哉？不多也。」</div>
+      <p class="why"><b>好在哪：</b>同一件事换成大白话只是「不多了」；文腔本身成了人物标签，也成了旁人发笑的理由。声口不是装饰，是处境。<br><b>练法：</b>给一个角色设计一句只他会用的措辞，让另一个角色因这句对他产生误判。</p>
+    </div>
+
+    <div class="classic-item">
+      <h4>07 重复是创伤的语言形状</h4>
+      <p class="ctx">鲁迅《祝福》，祥林嫂反复讲起那件事的开头。</p>
+      <div class="line">「我真傻，真的。」</div>
+      <p class="why"><b>好在哪：</b>台词内容一遍没变，变的是听者的反应：起初还有人听，后来只剩打断。关系的坍塌全靠这个反差，不需要作者说明「她越来越孤单」。<br><b>练法：</b>写同一句台词出现三次，只靠旁人反应的变化推进。</p>
+    </div>
+
+    <div class="classic-item">
+      <h4>08 人物对自己说的那句话</h4>
+      <p class="ctx">鲁迅《阿Q正传》，挨打之后翻来覆去的一句自我安慰（常见整理本作此短语）。</p>
+      <div class="line">「儿子打老子」</div>
+      <p class="why"><b>好在哪：</b>它不是完整的当面台词，而是把失败改写成胜利的那句话——挨了打，靠改换亲属关系就翻了盘。人物最核心的逻辑，常藏在他反复对自己说的那一句里。<br><b>练法：</b>写一句自我安慰的口头禅，让它在三个场合反复出现，一次比一次不管用。</p>
+    </div>
+
+    <div class="classic-item">
+      <h4>09 短句引爆全局</h4>
+      <p class="ctx">老舍《茶馆》第一幕，常四爷在茶馆里的一句牢骚。</p>
+      <div class="line">「大清国要完！」</div>
+      <p class="why"><b>好在哪：</b>六个字，没有铺垫、没有议论，立刻招来侦缉队。紧张场面的台词越短越重；若让他讲一段忧国忧民的道理，戏就散了。<br><b>练法：</b>把 200 字的激愤独白压成一句不超过 8 字的话，并让场面因这句话立刻改变。</p>
+    </div>
+
+    <div class="classic-item">
+      <h4>10 后半句自我拆台</h4>
+      <p class="ctx">老舍《茶馆》第三幕，常四爷。</p>
+      <div class="line">「我爱咱们的国呀，可是谁爱我呢？」</div>
+      <p class="why"><b>好在哪：</b>前半句是口号，后半句一转，人物从「概念」变回「人」。转折往往比宣言更像人话，也更容易让观众记住。<br><b>练法：</b>写一句先大后小、后半句把自己拆台的话。</p>
+    </div>
+
+    <div class="classic-item">
+      <h4>11 退场台词只带一个名字</h4>
+      <p class="ctx">《三国演义》周瑜临终（常见整理本）。</p>
+      <div class="line">「既生瑜，何生亮！」</div>
+      <p class="why"><b>好在哪：</b>不回顾功业、不交代后事，只把对手的名字带上。人物到最后还放不下什么，比他一生做过什么更能说明他。<br><b>练法：</b>写一句临终／退场台词，只准提一个具体的人或物，不许总结一生。</p>
+    </div>
+
+    <div class="classic-item">
+      <h4>12 一句同时立人物、冲突与主题</h4>
+      <p class="ctx">《史记·陈涉世家》（史书笔法，可直接迁移到小说）。</p>
+      <div class="line">「王侯将相宁有种乎！」</div>
+      <p class="why"><b>好在哪：</b>反问天然带煽动性，还把听众拉了进来——「你们服吗」。最会写人的对白常常只是一句问话，而不是一段宣告。<br><b>练法：</b>把一个主题句改写成角色对同伴发出的一句反问。</p>
+    </div>
+
+    <h3>二、外国经典 · 公版英文原文 + 自译 · 3 条</h3>
+
+    <div class="classic-item">
+      <h4>13 用两轮对话给整部小说定调</h4>
+      <p class="ctx">简·奥斯汀《傲慢与偏见》（1813）开篇。</p>
+      <div class="line">"My dear Mr. Bennet," said his lady to him one day, "have you heard that Netherfield Park is let at last?"<em>「我亲爱的班纳特先生，」他太太某天对他说，「你听说内瑟菲尔德庄园终于租出去了吗？」</em></div>
+      <div class="line">Mr. Bennet replied that he had not. ... "You want to tell me, and I have no objection to hearing it."<em>班纳特先生回答说他没听说。……「你想说，我也不反对听。」</em></div>
+      <p class="why"><b>好在哪：</b>太太第一句就带目的（不是告知，是推一桩心事）；先生先不接，再一句「你想说，我不反对听」把这场对话的性质点破——不配合，也不阻止。二三十年的婚姻与全书的机锋基调，两轮就定了。<br><b>练法：</b>用两轮对话开篇，让读者第一眼同时读出「这两个人什么关系」。</p>
+    </div>
+
+    <div class="classic-item">
+      <h4>14 要求表态，本身就是冲突</h4>
+      <p class="ctx">莎士比亚《李尔王》第一幕，李尔要小女儿用话证明爱。</p>
+      <div class="line">"Nothing will come of nothing: speak again."<em>「空话换不来东西。再说一遍。」</em></div>
+      <p class="why"><b>好在哪：</b>一句把亲情变成交易：说不出，就没有份地。权力全在「换来」这个说法里。它也是潜台词的反面教材——说得太明白，反而逼出了后面的谎话与灾祸。<br><b>练法：</b>写一场「要求对方表态」的对话，让这个要求本身成为冲突源头。</p>
+    </div>
+
+    <div class="classic-item">
+      <h4>15 最平的一句话，掀翻整个场面</h4>
+      <p class="ctx">狄更斯《雾都孤儿》（1838），济贫院食堂。</p>
+      <div class="line">"Please, sir, I want some more."<em>「先生，我还想要一点。」</em></div>
+      <p class="why"><b>好在哪：</b>孩子说的是最起码的请求，听的人却当成造反。台词越平，场面的过度反应越能写出这个世界的荒唐，作者完全不必替读者判断。<br><b>练法：</b>写一句毫无冒犯的话，让在场所有人反应过度。</p>
+    </div>
+
+    <p class="hint">英文引自公版原著，中文为自译，未采用任何现有中译本；中译本各有版权与风格差异，建议用自己手上的版本对照，重点看译者怎么处理声口。张爱玲、钱钟书、金庸、曹禺及海明威中译等仍在版权期或中译受保护的作品，见附 B 的拆解任务；指定一本你手上的版本，可以按「抄一段 → 标职能 → 删 30%」逐句拆。</p>
+    <div class="metrics"><b>用法：</b>别把这十五条当名句背。每条先遮住「好在哪」，自己说一遍它凭什么成立，再对照；然后照「练法」写一段自己的。</div>
+  </article>
+
+  <article class="card chapter" id="local">
+    <div class="ch-head"><div class="ch-num">D</div>
+      <h3>附 D · 把方法用回自己的稿子<span class="sub">教程示例与本地稿件互不依赖；这一步只是落地</span></h3></div>
+    <p>上面的示例都是自拟的通用文本。最后一步要落到你自己的旧稿上。<code>侠鹿/侠鹿.txt</code> 第一章 21–60 行是一份现成材料，可拿来对照下面四个观察点；<strong>换成你别的稿子，方法完全一样</strong>。</p>
+    <table>
+      <thead><tr><th>观察点</th><th>怎么查</th><th>对应训练</th></tr></thead>
+      <tbody>
+        <tr><td>标签密度</td><td>数 300 字内出现几个「冷笑地／不屑地／戏谑地」及情绪解释</td><td>T2 去标签</td></tr>
+        <tr><td>信息倾倒</td><td>标出「双方都知道、却说给读者听」的句子</td><td>T4 / T6 删 30%</td></tr>
+        <tr><td>声音趋同</td><td>遮住人名，看几个角色的句长与句式是否接近</td><td>T5 遮名测试</td></tr>
+        <tr><td>客套稀释冲突</td><td>紧张场面里，有没有互相寒暄、互致敬语却不着急</td><td>T3 / T6 重写</td></tr>
+      </tbody>
+    </table>
+    <p class="hint">建议先记下四个数字（标签数、平均句长、猜对率、可删台词数），再改写；四周计划第 4 周的 T6 就是拿这份对照收尾。</p>
+  </article>
+
+  <div class="card">
+    <h3>资料来源与示例说明</h3>
+    <p class="sources">
+      <code>技巧/【大神说法】如何写好一部小说（十分经典）.txt</code>：老舍谈人物语言、朗读法、短句与节奏<br>
+      <code>技巧/【写作升华】小说写作中华，动作描写的意义所在.txt</code>：人格化动作、台词不变换基调的练习<br>
+      <code>技巧/小说描写四大忌讳.txt</code>：不要概括，要具体<br>
+      <code>技巧/网络小说创作技巧（长篇幅）.txt</code>：对话作为细节、海明威《杀人者》通篇对话<br>
+      <code>书单/20261103网文书单.html</code>：拆解模仿时挑三本风格差异最大的作品<br>
+      <code>侠鹿/侠鹿.txt</code>：仅用于附 D 的实战诊断与训练 T6
+    </p>
+    <p class="hint"><strong>示例说明：</strong>教程六章与附 A 的全部对话、病例、人物均为<strong>本手册自拟示范文本</strong>，不是任何作品的原文引用；<strong>附 C 是例外</strong>——只收可确证的公版中文原著短引与公版英文原文（中文为自译），用于技法讨论；附 B 只列观察任务，不转录当代作品与中译本原文，请用自己手上的版本阅读。古典小说各整理本字句偶有差异，引用以你手上的版本为准。另：<code>技巧/</code> 下的 txt 为 GB18030 编码，直接打开可能乱码，文中引文已按通顺现代汉语整理、非逐字照录。</p>
+  </div>
+</section>
+
+<section class="view" id="v-drill">
+  <div class="eyebrow">PART 02 · DRILLS</div>
+  <h1 class="page-title">专项训练 · 六项</h1>
+  <p class="page-desc">每项都给出做法、量化验收与即时写作框。内容自动保存在本机；建议按 T1 → T6 顺序做，每项之间至少隔一天，好让盲测反馈起作用。</p>
+
+  <div class="timer-box no-print">
+    <div class="timer-time" id="timerTime">15:00</div>
+    <div style="flex:1;min-width:180px">
+      <div style="font-size:13.5px;color:var(--teal);font-weight:600;margin-bottom:6px">专注计时 · 先写完，再评判</div>
+      <div class="bar"><i id="timerBar" style="width:100%"></i></div>
+      <div class="hint" id="timerHint">选一个时长，练习期间不要回头修改。</div>
+    </div>
+    <div class="toolbar" style="margin:0">
+      <button class="btn sm" data-min="10">10 分钟</button>
+      <button class="btn sm" data-min="15">15 分钟</button>
+      <button class="btn sm" data-min="25">25 分钟</button>
+      <button class="btn primary sm" id="timerToggle">开始</button>
+      <button class="btn ghost sm" id="timerReset">重置</button>
+    </div>
+  </div>
+
+  <article class="card drill" id="t1">
+    <div class="drill-head"><div class="drill-id">T1</div>
+      <h3>真实对话转写<span class="sub">输入练习 · 治「不像人话」</span></h3>
+      <label class="check"><input type="checkbox" data-drill="t1"> 完成</label></div>
+    <p><span class="tag">约 25 分钟</span><span class="tag">难度 ★</span><span class="tag">材料：一段真实对话</span></p>
+    <ol class="steps">
+      <li>在咖啡馆、家里或影视片段里记下一段 2 分钟以上的真实对话，尽量逐字记，别顺手修顺。</li>
+      <li>标出：被打断的地方、停顿、重复、口头禅、答非所问、没说完的半句、突然换话题。</li>
+      <li>把这段压成 10 行以内的书面台词，保留至少两处「不工整」。</li>
+      <li>出声念一遍，念着别扭的地方再改短。</li>
+    </ol>
+    <div class="metrics"><b>验收：</b>10 行以内；至少 2 处打断／半句／答非所问；读起来不像两个人轮流念完整句。</div>
+    <textarea data-draft="t1" placeholder="在这里写转写稿与压缩后的 10 行台词……"></textarea>
+    <div class="print-only" data-print-draft="t1"></div>
+    <div class="field-tools no-print"><span data-count="t1">0 字</span><button class="btn sm" data-copy="t1">复制</button><button class="btn sm ghost" data-clear="t1">清空本段</button><span>自动保存</span></div>
+  </article>
+
+  <article class="card drill" id="t2">
+    <div class="drill-head"><div class="drill-id">T2</div>
+      <h3>去标签 + 盲测（核心练习）<span class="sub">治「情绪标签堆积」· 建立基线分</span></h3>
+      <label class="check"><input type="checkbox" data-drill="t2"> 完成</label></div>
+    <p><span class="tag red">约 30 分钟</span><span class="tag">难度 ★★</span><span class="tag">需要一位读者</span></p>
+    <ol class="steps">
+      <li>写 300–500 字纯对白，两人以上、有明确冲突。</li>
+      <li><strong>硬约束：</strong>只允许「说」「问」两个标签；禁止一切情绪副词、内心独白、作者解释、无色彩动作（点头／看／耸肩）。</li>
+      <li>遮住说话人名字，请一个没读过上下文的人读，回答三问：每句是谁说的？两人什么关系／谁占上风？说话人什么情绪？</li>
+      <li>把猜对率、情绪标签数、平均句长记进「盲测记录」页。这是你的基线。</li>
+    </ol>
+    <div class="metrics"><b>验收：</b>全文零情绪副词；盲测猜对率 ≥ 80%；读者说出的情绪与你的意图一致。猜不对就是没写清，不是读者不细心。</div>
+    <div class="case">
+      <div class="bad"><b>素材三选一</b>① 教程附 A 里任一段示例；② 自己一段带对白的旧稿；③ 《侠鹿》第一章 24–43 行。抄进写作框，删掉引号外全部内容，只留台词与「说」。</div>
+      <div class="good"><b>加分的做法</b>允许在每段开头或结尾各放一个带态度的动作，但台词一字不改。对比「全裸台词」与「加两处动作」两版的盲测分数。</div>
+    </div>
+    <textarea data-draft="t2" placeholder="只允许「说」「问」，不准写「冷笑地」「不屑地」「心中一惊」……"></textarea>
+    <div class="print-only" data-print-draft="t2"></div>
+    <div class="field-tools no-print"><span data-count="t2">0 字</span><button class="btn sm" data-copy="t2">复制</button><button class="btn sm ghost" data-clear="t2">清空本段</button><span>自动保存</span></div>
+  </article>
+
+  <article class="card drill" id="t3">
+    <div class="drill-head"><div class="drill-id">T3</div>
+      <h3>台词不变，换三种基调<span class="sub">来自本地教程的现成练习 · 治「动作不带态度」</span></h3>
+      <label class="check"><input type="checkbox" data-drill="t3"> 完成</label></div>
+    <p><span class="tag">约 20 分钟</span><span class="tag">难度 ★★</span><span class="tag green">台词一字不改</span></p>
+    <ol class="steps">
+      <li>用给定台词：「我不问了。」（教程第 5 章用另一句话做过示范，别照抄答案）。也可换成附 A 里任意一句。</li>
+      <li>写三版：<strong>释然</strong>／<strong>威胁</strong>／<strong>敷衍</strong>。三版台词完全相同，只改动作、停顿、标点与说话人位置。</li>
+      <li>动作必须带意图、态度或表情；禁止「点头、看、走、站、耸肩」这类无色彩动词。</li>
+      <li>把有目的的动作限制在一段对话的开头或结尾，别夹在台词中间。</li>
+      <li>请读者只读动作不看说明，猜是哪一版。</li>
+    </ol>
+    <div class="metrics"><b>验收：</b>三版台词逐字一致；零无色彩动词；读者能正确区分三种基调。</div>
+    <textarea data-draft="t3" placeholder="给定台词：我不问了。&#10;&#10;版本 A · 释然：&#10;版本 B · 威胁：&#10;版本 C · 敷衍："></textarea>
+    <div class="print-only" data-print-draft="t3"></div>
+    <div class="field-tools no-print"><span data-count="t3">0 字</span><button class="btn sm" data-copy="t3">复制</button><button class="btn sm ghost" data-clear="t3">清空本段</button><span>自动保存</span></div>
+  </article>
+
+  <article class="card drill" id="t4">
+    <div class="drill-head"><div class="drill-id">T4</div>
+      <h3>潜台词与限制轮数<span class="sub">治「直白、注水、每问必答」</span></h3>
+      <label class="check"><input type="checkbox" data-drill="t4"> 完成</label></div>
+    <p><span class="tag red">约 25 分钟</span><span class="tag">难度 ★★★</span><span class="tag">两小题</span></p>
+    <ol class="steps">
+      <li><strong>A 题：</strong>写两人在谈天气、修一间旧屋或分一碗面，实际在谈分手。全文不得出现「分手、我不信你、我们完了」等直白词。</li>
+      <li><strong>B 题：</strong>限 10 轮对话完成一次关系反转（开局求人 → 结尾对方反过来求他），每轮不超过 20 字。</li>
+      <li>至少用上三种潜台词手段：答非所问、打断、过度解释、突然换话题、沉默。</li>
+      <li>删掉 30% 台词，检查是否仍成立。</li>
+    </ol>
+    <div class="metrics"><b>验收：</b>A 题零直白词且读者能读懂真意；B 题 ≤10 轮、每轮 ≤20 字、删 30% 后反转仍清楚。</div>
+    <textarea data-draft="t4" placeholder="A 题：&#10;&#10;B 题："></textarea>
+    <div class="print-only" data-print-draft="t4"></div>
+    <div class="field-tools no-print"><span data-count="t4">0 字</span><button class="btn sm" data-copy="t4">复制</button><button class="btn sm ghost" data-clear="t4">清空本段</button><span>自动保存</span></div>
+  </article>
+
+  <article class="card drill" id="t5">
+    <div class="drill-head"><div class="drill-id">T5</div>
+      <h3>声音区分与遮名测试<span class="sub">治「全员一个腔调」</span></h3>
+      <label class="check"><input type="checkbox" data-drill="t5"> 完成</label></div>
+    <p><span class="tag">约 25 分钟</span><span class="tag">难度 ★★★</span><span class="tag">需要一位读者</span></p>
+    <ol class="steps">
+      <li>设一个场景：三个人在一间屋里，其中一人想让另两人中的一个先离开。</li>
+      <li>动笔前先给每人填两个硬约束：<strong>句长</strong>（短／中／长）与<strong>回避方式</strong>（玩笑／沉默／反咬／讲道理）。再任选第 3 章表格里两个参数拉开差距。</li>
+      <li>写 20 句以上对白，尽量不写说话人名字，靠台词自己区分。</li>
+      <li>遮名请人读，逐句标注是谁说的，并说出判断依据。</li>
+    </ol>
+    <div class="metrics"><b>验收：</b>遮名识别率 ≥ 80%；读者给出的依据是「句长／句式／回避方式」，而不是「口头禅」或猜的。</div>
+    <div class="case">
+      <div class="bad"><b>建议素材</b>教程附 A 第 10 例「四人饭桌」，或第 3 章的四张声音配方卡；想用自己的稿子，也可取《侠鹿》三人（长句绕／短句抢话／具体名词短判断）来拉开差距。</div>
+      <div class="good"><b>进阶</b>把「谁先沉默」「谁打断谁」也写成固定的权力关系，让声音差异同时承担关系信息。</div>
+    </div>
+    <textarea data-draft="t5" placeholder="角色约束：&#10;甲：句长___／回避方式___&#10;乙：句长___／回避方式___&#10;丙：句长___／回避方式___&#10;&#10;对白："></textarea>
+    <div class="print-only" data-print-draft="t5"></div>
+    <div class="field-tools no-print"><span data-count="t5">0 字</span><button class="btn sm" data-copy="t5">复制</button><button class="btn sm ghost" data-clear="t5">清空本段</button><span>自动保存</span></div>
+  </article>
+
+  <article class="card drill" id="t6">
+    <div class="drill-head"><div class="drill-id">T6</div>
+      <h3>删 30% 与重写旧稿<span class="sub">结业练习 · 把前面五项用回自己的稿子</span></h3>
+      <label class="check"><input type="checkbox" data-drill="t6"> 完成</label></div>
+    <p><span class="tag red">约 30 分钟</span><span class="tag">难度 ★★★</span><span class="tag green">产出新旧并排对照</span></p>
+    <ol class="steps">
+      <li>取自己一段 500 字左右带对白的旧稿；没有现成的，可用附 A 任一段扩建，或取《侠鹿》第一章 21–47 行。</li>
+      <li>第一轮删寒暄；第二轮删「双方都已知、说给读者听」的句子；第三轮删解释性回答。目标是删掉 30%。</li>
+      <li>对剩下的台词逐句标注职能与目的，写不出的继续删或重写。</li>
+      <li>用 T2 的去标签规则、T3 的人格化动作、T5 的声音约束重写一遍，保留原稿并排对照。</li>
+      <li>出声朗读，并把新版再送一次盲测，与 T2 的基线比。</li>
+    </ol>
+    <div class="metrics"><b>验收：</b>情绪标签数较原稿下降 50% 以上；平均句长在紧张段明显变短；朗读无拗口句；盲测猜对率较基线提升。</div>
+    <textarea data-draft="t6" placeholder="【原稿摘录】&#10;&#10;【删改记录：删了哪三句、为什么】&#10;&#10;【重写版】"></textarea>
+    <div class="print-only" data-print-draft="t6"></div>
+    <div class="field-tools no-print"><span data-count="t6">0 字</span><button class="btn sm" data-copy="t6">复制</button><button class="btn sm ghost" data-clear="t6">清空本段</button><span>自动保存</span></div>
+  </article>
+</section>
+
+<section class="view" id="v-plan">
+  <div class="eyebrow">PART 03 · 4 WEEKS</div>
+  <h1 class="page-title">四周计划</h1>
+  <p class="page-desc">每周固定 500 字对白 + 一次盲测即可。勾选任务后进度自动保存；每周复盘建议写在下方写作框里。</p>
+  <div class="card">
+    <h3>总完成度</h3>
+    <div class="bar"><i id="planBar" style="width:0%"></i></div>
+    <p class="hint" id="planHint">0 / 8 项</p>
+  </div>
+  <div class="card">
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr><th style="width:90px">周次</th><th>重点与练习</th><th>产出</th><th>验收</th><th style="width:60px">完成</th></tr></thead>
+      <tbody>
+        <tr class="plan-row"><td>第 1 周<br><span class="hint">诊断</span></td><td>教程 1–2 章；T1 真实对话转写；T2 去标签 + 首次盲测</td><td>500 字纯对白、盲测基线一条</td><td>建立基线：猜对率、标签数、平均句长</td><td><input type="checkbox" data-plan="w1t"></td></tr>
+        <tr class="plan-row"><td></td><td>读教程 3–4 章；数出旧稿中「双方已知却说出口」的句子</td><td>一份删改清单</td><td>至少标出 5 句信息倾倒</td><td><input type="checkbox" data-plan="w1r"></td></tr>
+        <tr class="plan-row"><td>第 2 周<br><span class="hint">效率</span></td><td>T4 潜台词与限制轮数；对自己一段旧稿做删 30%</td><td>10 轮对话一版、删改前后对照</td><td>零直白词、≤10 轮、删后仍成立</td><td><input type="checkbox" data-plan="w2t"></td></tr>
+        <tr class="plan-row"><td></td><td>读教程 5 章；把「你也知道我也知道」测试用于全部新写的台词</td><td>新版场景一段</td><td>无一句替读者补前情</td><td><input type="checkbox" data-plan="w2r"></td></tr>
+        <tr class="plan-row"><td>第 3 周<br><span class="hint">声音</span></td><td>T5 声音区分与遮名测试；T3 台词不变换三种基调</td><td>三角色场景、三基调版本</td><td>遮名识别率 ≥ 80%、读者能分出三版</td><td><input type="checkbox" data-plan="w3t"></td></tr>
+        <tr class="plan-row"><td></td><td>从书单挑三位风格差异大的作者，逐句标注每句台词的职能</td><td>一页拆解笔记</td><td>标出至少 3 句「不承担职能、可删」</td><td><input type="checkbox" data-plan="w3r"></td></tr>
+        <tr class="plan-row"><td>第 4 周<br><span class="hint">实战</span></td><td>T6 重写自己的一段旧稿（或附 A 示例扩建稿）；新旧并排</td><td>重写稿 + 删改记录</td><td>标签数降 50%、朗读通过、盲测复测</td><td><input type="checkbox" data-plan="w4t"></td></tr>
+        <tr class="plan-row"><td></td><td>读教程 6 章；过一遍速查清单；整理四周盲测数据</td><td>一份四周复盘</td><td>写出「我已改掉的两个习惯」</td><td><input type="checkbox" data-plan="w4r"></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+  <div class="card">
+    <h3>每周复盘三问</h3>
+    <p class="hint">每周日花五分钟回答，写在同一框里即可，四周后回看能清楚看到自己的惯性。</p>
+    <ul>
+      <li>这周写的哪一句最像人话？它做对了什么？</li>
+      <li>哪一句其实是说给读者听的？下次用什么替代？</li>
+      <li>下周要戒掉的一个具体习惯是什么？（写动作，不写决心）</li>
+    </ul>
+    <textarea data-review="weekly" placeholder="第 1 周：&#10;第 2 周：&#10;第 3 周：&#10;第 4 周："></textarea>
+    <div class="print-only" data-print-draft="weekly"></div>
+    <div class="field-tools no-print"><span data-count="weekly">0 字</span><span>自动保存</span></div>
+  </div>
+</section>
+
+<section class="view" id="v-blind">
+  <div class="eyebrow">PART 04 · FEEDBACK</div>
+  <h1 class="page-title">盲测记录</h1>
+  <p class="page-desc">对白能力最可靠的进步信号，是「没看过上下文的人能不能读懂」。每次练完记一条，看猜对率是否往 80% 走。</p>
+  <div class="card no-print">
+    <h3>新增一条记录</h3>
+    <div class="form-grid">
+      <div class="field"><label>日期</label><input type="date" id="bDate"></div>
+      <div class="field"><label>练习 / 段落名</label><input type="text" id="bTitle" placeholder="如：T2 去标签 · 第 1 版"></div>
+      <div class="field"><label>盲测人数</label><input type="number" id="bPeople" min="1" value="1"></div>
+      <div class="field"><label>猜对率 %</label><input type="number" id="bRate" min="0" max="100" value="0"></div>
+      <div class="field"><label>情绪标签数 / 300 字</label><input type="number" id="bTags" min="0" value="0"></div>
+      <div class="field"><label>平均句长（字）</label><input type="number" id="bAvg" min="0" value="0"></div>
+      <div class="field" style="grid-column:span 2"><label>备注（读者猜错在哪、下次改什么）</label><input type="text" id="bNote" placeholder="选填"></div>
+    </div>
+    <div class="toolbar" style="margin:0">
+      <button class="btn primary" id="bAdd">添加记录</button>
+      <button class="btn" id="bExportCsv">导出 CSV</button>
+      <button class="btn ghost" id="bClearAll">清空全部记录</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>猜对率趋势 <span class="hint" style="font-weight:400">（目标线 80%）</span></h3>
+    <div id="rateChart"><div class="empty">还没有记录，先做一次 T2 盲测吧。</div></div>
+  </div>
+  <div class="card">
+    <h3>全部记录</h3>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>日期</th><th>段落</th><th>人数</th><th>猜对率</th><th>标签数</th><th>平均句长</th><th>备注</th><th class="no-print"></th></tr></thead>
+        <tbody id="bBody"><tr><td colspan="8" class="empty">暂无记录</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="view" id="v-quick">
+  <div class="eyebrow">PART 05 · CHECKLIST</div>
+  <h1 class="page-title">速查与自检</h1>
+  <p class="page-desc">写完任何一段对白，用下面十条过一遍。勾选状态会保存，换下一段时可一键重置。十种病症速查表见教程第 6 章。</p>
+  <div class="card">
+    <div class="toolbar no-print" style="justify-content:space-between">
+      <h3 style="margin:0">对白自检清单</h3>
+      <div><button class="btn sm" id="checkReset">重置清单</button> <button class="btn sm" id="doPrint">打印 / 存 PDF</button></div>
+    </div>
+    <ul class="checklist">
+      <li><input type="checkbox" data-check="c1"><span>每句台词都能说出「说话人想让对方做什么」。</span></li>
+      <li><input type="checkbox" data-check="c2"><span>遮住说话人名字，仍能分辨是谁在说。</span></li>
+      <li><input type="checkbox" data-check="c3"><span>没有「双方早就知道、却说给读者听」的句子。</span></li>
+      <li><input type="checkbox" data-check="c4"><span>没有寒暄开场，第一句就带目的或冲突。</span></li>
+      <li><input type="checkbox" data-check="c5"><span>情绪标签只用了「说」「问」，或干脆没有。</span></li>
+      <li><input type="checkbox" data-check="c6"><span>动作都带态度／意图，没有无色彩的「点头、看、走、耸肩」。</span></li>
+      <li><input type="checkbox" data-check="c7"><span>至少有一处答非所问、打断、沉默或突然换话题。</span></li>
+      <li><input type="checkbox" data-check="c8"><span>删掉 30% 台词后，场景仍然成立（说明剩下的都有效）。</span></li>
+      <li><input type="checkbox" data-check="c9"><span>出声朗读过，没有拗口、过完整、书面腔的句子。</span></li>
+      <li><input type="checkbox" data-check="c10"><span>紧张处用了短句短词；连续 3–4 句以上有明确的说话人归属。</span></li>
+    </ul>
+  </div>
+  <div class="card no-print">
+    <h3>数据备份</h3>
+    <p>所有勾选、练习稿、盲测记录都只保存在当前浏览器的 localStorage，不上传任何服务器。换电脑、换浏览器或清理缓存前，请先导出备份。</p>
+    <div class="toolbar">
+      <button class="btn primary" id="exportAll">导出全部数据（JSON）</button>
+      <button class="btn" id="importAll">导入备份</button>
+      <input type="file" id="importFile" accept=".json,application/json" style="display:none">
+      <button class="btn" id="exportMd">导出练习稿（Markdown）</button>
+      <button class="btn ghost" id="resetAll">清空全部进度</button>
+    </div>
+    <p class="hint">导出的 Markdown 会把六个练习的写作框与每周复盘汇总成一个文件，方便贴进笔记软件或拿去给人看。</p>
+  </div>
+</section>
+
+<div class="footer">人物对白 · 学习教程与训练手册　|　单文件离线可用　|　示例：24 段自拟 + 15 条经典对白短引　|　原则引自本地 <code>技巧/</code> 资料</div>
+<div class="toast" id="toast"></div>
+<script>
+(function(){
+  'use strict';
+  var KEY='dialogue-lab-v1';
+  function fresh(){return {read:{},drills:{},drafts:{},plan:{},review:{},blind:[],checklist:{}};}
+  function merge(o){
+    var m=fresh();
+    Object.keys(m).forEach(function(k){
+      var v=o[k];
+      if(k==='blind'){if(Array.isArray(v))m.blind=v;}
+      else if(v&&typeof v==='object'&&!Array.isArray(v))m[k]=v;
+    });
+    return m;
+  }
+  var S=load();
+
+  function load(){
+    try{
+      var o=JSON.parse(localStorage.getItem(KEY)||'{}');
+      return merge(o&&typeof o==='object'?o:{});
+    }catch(e){return fresh();}
+  }
+  function save(){
+    try{localStorage.setItem(KEY,JSON.stringify(S));}
+    catch(e){toast('浏览器限制了本地存储，请用「导出全部数据」备份');}
+  }
+  function esc(s){
+    return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function $(s){return document.querySelector(s);}
+  function $$(s){return Array.prototype.slice.call(document.querySelectorAll(s));}
+  function debounce(fn,ms){
+    var id;
+    return function(){var a=arguments,c=this;clearTimeout(id);id=setTimeout(function(){fn.apply(c,a);},ms);};
+  }
+  function today(){
+    var d=new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  function download(name,text,type){
+    type=type||'text/plain;charset=utf-8';
+    var bom=type.indexOf('csv')>=0?'\ufeff':'';
+    var blob=new Blob([bom+text],{type:type});
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download=name;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
+  }
+  function toast(msg){
+    var t=$('#toast');t.textContent=msg;t.classList.add('show');
+    clearTimeout(t._id);t._id=setTimeout(function(){t.classList.remove('show');},2200);
+  }
+
+  /* ---------- 视图 ---------- */
+  function show(v){
+    if(!document.getElementById('v-'+v))v='home';
+    $$('.view').forEach(function(el){el.classList.toggle('active',el.id==='v-'+v);});
+    $$('[data-view]').forEach(function(b){b.classList.toggle('active',b.dataset.view===v);});
+    if(location.hash.slice(1)!==v){
+      try{history.replaceState(null,'','#'+v);}catch(e){/* 部分浏览器在 file:// 下禁用 */}
+    }
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  $$('[data-view]').forEach(function(b){
+    b.addEventListener('click',function(){show(b.dataset.view);});
+  });
+  window.addEventListener('hashchange',function(){show(location.hash.slice(1));});
+  $$('.chapter-nav a').forEach(function(a){
+    a.addEventListener('click',function(e){
+      e.preventDefault();
+      show('course');
+      setTimeout(function(){
+        var t=document.querySelector(a.getAttribute('href'));
+        if(t)t.scrollIntoView({behavior:'smooth',block:'start'});
+      },80);
+    });
+  });
+
+  /* ---------- 场景示例库筛选 ---------- */
+  $$('#exChips .chip').forEach(function(b){
+    b.addEventListener('click',function(){
+      var f=b.dataset.filter;
+      $$('#exChips .chip').forEach(function(x){x.classList.toggle('active',x===b);});
+      $$('.ex-item').forEach(function(item){
+        var tags=String(item.dataset.tags||'').split(/\s+/);
+        item.classList.toggle('hidden',f!=='all'&&tags.indexOf(f)<0);
+      });
+    });
+  });
+
+  /* ---------- 勾选 ---------- */
+  [['data-read','read'],['data-drill','drills'],['data-plan','plan'],['data-check','checklist']].forEach(function(pair){
+    var attr=pair[0],key=pair[1];
+    $$('['+attr+']').forEach(function(el){
+      var id=el.getAttribute(attr);
+      el.checked=!!S[key][id];
+      el.addEventListener('change',function(){
+        S[key][id]=el.checked;save();updateProgress();
+      });
+    });
+  });
+  $('#checkReset').addEventListener('click',function(){
+    S.checklist={};save();
+    $$('[data-check]').forEach(function(el){el.checked=false;});
+    updateProgress();toast('自检清单已重置');
+  });
+  $('#doPrint').addEventListener('click',function(){window.print();});
+
+  /* ---------- 写作框 ---------- */
+  var saveDraft=debounce(function(id,val){S.drafts[id]=val;save();},280);
+  var saveReview=debounce(function(val){S.review.weekly=val;save();},280);
+  function syncCount(id,v){
+    var c=$('[data-count="'+id+'"]');
+    if(c)c.textContent=v.replace(/\s/g,'').length+' 字';
+  }
+  function syncPrint(id,v){
+    var p=$('[data-print-draft="'+id+'"]');
+    if(p)p.textContent=v||'（未填写）';
+  }
+  function initDraft(id){
+    var ta=$('[data-draft="'+id+'"]')||$('[data-review="'+id+'"]');
+    var val=id==='weekly'?(S.review.weekly||''):(S.drafts[id]||'');
+    if(ta)ta.value=val;
+    syncCount(id,val);syncPrint(id,val);
+  }
+  $$('[data-draft]').forEach(function(ta){
+    var id=ta.dataset.draft;
+    ta.addEventListener('input',function(){
+      saveDraft(id,ta.value);syncCount(id,ta.value);syncPrint(id,ta.value);
+    });
+  });
+  var weekly=$('[data-review="weekly"]');
+  if(weekly)weekly.addEventListener('input',function(){
+    saveReview(weekly.value);syncCount('weekly',weekly.value);syncPrint('weekly',weekly.value);
+  });
+  ['t1','t2','t3','t4','t5','t6','weekly'].forEach(initDraft);
+
+  function fallbackCopy(text){
+    var t=document.createElement('textarea');
+    t.value=text;t.style.position='fixed';t.style.opacity='0';
+    document.body.appendChild(t);t.select();
+    try{document.execCommand('copy');toast('已复制');}
+    catch(e){toast('复制失败，请手动选中文本');}
+    document.body.removeChild(t);
+  }
+  $$('[data-copy]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var ta=$('[data-draft="'+b.dataset.copy+'"]');
+      var text=ta?ta.value:'';
+      if(!text){toast('这一段还是空的');return;}
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(
+          function(){toast('已复制');},
+          function(){fallbackCopy(text);}
+        );
+      }else fallbackCopy(text);
+    });
+  });
+  $$('[data-clear]').forEach(function(b){
+    b.addEventListener('click',function(){
+      if(!confirm('确定清空这一段的写作内容？'))return;
+      var id=b.dataset.clear,ta=$('[data-draft="'+id+'"]');
+      if(ta)ta.value='';
+      S.drafts[id]='';save();syncCount(id,'');syncPrint(id,'');toast('已清空');
+    });
+  });
+
+  /* ---------- 专注计时 ---------- */
+  var T={total:900,left:900,running:false,id:null};
+  function fmt(s){
+    var m=Math.floor(s/60),q=s%60;
+    return String(m).padStart(2,'0')+':'+String(q).padStart(2,'0');
+  }
+  function renderTimer(){
+    $('#timerTime').textContent=fmt(T.left);
+    $('#timerBar').style.width=(T.total?(T.left/T.total*100):0)+'%';
+    $('#timerToggle').textContent=T.running?'暂停':'开始';
+    $('#timerHint').textContent=T.running?'练习期间不要回头修改。':(T.left===0?'时间到，进入验收环节。':'先写完，再评判。');
+  }
+  function tick(){
+    if(!T.running)return;
+    T.left--;
+    if(T.left<=0){
+      T.left=0;T.running=false;clearInterval(T.id);T.id=null;
+      toast('时间到 · 现在按验收标准检查');
+    }
+    renderTimer();
+  }
+  $$('[data-min]').forEach(function(b){
+    b.addEventListener('click',function(){
+      T.total=parseInt(b.dataset.min,10)*60;T.left=T.total;
+      T.running=false;clearInterval(T.id);T.id=null;
+      renderTimer();toast('已设为 '+b.dataset.min+' 分钟');
+    });
+  });
+  $('#timerToggle').addEventListener('click',function(){
+    if(T.left===0)T.left=T.total;
+    T.running=!T.running;
+    clearInterval(T.id);
+    if(T.running)T.id=setInterval(tick,1000);else T.id=null;
+    renderTimer();
+  });
+  $('#timerReset').addEventListener('click',function(){
+    T.running=false;clearInterval(T.id);T.id=null;T.left=T.total;renderTimer();
+  });
+  renderTimer();
+
+  /* ---------- 盲测记录 ---------- */
+  function csvCell(v){
+    var s=String(v==null?'':v);
+    return '"'+s.replace(/"/g,'""')+'"';
+  }
+  function renderBlind(){
+    var body=$('#bBody'),chart=$('#rateChart');
+    if(!S.blind.length){
+      body.innerHTML='<tr><td colspan="8" class="empty">暂无记录</td></tr>';
+      chart.innerHTML='<div class="empty">还没有记录，先做一次 T2 盲测吧。</div>';
+      updateProgress();return;
+    }
+    body.innerHTML=S.blind.map(function(r,i){
+      return '<tr><td>'+esc(r.date)+'</td><td>'+esc(r.title)+'</td><td>'+esc(r.people)+
+        '</td><td><b>'+esc(r.rate)+'%</b></td><td>'+esc(r.tags)+'</td><td>'+esc(r.avg)+
+        '</td><td>'+esc(r.note||'')+'</td><td class="no-print"><button class="btn sm ghost" data-del="'+
+        i+'">删</button></td></tr>';
+    }).join('');
+    $$('[data-del]').forEach(function(b){
+      b.addEventListener('click',function(){
+        S.blind.splice(parseInt(b.dataset.del,10),1);
+        save();renderBlind();toast('已删除');
+      });
+    });
+    var recent=S.blind.slice(-10).reverse();
+    chart.innerHTML=recent.map(function(r){
+      var rate=Math.max(0,Math.min(100,Number(r.rate)||0));
+      var color=rate>=80?'var(--green)':(rate>=60?'var(--gold)':'var(--cinnabar)');
+      return '<div class="rate-row"><span class="name" title="'+esc(r.title)+'">'+esc(r.date)+' '+esc(r.title)+
+        '</span><span class="rate-track"><i style="width:'+rate+'%;background:'+color+'"></i></span><b>'+
+        rate+'%</b></div>';
+    }).join('')+'<p class="hint" style="margin-top:10px">绿色 ≥80% 达标，金色 60–79%，红色 &lt;60%。最近 '+
+      recent.length+' 次，按时间倒序。</p>';
+    updateProgress();
+  }
+  $('#bDate').value=today();
+  $('#bAdd').addEventListener('click',function(){
+    var title=$('#bTitle').value.trim();
+    if(!title){toast('请填写练习 / 段落名');$('#bTitle').focus();return;}
+    var rate=Math.max(0,Math.min(100,Number($('#bRate').value)||0));
+    S.blind.push({
+      date:$('#bDate').value||today(),title:title,
+      people:Math.max(1,Number($('#bPeople').value)||1),rate:rate,
+      tags:Math.max(0,Number($('#bTags').value)||0),
+      avg:Math.max(0,Number($('#bAvg').value)||0),
+      note:$('#bNote').value.trim()
+    });
+    save();renderBlind();
+    $('#bTitle').value='';$('#bNote').value='';$('#bRate').value='0';
+    toast('已记录 · '+(rate>=80?'达标':'继续练'));
+  });
+  $('#bExportCsv').addEventListener('click',function(){
+    if(!S.blind.length){toast('还没有记录');return;}
+    var rows=[['日期','段落','人数','猜对率%','标签数','平均句长','备注']].concat(
+      S.blind.map(function(r){return [r.date,r.title,r.people,r.rate,r.tags,r.avg,r.note||''];}));
+    download('对白盲测记录-'+today()+'.csv',rows.map(function(row){return row.map(csvCell).join(',');}).join('\r\n'),'text/csv;charset=utf-8');
+    toast('CSV 已导出');
+  });
+  $('#bClearAll').addEventListener('click',function(){
+    if(!S.blind.length){toast('还没有记录');return;}
+    if(!confirm('确定清空全部盲测记录？此操作不可撤销。'))return;
+    S.blind=[];save();renderBlind();toast('记录已清空');
+  });
+
+  /* ---------- 进度 ---------- */
+  function countTrue(obj){
+    return Object.keys(obj||{}).filter(function(k){return !!obj[k];}).length;
+  }
+  function updateProgress(){
+    var r=countTrue(S.read),d=countTrue(S.drills),p=countTrue(S.plan);
+    var pct=Math.round((r+d+p)/20*100);
+    $('#statRead').textContent=r+'/6';
+    $('#statDrill').textContent=d+'/6';
+    $('#statBlind').textContent=S.blind.length;
+    $('#mainBar').style.width=pct+'%';
+    $('#topProgress').textContent=pct+'%';
+    $('#progressHint').textContent='教程 '+r+'/6 · 训练 '+d+'/6 · 周计划 '+p+'/8 · 盲测 '+S.blind.length+' 条。勾选即自动保存。';
+    $('#planBar').style.width=Math.round(p/8*100)+'%';
+    $('#planHint').textContent=p+' / 8 项';
+  }
+
+  /* ---------- 备份 ---------- */
+  $('#exportAll').addEventListener('click',function(){
+    download('对白训练-备份-'+today()+'.json',JSON.stringify(S,null,2),'application/json;charset=utf-8');
+    toast('备份已导出');
+  });
+  $('#importAll').addEventListener('click',function(){$('#importFile').click();});
+  $('#importFile').addEventListener('change',function(e){
+    var f=e.target.files&&e.target.files[0];
+    if(!f)return;
+    var reader=new FileReader();
+    reader.onload=function(){
+      try{
+        var o=JSON.parse(String(reader.result).replace(/^\ufeff/,''));
+        if(!o||typeof o!=='object'||Array.isArray(o))throw new Error('格式不对');
+        S=merge(o);
+        save();toast('导入成功，正在刷新');
+        setTimeout(function(){location.reload();},600);
+      }catch(err){toast('导入失败：不是有效的备份文件');}
+    };
+    reader.readAsText(f,'utf-8');
+    e.target.value='';
+  });
+  var DRILL_NAMES={
+    t1:'T1 真实对话转写',t2:'T2 去标签 + 盲测',t3:'T3 台词不变换三种基调',
+    t4:'T4 潜台词与限制轮数',t5:'T5 声音区分与遮名测试',t6:'T6 删 30% 与重写旧稿'
+  };
+  $('#exportMd').addEventListener('click',function(){
+    var out=['# 人物对白训练稿','','导出日期：'+today(),''];
+    Object.keys(DRILL_NAMES).forEach(function(k){
+      out.push('## '+DRILL_NAMES[k],'',(S.drafts[k]||'（未填写）'),'');
+    });
+    out.push('## 每周复盘','',(S.review.weekly||'（未填写）'),'');
+    out.push('---','','盲测记录：'+S.blind.length+' 条','');
+    S.blind.forEach(function(r){
+      out.push('- '+r.date+' '+r.title+' ｜ 猜对率 '+r.rate+'% ｜ 标签数 '+r.tags+' ｜ 平均句长 '+r.avg+(r.note?' ｜ '+r.note:''));
+    });
+    download('对白练习稿-'+today()+'.md',out.join('\n'),'text/markdown;charset=utf-8');
+    toast('练习稿已导出');
+  });
+  $('#resetAll').addEventListener('click',function(){
+    if(!confirm('确定清空全部进度（含练习稿与盲测记录）？建议先导出备份。'))return;
+    S=fresh();
+    save();toast('已清空，正在刷新');
+    setTimeout(function(){location.reload();},600);
+  });
+
+  /* ---------- 初始化 ---------- */
+  renderBlind();
+  updateProgress();
+  show(location.hash.slice(1)||'home');
+})();
+</script>
+</main>
+</body>
+</html>

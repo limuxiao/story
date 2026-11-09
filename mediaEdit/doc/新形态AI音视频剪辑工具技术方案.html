@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>新形态 AI 音视频剪辑工具 · 技术方案</title>
+<style>
+  :root {
+    --bg: #f7f8fb;
+    --surface: #ffffff;
+    --ink: #1e293b;
+    --ink-soft: #475569;
+    --line: #e2e8f0;
+    --brand: #4f46e5;
+    --brand-soft: #eef2ff;
+    --accent: #0ea5e9;
+    --ok: #16a34a;
+    --warn: #d97706;
+    --bad: #dc2626;
+    --code-bg: #0f172a;
+    --code-ink: #e2e8f0;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+  .hero {
+    background: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%);
+    color: #fff;
+    padding: 56px 40px 48px;
+  }
+  .hero h1 { margin: 0 0 12px; font-size: 30px; letter-spacing: 0.5px; }
+  .hero p { margin: 4px 0; opacity: 0.92; font-size: 15px; }
+  .hero .meta { margin-top: 18px; font-size: 13px; opacity: 0.85; }
+  .wrap { display: flex; max-width: 1280px; margin: 0 auto; }
+  nav.toc {
+    width: 250px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 28px 18px;
+    border-right: 1px solid var(--line);
+    background: var(--surface);
+  }
+  nav.toc h4 { font-size: 12px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 1px; margin: 18px 0 8px; }
+  nav.toc a { display: block; color: var(--ink-soft); text-decoration: none; padding: 5px 10px; border-radius: 6px; font-size: 13.5px; }
+  nav.toc a:hover { background: var(--brand-soft); color: var(--brand); }
+  main { flex: 1; padding: 36px 48px 80px; min-width: 0; }
+  section { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 28px 32px; margin-bottom: 26px; }
+  h2 { font-size: 22px; margin: 0 0 16px; padding-left: 12px; border-left: 4px solid var(--brand); }
+  h3 { font-size: 17px; margin: 24px 0 10px; color: var(--brand); }
+  h4 { font-size: 15px; margin: 18px 0 8px; color: var(--ink); }
+  p { margin: 10px 0; color: var(--ink-soft); }
+  ul, ol { color: var(--ink-soft); padding-left: 22px; }
+  li { margin: 6px 0; }
+  strong { color: var(--ink); }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .tag.ok { background: #dcfce7; color: var(--ok); }
+  .tag.warn { background: #fef3c7; color: var(--warn); }
+  .tag.bad { background: #fee2e2; color: var(--bad); }
+  .tag.info { background: var(--brand-soft); color: var(--brand); }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+  th, td { border: 1px solid var(--line); padding: 10px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--brand-soft); color: var(--brand); font-weight: 600; }
+  tr:nth-child(even) td { background: #fafbff; }
+  pre { background: var(--code-bg); color: var(--code-ink); padding: 16px 18px; border-radius: 10px; overflow-x: auto; font-size: 13px; line-height: 1.6; }
+  code { font-family: "SF Mono", "Fira Code", Consolas, monospace; }
+  p code, li code, td code { background: #eef2ff; color: var(--brand); padding: 1px 6px; border-radius: 4px; font-size: 13px; }
+  .note { border-left: 4px solid var(--accent); background: #f0f9ff; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 14px 0; font-size: 14px; }
+  .note.warn { border-color: var(--warn); background: #fffbeb; }
+  .note.ok { border-color: var(--ok); background: #f0fdf4; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 16px 0; }
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: 16px; background: #fff; }
+  .card h4 { margin: 0 0 6px; color: var(--brand); }
+  .card p { margin: 0; font-size: 13.5px; }
+  .arch { display: grid; gap: 12px; margin: 16px 0; }
+  .arch .row { display: flex; gap: 12px; align-items: stretch; flex-wrap: wrap; }
+  .box { border: 1px solid var(--brand); background: var(--brand-soft); border-radius: 10px; padding: 12px 16px; flex: 1; min-width: 160px; }
+  .box.dark { border-color: #0ea5e9; background: #e0f2fe; }
+  .box h4 { margin: 0 0 4px; font-size: 14px; }
+  .box p { margin: 0; font-size: 12.5px; }
+  .arrow { text-align: center; color: var(--ink-soft); font-weight: 600; }
+  .footer { text-align: center; color: var(--ink-soft); font-size: 13px; padding: 30px; }
+  @media (max-width: 900px) {
+    .wrap { flex-direction: column; }
+    nav.toc { width: 100%; height: auto; position: static; border-right: none; border-bottom: 1px solid var(--line); }
+    main { padding: 24px 18px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>新形态 AI 音视频剪辑工具 · 技术方案</h1>
+  <p>基于 Web 的轻量剪辑 / 合成引擎 + 大模型驱动的智能化剪辑平台</p>
+  <p>核心定位：浏览器内高效剪辑大文件（不爆内存）· 多视频同屏合成（模式 B）· AI 原生</p>
+  <div class="meta">文档版本 v1.0 · 编制日期 2026-11-04 · 范围：架构设计 / 技术选型 / MVP 规划</div>
+</div>
+
+<div class="wrap">
+  <nav class="toc">
+    <h4>目录</h4>
+    <a href="#c1">1. 项目背景</a>
+    <a href="#c2">2. 产品定位</a>
+    <a href="#c3">3. 功能介绍</a>
+    <a href="#c4">4. 技术方案选型</a>
+    <a href="#c5">5. 核心架构</a>
+    <a href="#c6">6. AI 集成设计</a>
+    <a href="#c7">7. 性能与降级策略</a>
+    <a href="#c8">8. 项目优势</a>
+    <a href="#c9">9. 可行性与风险</a>
+    <a href="#c10">10. MVP / Demo 规划</a>
+    <a href="#c11">11. 技术栈总览</a>
+  </nav>
+
+  <main>
+
+    <!-- 1 -->
+    <section id="c1">
+      <h2>1. 项目背景</h2>
+
+      <h3>1.1 行业趋势</h3>
+      <ul>
+        <li><strong>内容生产平民化</strong>：短视频、直播、数字人、在线课程等内容形态爆发，剪辑需求从专业团队下沉到海量普通创作者。</li>
+        <li><strong>Web / 移动端剪辑被验证</strong>：剪映、CapCut 证明了"轻量、模板化、低门槛"剪辑工具的巨大市场，且网页版正在成为重要入口。</li>
+        <li><strong>专业合成的标杆</strong>：Adobe After Effects（AE）代表了图层合成 / 关键帧动画 / 特效的天花板，但其门槛与重量级使其难以普及。</li>
+        <li><strong>大模型重新定义"剪辑"</strong>：多模态大模型（语音识别、视频理解、文生视频、对话式交互）正在把剪辑从"手动操作"推向"自然语言驱动 / 智能自动化"。</li>
+      </ul>
+
+      <h3>1.2 现有方案的核心痛点</h3>
+      <ul>
+        <li><strong>桌面软件</strong>（Premiere / AE）：安装重、跨平台差、协作与云化困难，对普通用户门槛高。</li>
+        <li><strong>纯 Web 剪辑器的内存死结</strong>：浏览器默认会把大文件整体加载进内存（尤其 <code>FileReader.readAsArrayBuffer</code> 或 ffmpeg.wasm 全量解码），一个 1GB 视频上轨即 +1GB 内存，几个片段就撑爆。</li>
+        <li><strong>闭源 SaaS</strong>（剪映网页版、VEED、Kapwing）：数据不自主、定制能力受限、能力边界由厂商决定。</li>
+        <li><strong>开源方案的两极</strong>：要么是"程序化生成"型（如 Remotion，用代码声明视频，适合模板而非自由剪辑），要么是"玩具 demo"型（处理能力仅限几十 MB），缺乏"自由剪辑 + 专业合成 + AI"三位一体的可二次开发基座。</li>
+      </ul>
+
+      <h3>1.3 我们要解决的问题与目标</h3>
+      <div class="note">
+        <strong>核心诉求</strong>：在浏览器内高效剪辑大体积音视频资源，<strong>绝不因素材体积导致内存爆炸</strong>；支持多轨时间轴、转场、特效与多视频同屏合成；并原生集成 AI 大模型能力，体验对标剪映的交互易用性与 AE 的合成表现力。
+      </div>
+      <p>
+        关键认知：<strong>"上轨"不等于"加载文件"</strong>。轨道只保存一份<strong>元数据描述（JSON）</strong>，引用后端生成的代理 MP4（前端 mp4box 解封装 + WebCodecs 窗口化解码）；网络层仅拉取体积小巧的代理文件，解码层只保留播放头附近帧、旧帧即 <code>close()</code> 释放，故内存恒定。原片仅在服务端导出时露面。这正是解决内存压力的根本路径。
+      </p>
+    </section>
+
+    <!-- 2 -->
+    <section id="c2">
+      <h2>2. 产品定位</h2>
+      <div class="grid">
+        <div class="card">
+          <h4>一句话定位</h4>
+          <p>一款 AI 优先、浏览器内运行的轻量音视频剪辑 / 合成工具，让普通人也能完成"接近 AE 表现力"的成片。</p>
+        </div>
+        <div class="card">
+          <h4>目标用户</h4>
+          <p>短视频创作者、运营、教育者、数字人 / 直播从业者，以及需要"快速出片 + 一定专业度"的中小团队。</p>
+        </div>
+        <div class="card">
+          <h4>差异化</h4>
+          <p>AI 原生驱动 + 模式 B 图层合成 + 数据可自主 / 可自托管，区别于普通 Web 剪辑器与闭源 SaaS。</p>
+        </div>
+        <div class="card">
+          <h4>非目标</h4>
+          <p>不追求"全功能替代 Premiere + AE"，而是做"足够好用 + AI 增强"的轻量专业工具。</p>
+        </div>
+      </div>
+      <div class="note ok">
+        战略判断：把期望从"做一个剪映 + AE"调整为"做一个 <strong>AI 驱动的、足够好用的轻量剪辑 / 合成工具</strong>"。后者真实可行且有竞争力；前者工程量与生态鸿沟不可及。AI 能力跑在后端推理，天然不压前端算力，是我们的结构性优势。
+      </div>
+    </section>
+
+    <!-- 3 -->
+    <section id="c3">
+      <h2>3. 功能介绍</h2>
+
+      <h3>3.1 剪辑核心</h3>
+      <ul>
+        <li><strong>多轨时间轴</strong>：视频轨、音频轨、图片轨、文字轨、特效轨，支持轨道增删、锁定、隐藏、层级排序。</li>
+        <li><strong>Clip 操作</strong>：裁剪、分割、吸附对齐、变速（含曲线）、音量、位移 / 缩放 / 旋转、透明度。</li>
+        <li><strong>关键帧动画</strong>：对任意可视属性（位置 / 缩放 / 透明度 / 滤镜参数）打关键帧，支持线性 / 贝塞尔插值。</li>
+        <li><strong>工程结构</strong>：以 JSON 描述序列（分辨率、帧率）、轨道、Clip（入出点、源引用、特效列表）、转场、关键帧。</li>
+      </ul>
+
+      <h3>3.2 合成与特效（模式 B）</h3>
+      <p>采用 <strong>模式 B（全帧合成）</strong>：每一帧把各视频源画面上传为 WebGL 纹理，在 shader 中按轨道层级与转场函数混合，再叠加特效，最后输出。支持多视频同屏合成。</p>
+      <table>
+        <thead><tr><th>特效类别</th><th>前端实现方式</th><th>典型示例</th></tr></thead>
+        <tbody>
+          <tr><td>调色 / 滤镜 / LUT</td><td>fragment shader 逐像素运算；LUT 用 3D 纹理 / 2D LUT 图采样</td><td>亮度 / 对比度 / 风格化滤镜</td></tr>
+          <tr><td>变换 / 3D 翻转 / 透视</td><td>vertex shader 变换顶点坐标 + 变换矩阵</td><td>旋转、缩放、翻页</td></tr>
+          <tr><td>转场</td><td>混合两纹理，系数由转场进度 <code>t</code> 驱动</td><td>溶解、滑动、翻页、遮罩擦除</td></tr>
+          <tr><td>抠像 / 蒙版</td><td>色键（按颜色距离剔除）/ mask 纹理 alpha 调制</td><td>绿幕抠像、局部蒙版</td></tr>
+          <tr><td>模糊 / 辉光 Bloom</td><td>多 pass：降采样 → 模糊 → 叠加</td><td>背景虚化、发光</td></tr>
+          <tr><td>扭曲 / 水波</td><td>噪声纹理做 UV 位移（displacement map）</td><td>水波、液化</td></tr>
+          <tr><td>粒子 / 光效</td><td>GPU 粒子系统（GPGPU）或预渲染 sprite 序列帧</td><td>烟花、光斑</td></tr>
+          <tr><td>文字 / 字幕</td><td>canvas 2D 渲染成纹理再合成，动画走 transform</td><td>标题、动态字幕</td></tr>
+        </tbody>
+      </table>
+      <p>溶解转场 shader 示例（直观说明前端如何落地）：</p>
+      <pre><code>uniform sampler2D fromTex;
+uniform sampler2D toTex;
+uniform float progress;     // 0..1，由转场区间时间插值得到
+uniform sampler2D noiseTex; // 噪声图决定溶解蔓延顺序
+varying vec2 vUv;
+void main() {
+  float n = texture2D(noiseTex, vUv).r;
+  float m = step(n, progress);
+  vec4 a = texture2D(fromTex, vUv);
+  vec4 b = texture2D(toTex, vUv);
+  gl_FragColor = mix(a, b, m);
+}</code></pre>
+
+      <h3>3.3 预览与导出</h3>
+      <ul>
+        <li><strong>实时预览</strong>：基于主时钟驱动渲染管线，配合性能降级策略保证流畅（详见第 7 章）。</li>
+        <li><strong>服务端导出（前端仅预览）</strong>：前端只负责实时预览（低保真 WebGL 合成），<strong>不参与导出</strong>；导出完全在服务端由 ffmpeg 按原片分辨率 + 工程 JSON 重新合成。预览与导出是两条独立渲染路径（一致性见第 9 章）。</li>
+      </ul>
+
+      <h3>3.4 AI 能力矩阵</h3>
+      <div class="grid">
+        <div class="card"><h4>自动字幕 / 转录</h4><p>语音识别生成时间轴字幕，支持多语种、校对。</p></div>
+        <div class="card"><h4>智能粗剪</h4><p>视频理解自动挑选精彩镜头、去除静默段，生成粗剪时间轴。</p></div>
+        <div class="card"><h4>智能抠像</h4><p>分割模型去背景，替代传统绿幕色键。</p></div>
+        <div class="card"><h4>文生特效 / 转场</h4><p>LLM 生成特效参数（或受限 shader），自然语言描述即出效果；生成代码须经校验 / 沙箱后再编译，避免注入与运行时错误。</p></div>
+        <div class="card"><h4>对话式编辑</h4><p>"把这段加速并加淡入"→ 解析为工程 JSON 操作。</p></div>
+        <div class="card"><h4>智能配音 TTS</h4><p>多音色配音，自动匹配语速与情绪。</p></div>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section id="c4">
+      <h2>4. 技术方案选型</h2>
+
+      <h3>4.1 选型原则</h3>
+      <p>没有单一"全家桶"开源项目能覆盖全部能力（前端编辑器 UI + 轨道 + WebGL 合成引擎 + 后端分片转码 + 服务端导出）。因此采用<strong>分层选型、拼装成基座</strong>的策略，每层挑选最成熟 / 最契合的组件。</p>
+
+      <h3>4.2 分层推荐表</h3>
+      <table>
+        <thead><tr><th>层</th><th>推荐基座</th><th>理由</th><th>二次开发改造点</th></tr></thead>
+        <tbody>
+          <tr><td>前端轨道 UI</td><td>自研（参考 OpenCut 交互）</td><td>无成熟"视频时间轴组件"可复用，必须深度定制模式 B</td><td>OpenCut 仅作交互与工程结构参考，谨慎直接 fork</td></tr>
+          <tr><td>WebGL 合成引擎（核心）</td><td><strong>PixiJS v8</strong></td><td>场景图 / 图层栈 + Filter 滤镜系统（自定义 shader）+ 渲染循环，最贴合模式 B</td><td>接主时钟渲染循环、把 WebCodecs 帧做成纹理、写自定义特效 Filter</td></tr>
+          <tr><td>解封装 / 解码</td><td><strong>mp4box</strong> + <strong>WebCodecs</strong></td><td>mp4box 解封装单文件 MP4，VideoDecoder / AudioDecoder 在 Worker 精确解码为 VideoFrame / AudioData，经 transfer 回主线程后上传纹理 / 送入 Web Audio；全程无 <code>&lt;video&gt;</code> / <code>&lt;audio&gt;</code> 元素</td><td>纯 WebCodecs 路线，彻底摒弃 <code>&lt;video&gt;</code> 元素（见 5.2）；解码放 Worker 且窗口化，只解码播放头附近帧</td></tr>
+          <tr><td>后端分片转码</td><td><strong>ffmpeg</strong>（fluent-ffmpeg）或 <strong>Cloudflare Stream / Mux</strong></td><td>ffmpeg 转代理 MP4 是事实标准；云服务"上传即转码"省去自建转码（输出同样为单文件 MP4 供前端 mp4box 解封装）</td><td>自托管需搭转码服务 + 对象存储；借云则只调 API 拿 URL</td></tr>
+          <tr><td>服务端导出</td><td><strong>ffmpeg</strong>（服务端）</td><td>前端仅预览、不参与导出；ffmpeg filter 链在服务端按工程 JSON 复现剪辑 / 转场 / 滤镜，输出原片分辨率成片</td><td>前端 shader 特效需有对应服务端实现（或自建 WebGL offscreen 渲染）；预览与导出一致性是后续专题（见 9.1）</td></tr>
+          <tr><td>工程数据结构</td><td>参考 <strong>Editly</strong> JSON schema</td><td>clips / layers / transitions 结构清晰，可直接借鉴</td><td>按特效 / 关键帧模型扩展</td></tr>
+          <tr><td>AI 推理</td><td>大模型 API（ASR / LLM / 分割 / TTS）</td><td>能力跑后端，前端只触发与展示</td><td>结果回写为工程 JSON 节点</td></tr>
+        </tbody>
+      </table>
+
+      <h3>4.3 关键说明</h3>
+      <div class="note warn">
+        <strong>OpenCut 适合"抄"不适合"fork 当基座"</strong>：它是 2025 年新兴开源项目（目标为开源版 CapCut），交互与工程结构值得逐行研究，但项目年轻、与自身后端耦合，直接二次开发风险高。
+      </div>
+      <div class="note warn">
+        <strong>前端只预览，导出全在服务端</strong>：预览走前端 WebGL 低保真合成（为实时性优化），导出由服务端 ffmpeg 按工程 JSON 重新合成（原片分辨率、精确）。两者渲染路径不同，<strong>特效 / 转场在预览与导出间的一致性、以及对大量常用特效转场的支持，是后续需专题讨论的议题（见 9.1）</strong>，本方案不假设"预览即导出"。
+      </div>
+
+      <h3>4.4 推荐组合</h3>
+      <table>
+        <thead><tr><th>组合</th><th>构成</th><th>适用</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag info">A</span> 借云服务（可选，非默认）</td><td>自研 UI + PixiJS + 云服务转码(Cloudflare Stream / Mux) + 前端 WebCodecs(mp4box) 解码 + 服务端 ffmpeg 导出</td><td>不碰转码后端、快速起步；但媒体走第三方云，<strong>数据自主优势不成立</strong>，故不作为默认</td></tr>
+          <tr><td><span class="tag ok">B</span> 全自托管（默认）</td><td>自研 UI + PixiJS + 后端 ffmpeg 切 MP4(代理) + 前端 WebCodecs(mp4box) 解码 + 后端 ffmpeg 导出</td><td><strong>数据 / 算力自主</strong>，契合核心差异化；工作量较 A 翻倍</td></tr>
+        </tbody>
+      </table>
+      <div class="note ok"><strong>首选建议</strong>：<strong>直接采用组合 B（全自托管），把数据自主作为优先</strong>。组合 A 云服务仅作为可选兜底（媒体会经第三方云，数据自主优势不成立）。合成引擎锁定 PixiJS；人力集中在最稀缺、最该自掌握的<strong>轨道 UI</strong> 与 <strong>WebGL 合成引擎</strong>。</div>
+    </section>
+
+    <!-- 5 -->
+    <section id="c5">
+      <h2>5. 核心架构</h2>
+
+      <h3>5.1 整体架构</h3>
+      <div class="arch">
+        <div class="row">
+          <div class="box"><h4>浏览器前端</h4><p>轨道 UI · PixiJS 合成引擎 · mp4box + WebCodecs(Worker) · 性能降级层</p></div>
+        </div>
+        <div class="arrow">↑ 工程 JSON / 指令　↓ 代理 MP4(mp4box 解封装) / 渲染结果</div>
+        <div class="row">
+          <div class="box dark"><h4>API 网关</h4><p>鉴权 · 工程存取 · 任务调度</p></div>
+          <div class="box dark"><h4>分片转码服务</h4><p>ffmpeg / Mux：上传即转代理 MP4 + 低码率代理</p></div>
+          <div class="box dark"><h4>AI 推理服务</h4><p>ASR / LLM / 分割 / TTS：结果回写工程 JSON</p></div>
+          <div class="box dark"><h4>导出合成服务</h4><p>ffmpeg / GPU：按原片 + JSON 精确合成</p></div>
+        </div>
+        <div class="arrow">↕ 对象存储（可自托管，如 MinIO 等 S3 兼容）+ CDN（可选）</div>
+      </div>
+
+      <h3>5.2 前端架构</h3>
+      <ul>
+        <li><strong>轨道 UI 层</strong>：时间轴、Clip、playhead、拖拽交互；只读写工程 JSON，不直接持有媒体。</li>
+        <li><strong>合成引擎层（PixiJS）</strong>：图层栈（Container）+ 自定义 Filter（shader）构成多 pass 管线；每个 Clip 对应输入纹理源。</li>
+        <li><strong>播放 / 解码层</strong>：mp4box 解封装单文件 MP4，WebCodecs 在 Worker 精确解码为 VideoFrame / AudioData，经 transfer 回主线程后上传纹理 / 送入 Web Audio；全程无 <code>&lt;video&gt;</code> / <code>&lt;audio&gt;</code> 元素，且按播放头窗口化解码（只解码当前窗口 + 预解码未来 1–2 秒）。</li>
+        <li><strong>主时钟与同步</strong>：单一播放头时间驱动所有轨道；每帧在各源上按播放头取对应 VideoFrame（窗口化解码、旧帧释放），超出解码窗口则触发重新解码校正。</li>
+        <li><strong>性能降级层</strong>：按设备能力调节分辨率 / 帧率 / 同屏解码路数（详见第 7 章）。</li>
+      </ul>
+
+      <h3>5.3 后端架构</h3>
+      <ul>
+        <li><strong>分片转码服务</strong>：上传后异步转码出低码率代理 MP4（供前端 mp4box 解封装 + WebCodecs 窗口化解码）；原片独立保存，仅导出时引用。</li>
+        <li><strong>AI 推理服务</strong>：异步任务队列，推理结果（字幕、粗剪、抠像蒙版、特效参数）回写为工程 JSON 节点。</li>
+        <li><strong>导出合成服务</strong>：读取工程 JSON + 原片，ffmpeg 复现剪辑 / 转场 / 滤镜，输出成片。</li>
+        <li><strong>对象存储（自托管优先）</strong>：分片 / 代理 / 原片 / 成片存于可自托管的对象存储（如 MinIO 等 S3 兼容），数据自主可控；CDN 为可选加速层。</li>
+      </ul>
+
+      <h3>5.4 数据流</h3>
+      <h4>工程 JSON（核心资产）</h4>
+      <pre><code>{
+  "sequence": { "width": 1920, "height": 1080, "fps": 30 },
+  "tracks": [
+    { "type": "video", "clips": [
+      { "sourceId": "vid_01",
+        "srcIn": 2.0, "srcOut": 8.0,
+        "timelineStart": 0.0,
+        "effects": [ { "type": "lut", "params": { "intensity": 0.8 } } ],
+        "transitions": [ { "type": "dissolve", "duration": 1.0 } ] }
+    ]},
+    { "type": "audio", "clips": [ /* ... */ ] }
+  ]
+}
+// Source 引用后端代理 MP4（前端 WebCodecs 解封装，URL 由自托管对象存储签发），原片仅在导出时引用
+{ "id": "vid_01", "previewUrl": "<storage>/mp4/vid_01/clip.mp4", "originalUrl": "<storage>/origin/vid_01.mp4" }</code></pre>
+      <h4>每帧渲染管线</h4>
+      <ol>
+        <li>主时钟推进到时间 <code>t</code></li>
+        <li>计算各 Clip 在 <code>t</code> 的可见性、入出点、转场进度</li>
+        <li>对各可见视频源：用 WebCodecs 取到对应时间的 VideoFrame，<code>copyExternalImageToTexture</code> / <code>texImage2D</code> 上传纹理</li>
+        <li>跑 shader 多 pass（图层底→顶 blend + 各特效 Filter）</li>
+        <li>最终帧输出屏幕 canvas</li>
+      </ol>
+
+      <h3>5.5 内存 / 性能架构</h3>
+      <ul>
+        <li><strong>窗口化解码</strong>：代理 MP4 体积小，且前端仅解码播放头附近帧、旧帧即 <code>close()</code> 释放，内存恒定（非整段全量解码）。</li>
+        <li><strong>代理</strong>：预览用低码率 / 低分辨率，原片从不进浏览器。</li>
+        <li><strong>显存管理</strong>：纹理池 / FBO 复用，及时 <code>close()</code> / <code>delete()</code>；超限即降分辨率。</li>
+        <li><strong>图片不分片</strong>：直接加载；超大图（&gt; 纹理上限）降级分辨率或分块。</li>
+      </ul>
+    </section>
+
+    <!-- 6 -->
+    <section id="c6">
+      <h2>6. AI 集成设计</h2>
+
+      <h3>6.1 接入范式</h3>
+      <p>所有 AI 能力遵循统一范式：<strong>前端触发 → 后端异步推理 → 结果回写为工程 JSON 节点</strong>。AI 不占用前端算力，不破坏实时预览体验。</p>
+
+      <h3>6.2 能力清单与对接</h3>
+      <table>
+        <thead><tr><th>能力</th><th>输入</th><th>后端处理</th><th>回写产物</th></tr></thead>
+        <tbody>
+          <tr><td>自动字幕</td><td>音频 / 视频</td><td>ASR 转录</td><td>字幕 Clip（带时间轴）</td></tr>
+          <tr><td>智能粗剪</td><td>视频</td><td>内容理解 / 镜头打分</td><td>裁剪后的 Clip 序列</td></tr>
+          <tr><td>智能抠像</td><td>视频 / 图片</td><td>分割模型</td><td>蒙版 / 扣像特效节点</td></tr>
+          <tr><td>文生特效</td><td>自然语言</td><td>LLM → 受限参数 / shader（经校验沙箱）</td><td>自定义特效 Filter 配置</td></tr>
+          <tr><td>对话式编辑</td><td>自然语言指令</td><td>LLM → 操作序列</td><td>工程 JSON 变更</td></tr>
+          <tr><td>智能配音</td><td>文本</td><td>TTS</td><td>音频 Clip</td></tr>
+        </tbody>
+      </table>
+
+      <h3>6.3 不破坏实时预览的设计</h3>
+      <ul>
+        <li><strong>异步 + 占位</strong>：AI 任务提交后，时间轴先显示占位 Clip，结果就绪后无缝替换。</li>
+        <li><strong>结果即数据</strong>：AI 产出是工程 JSON 节点，预览管线无需 special case，与手动编辑产物一致。</li>
+        <li><strong>可撤销</strong>：所有 AI 修改进入同一套 undo / redo 栈。</li>
+      </ul>
+    </section>
+
+    <!-- 7 -->
+    <section id="c7">
+      <h2>7. 性能与降级策略</h2>
+      <div class="note warn"><strong>重要认知</strong>：模式 B 预览<strong>必然</strong>存在卡顿风险（多路解码 + 多 pass 填充率 + 纹理带宽 + 显存）。专业软件（PR / AE）也靠降级策略化解，预览只为"判断效果对不对"，不为交付；导出走服务端。</div>
+
+      <h3>7.1 卡顿来源</h3>
+      <table>
+        <thead><tr><th>源头</th><th>原因</th><th>严重度</th></tr></thead>
+        <tbody>
+          <tr><td>多路解码</td><td>同屏 N 路 1080p 实时解码抢算力（WebCodecs 多路亦然，故需窗口化 + Worker）</td><td><span class="tag bad">最大</span></td></tr>
+          <tr><td>填充率</td><td>多 pass 全屏像素累加，1080p × 10 pass 每帧约 2 亿像素运算</td><td><span class="tag warn">高</span></td></tr>
+          <tr><td>纹理上传带宽</td><td>多路视频每帧 texImage2D 上传 GPU</td><td><span class="tag warn">高</span></td></tr>
+          <tr><td>显存</td><td>多纹理 + 多 FBO + 特效中间结果</td><td><span class="tag warn">高</span></td></tr>
+          <tr><td>特效本身重</td><td>模糊 / Bloom / 粒子多趟</td><td><span class="tag info">中</span></td></tr>
+          <tr><td>JS 主线程 + 同步抖动</td><td>图层遍历 / 插值阻塞 rAF；解码跟不上播放</td><td><span class="tag info">中</span></td></tr>
+        </tbody>
+      </table>
+
+      <h3>7.2 性能三旋钮</h3>
+      <pre><code>预览性能 = f(分辨率, 帧率, 同屏路数)
+            480p/720p   15-30fps   2-4 路
+// 设备越弱，三旋钮向左拧；导出全拧到最大（原分辨率/源帧率/全路数），但导出走服务端</code></pre>
+
+      <h3>7.3 分级策略清单</h3>
+      <ul>
+        <li><strong>代理分辨率</strong>：预览跑 480p / 720p，导出原分辨率（最有效）。</li>
+        <li><strong>动态帧率 / 跳帧</strong>：scrub 时降到 15–24fps；实时跟不上丢中间帧保流畅。</li>
+        <li><strong>限制同屏解码路数</strong>：仅保留时间窗内可见源解码，出窗释放；用 WebCodecs 精确取帧。</li>
+        <li><strong>特效分级（LOD）</strong>：预览用廉价近似，导出用精确版。</li>
+        <li><strong>选择性渲染</strong>：静态图层缓存位图不每帧重合成；仅变化区域重跑 shader。</li>
+        <li><strong>显存预算 + 资源复用</strong>：纹理池 / FBO 复用，监控超限降分辨率。</li>
+        <li><strong>解码放 Worker</strong>：WebCodecs 在 worker 解，不阻塞主线程；预解码未来 1–2 秒帧。</li>
+      </ul>
+    </section>
+
+    <!-- 8 -->
+    <section id="c8">
+      <h2>8. 项目优势</h2>
+      <div class="grid">
+        <div class="card"><h4>内存安全</h4><p>代理 + 窗口化解码 + 降级，大文件上轨不再 +1GB 内存，几个片段也不撑爆。</p></div>
+        <div class="card"><h4>AI 原生</h4><p>AI 跑后端推理，前端仅触发 / 展示，不压算力，结构性区别于传统编辑器。</p></div>
+        <div class="card"><h4>数据自主</h4><p>可自托管（组合 B），工程 / 素材 / 成片全可控，不受 SaaS 边界限制。</p></div>
+        <div class="card"><h4>模式 B 护城河</h4><p>多数 Web 剪辑器仅模式 A；多视频同屏合成 + 自定义 shader 特效形成区隔。</p></div>
+        <div class="card"><h4>数据自主优先</h4><p>默认全自托管（组合 B），数据 / 算力完全自主；云服务仅作可选兜底，技术债务可控。</p></div>
+        <div class="card"><h4>跨平台</h4><p>纯浏览器入口，天然跨端，协作与云化成本低。</p></div>
+      </div>
+    </section>
+
+    <!-- 9 -->
+    <section id="c9">
+      <h2>9. 可行性与风险</h2>
+      <table>
+        <thead><tr><th>目标</th><th>判定</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>浏览器不爆内存预览大文件</td><td><span class="tag ok">可行</span></td><td>代理 + 窗口化解码 + 降级（路线可行；demo 当前为全量解码，长素材待窗口化后才严格成立）</td></tr>
+          <tr><td>多轨剪辑 + 转场 + 基础特效</td><td><span class="tag ok">可行</span></td><td>PixiJS + shader 覆盖核心子集</td></tr>
+          <tr><td>集成 AI 大模型</td><td><span class="tag ok">可行且优势</span></td><td>AI 后端推理，契合架构</td></tr>
+          <tr><td>类剪映的"好用度"</td><td><span class="tag warn">长期工程</span></td><td>靠交互打磨 + 素材生态，非架构定即成的</td></tr>
+          <tr><td>类 AE 深度合成</td><td><span class="tag warn">部分可行</span></td><td>做"轻量 AE"可行，替代 AE 不可行</td></tr>
+          <tr><td>全面对标剪映 + AE</td><td><span class="tag bad">不现实</span></td><td>工程量 / 生态不可及</td></tr>
+        </tbody>
+      </table>
+      <h3>9.1 主要风险与缓解</h3>
+      <ul>
+        <li><strong>工程量巨大</strong> → 聚焦差异化（AI + 模式 B），不做全功能对标。</li>
+        <li><strong>特效资产生态不足</strong> → 优先内置高频特效 + AI 生成特效，降低对素材库的依赖。</li>
+        <li><strong>复杂工程性能</strong> → 持续调优降级策略，导出走服务端兜底。</li>
+        <li><strong>AI 推理成本 / 时延</strong> → 异步任务 + 占位，不阻塞编辑流；热点能力缓存。</li>
+        <li><strong>浏览器能力边界</strong> → WebGL 精度 / 编解码 / 移动端性能设下限，必要时引导客户端。</li>
+        <li><strong>预览 ≠ 导出（一致性待专题）</strong> → 前端预览走 WebGL 低保真合成，导出走服务端 ffmpeg，两条渲染路径不同；<strong>特效 / 转场在两端的一致性、以及对大量常用特效转场的支持，是后续需专题讨论的议题</strong>，本方案不假设"预览即导出"。</li>
+      </ul>
+    </section>
+
+    <!-- 10 -->
+    <section id="c10">
+      <h2>10. MVP / Demo 规划</h2>
+      <p>目标：构建一个<strong>中小型体量 demo</strong>，验证核心功能与交互是否成立，而非一次性做全。采用<strong>组合 B（全自托管）</strong>（PixiJS + 后端 ffmpeg 转代理 + 前端 WebCodecs(mp4box) 解码 + 服务端 ffmpeg 导出），以数据自主为先。</p>
+
+      <h3>10.1 Demo 验证范围（建议）</h3>
+      <table>
+        <thead><tr><th>模块</th><th>Demo 内容</th><th>验证目标</th></tr></thead>
+        <tbody>
+          <tr><td>分片预览</td><td>上传视频 → 后端转 MP4(代理) → 前端 mp4box + WebCodecs 窗口化解码 → 时间轴拖拽播放</td><td>大文件不爆内存（依赖窗口化解码，非整段全量解码）</td></tr>
+          <tr><td>多轨剪辑</td><td>视频轨 + 音频轨，裁剪 / 分割 / 对齐</td><td>轨道交互成立</td></tr>
+          <tr><td>模式 B 合成</td><td>两视频同屏画中画 + 一个转场</td><td>WebGL 合成管线跑通</td></tr>
+          <tr><td>基础特效</td><td>调色 Filter + 文字图层</td><td>自定义 shader 可扩展</td></tr>
+          <tr><td>降级策略</td><td>质量滑块（流畅↔精确）</td><td>三旋钮兜底有效</td></tr>
+          <tr><td>AI 亮点</td><td>自动字幕 或 对话式编辑（二选一先做）</td><td>AI 接入范式可行</td></tr>
+          <tr><td>导出</td><td>服务端 ffmpeg 按 JSON 出片</td><td>预览 ≠ 导出，导出链路接通（两端一致性为后续专题）</td></tr>
+        </tbody>
+      </table>
+
+      <h3>10.2 里程碑（建议）</h3>
+      <ol>
+        <li><strong>阶段一（骨架）</strong>：工程 JSON schema + 轨道 UI + WebCodecs(mp4box) 单视频预览（无 <code>&lt;video&gt;</code>）。</li>
+        <li><strong>阶段二（合成）</strong>：PixiJS 合成引擎 + 主时钟 + 一个转场 + 调色 Filter。</li>
+        <li><strong>阶段三（降级 + 导出）</strong>：质量旋钮 + 服务端 ffmpeg 导出。</li>
+        <li><strong>阶段四（AI）</strong>：接入一个 AI 能力（自动字幕 / 对话式编辑）回写 JSON。</li>
+      </ol>
+    </section>
+
+    <!-- 11 -->
+    <section id="c11">
+      <h2>11. 技术栈总览</h2>
+      <table>
+        <thead><tr><th>维度</th><th>选型</th></tr></thead>
+        <tbody>
+          <tr><td>前端框架</td><td>React / Vue（推荐 React，生态与 PixiJS 配合好）</td></tr>
+          <tr><td>轨道 UI</td><td>自研（参考 OpenCut 交互）</td></tr>
+          <tr><td>合成引擎</td><td>PixiJS v8</td></tr>
+          <tr><td>分片播放</td><td>mp4box（解封装单文件 MP4）</td></tr>
+          <tr><td>精确解码</td><td>WebCodecs（Worker 内，纯解码路径，无 <code>&lt;video&gt;</code>）</td></tr>
+          <tr><td>转场 / 特效 shader</td><td>自研 GLSL + GL Transitions 资源</td></tr>
+          <tr><td>后端转码</td><td>ffmpeg（自托管；可后续接 Cloudflare Stream / Mux 作为可选云兜底）</td></tr>
+          <tr><td>导出</td><td>ffmpeg（服务端 filter 链；前端不参与导出）</td></tr>
+          <tr><td>存储 / CDN</td><td>对象存储（S3 兼容，可自托管如 MinIO）+ CDN（可选）</td></tr>
+          <tr><td>AI</td><td>ASR / LLM / 分割 / TTS（大模型 API）</td></tr>
+          <tr><td>工程结构参考</td><td>Editly JSON schema</td></tr>
+        </tbody>
+      </table>
+      <div class="note ok">
+        <strong>结语</strong>：方案在技术上可行、路径清晰。AI 集成与模式 B 合成是我们结构性优势与差异化支点。<strong>默认全自托管（组合 B），数据自主优先</strong>。下一步落地一个中小型 demo，先验证"分片预览 + 模式 B 合成 + 降级 + 一个 AI 能力 + 服务端导出"的闭环，再逐步加深特效与合成深度。
+      </div>
+    </section>
+
+    <div class="footer">新形态 AI 音视频剪辑工具 · 技术方案 v1.0 · 本文档为内部架构设计参考</div>
+  </main>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,3272 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover" />
+    <title>森林弹射 · Paper Wings</title>
+    <!--
+  免费素材来源（均已核实许可，单文件模式下默认使用内置程序化绘制，避免外链失效）：
+  · Kenney Nature Kit        https://kenney.nl/assets/nature-kit        CC0（树木 / 岩石 / 植被）
+  · Kenney Foliage Sprites   https://kenney.nl/assets/foliage-sprites   CC0（2D 叶片）
+  · Kenney UI Pack           https://kenney.nl/assets/ui-pack            CC0（按钮 / HUD）
+  · Kenney Impact Sounds     https://kenney.nl/assets/impact-sounds      CC0（弹跳 / 落地）
+  · Kenney Interface Sounds  https://kenney.nl/assets/interface-sounds   CC0（金币 / 升级）
+  · OpenGameArt SunnyLand - Forest https://opengameart.org/content/sunnyland-forest  CC0（森林视差背景）
+  · Google Fonts Nunito / Baloo 2  https://fonts.google.com/              SIL OFL 1.1（本页已引用）
+
+  若要换成真实素材：把下载好的文件放到同目录，填入下方 ASSETS 里的 URL 即可。
+  图片字段留空 = 使用内置 Canvas 绘制；音效字段留空 = 使用 Web Audio 合成音。
+-->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap"
+      rel="stylesheet" />
+    <style>
+      :root {
+        --cream: #f7f2e4;
+        --cream-dim: #cfc7b2;
+        --deep: #0b1e16;
+        --glass: rgba(11, 32, 22, 0.76);
+        --moss: #347d52;
+        --leaf: #62bd79;
+        --mint: #b3e9bd;
+        --gold: #f7c45b;
+        --gold-deep: #b9761c;
+        --stroke: rgba(196, 232, 196, 0.17);
+        --font:
+          "Baloo 2", "Nunito", "PingFang SC", "Hiragino Sans GB",
+          "Microsoft YaHei", sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #0b1e16;
+      }
+      body {
+        font-family: var(--font);
+        color: var(--cream);
+        -webkit-font-smoothing: antialiased;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      #app {
+        position: fixed;
+        inset: 0;
+        overflow: hidden;
+      }
+      canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      #bg {
+        z-index: 0;
+      }
+      #game {
+        z-index: 1;
+        touch-action: none;
+        cursor: grab;
+      }
+      #game.aiming {
+        cursor: grabbing;
+      }
+      .vignette {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        pointer-events: none;
+        box-shadow: inset 0 0 230px 80px rgba(5, 17, 11, 0.6);
+      }
+      #flash {
+        position: absolute;
+        inset: 0;
+        z-index: 6;
+        pointer-events: none;
+        opacity: 0;
+        background: radial-gradient(
+          circle at 50% 45%,
+          rgba(255, 224, 140, 0.55),
+          rgba(255, 224, 140, 0) 62%
+        );
+      }
+      #flash.go {
+        animation: flashAnim 0.9s ease-out forwards;
+      }
+      @keyframes flashAnim {
+        0% {
+          opacity: 0.85;
+        }
+        100% {
+          opacity: 0;
+        }
+      }
+
+      #hud {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        pointer-events: none;
+      }
+      .topbar {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        padding: 18px 22px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-shadow: 0 2px 18px rgba(0, 0, 0, 0.55);
+      }
+      .brand-mark {
+        width: 42px;
+        height: 42px;
+        border-radius: 13px;
+        display: grid;
+        place-items: center;
+        font-size: 21px;
+        color: #12301f;
+        background: linear-gradient(145deg, #ffe9a8, var(--gold));
+        box-shadow:
+          0 8px 22px rgba(0, 0, 0, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      }
+      .brand-title {
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        line-height: 1.1;
+      }
+      .brand-sub {
+        font-size: 9px;
+        letter-spacing: 0.24em;
+        color: var(--mint);
+        opacity: 0.8;
+        margin-top: 3px;
+      }
+      .stats {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      .pill {
+        pointer-events: auto;
+        min-width: 84px;
+        padding: 7px 13px 8px;
+        border-radius: 14px;
+        background: var(--glass);
+        border: 1px solid var(--stroke);
+        -webkit-backdrop-filter: blur(14px);
+        backdrop-filter: blur(14px);
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.24);
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+      }
+      .pill b {
+        font-size: 19px;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+        font-variant-numeric: tabular-nums;
+      }
+      .pill small {
+        font-size: 10px;
+        color: var(--cream-dim);
+        letter-spacing: 0.06em;
+      }
+      .coin-pill b {
+        color: var(--gold);
+      }
+      .coin-dot {
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        flex: none;
+        align-self: center;
+        background: radial-gradient(
+          circle at 32% 28%,
+          #fff3c4,
+          var(--gold) 58%,
+          var(--gold-deep)
+        );
+        box-shadow: 0 0 10px rgba(247, 196, 91, 0.6);
+      }
+      .pill.bump {
+        animation: bump 0.45s cubic-bezier(0.2, 1.6, 0.4, 1);
+      }
+      @keyframes bump {
+        0% {
+          transform: scale(1);
+        }
+        45% {
+          transform: scale(1.14);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      .shop {
+        position: absolute;
+        right: 20px;
+        top: 96px;
+        width: 286px;
+        pointer-events: auto;
+        background: var(--glass);
+        border: 1px solid var(--stroke);
+        border-radius: 22px;
+        padding: 15px 14px 13px;
+        -webkit-backdrop-filter: blur(18px);
+        backdrop-filter: blur(18px);
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.34);
+      }
+      .shop-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 3px 12px;
+        margin-bottom: 11px;
+        border-bottom: 1px solid rgba(196, 232, 196, 0.12);
+      }
+      .shop-head span:first-child {
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+      }
+      .shop-head-sub {
+        font-size: 9px;
+        letter-spacing: 0.2em;
+        color: var(--mint);
+        opacity: 0.7;
+      }
+      .up-card {
+        border: 1px solid rgba(196, 232, 196, 0.1);
+        border-radius: 16px;
+        padding: 11px 11px 10px;
+        margin-bottom: 9px;
+        background: rgba(255, 255, 255, 0.035);
+        transition:
+          border-color 0.25s,
+          background 0.25s;
+      }
+      .up-card:hover {
+        border-color: rgba(196, 232, 196, 0.28);
+        background: rgba(255, 255, 255, 0.06);
+      }
+      .up-card.last {
+        margin-bottom: 0;
+      }
+      .up-row {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+      .up-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 11px;
+        flex: none;
+        display: grid;
+        place-items: center;
+        font-size: 18px;
+        color: #12301f;
+        background: linear-gradient(
+          145deg,
+          var(--c),
+          rgba(255, 255, 255, 0.45)
+        );
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      }
+      .up-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .up-name {
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+      }
+      .up-desc {
+        font-size: 10px;
+        color: var(--cream-dim);
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .up-tier {
+        font-size: 9px;
+        letter-spacing: 0.08em;
+        color: var(--mint);
+        text-align: right;
+        line-height: 1.35;
+        white-space: nowrap;
+      }
+      .up-tier b {
+        display: block;
+        font-size: 17px;
+        color: var(--cream);
+        font-weight: 800;
+      }
+      .pips {
+        display: flex;
+        gap: 5px;
+        margin: 10px 1px 9px;
+      }
+      .pip {
+        height: 9px;
+        flex: 1;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        transition:
+          background 0.3s,
+          box-shadow 0.3s;
+      }
+      .pip.on {
+        background: linear-gradient(180deg, #ffe8a6, var(--gold));
+        border-color: rgba(255, 225, 150, 0.6);
+        box-shadow: 0 0 9px rgba(247, 196, 91, 0.45);
+      }
+      .pips.ready .pip:not(.on) {
+        border-color: rgba(247, 196, 91, 0.5);
+      }
+      .mult-note {
+        font-size: 10px;
+        color: var(--cream-dim);
+        margin: 10px 1px 9px;
+        letter-spacing: 0.02em;
+      }
+      .mult-note b {
+        color: var(--gold);
+        font-size: 12px;
+      }
+      .up-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .up-effect {
+        font-size: 10px;
+        color: var(--mint);
+        opacity: 0.9;
+      }
+      .buy-btn {
+        pointer-events: auto;
+        flex: none;
+        min-width: 94px;
+        padding: 7px 10px;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        cursor: pointer;
+        font-family: var(--font);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        color: #16301f;
+        background: linear-gradient(145deg, #ffe6a0, var(--gold));
+        box-shadow: 0 5px 14px rgba(0, 0, 0, 0.22);
+        transition:
+          transform 0.15s,
+          filter 0.2s;
+      }
+      .buy-btn:hover:not(:disabled) {
+        filter: brightness(1.08);
+        transform: translateY(-1px);
+      }
+      .buy-btn:active:not(:disabled) {
+        transform: scale(0.96);
+      }
+      .buy-btn:disabled {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(247, 242, 228, 0.42);
+        border-color: rgba(255, 255, 255, 0.09);
+        box-shadow: none;
+        cursor: not-allowed;
+      }
+      .shop-hint {
+        font-size: 9.5px;
+        line-height: 1.6;
+        color: var(--cream-dim);
+        opacity: 0.75;
+        padding: 9px 3px 0;
+      }
+
+      .bottom {
+        position: absolute;
+        left: 22px;
+        bottom: 20px;
+        width: min(430px, calc(100vw - 350px));
+      }
+      .power-box {
+        background: var(--glass);
+        border: 1px solid var(--stroke);
+        border-radius: 16px;
+        padding: 11px 14px;
+        -webkit-backdrop-filter: blur(14px);
+        backdrop-filter: blur(14px);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+      }
+      .power-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        color: var(--mint);
+        margin-bottom: 8px;
+      }
+      .power-top b {
+        font-size: 13px;
+        color: var(--cream);
+        letter-spacing: 0.02em;
+        font-variant-numeric: tabular-nums;
+      }
+      .power-track {
+        height: 11px;
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.34);
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      #powerFill {
+        height: 100%;
+        width: 0%;
+        border-radius: 8px;
+        background: linear-gradient(90deg, var(--leaf), #d9d85a 55%, #f0873f);
+        transition: width 0.06s linear;
+        box-shadow: 0 0 14px rgba(216, 216, 90, 0.4);
+      }
+      .hint {
+        margin-top: 10px;
+        font-size: 11px;
+        line-height: 1.7;
+        color: var(--cream);
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+      }
+      .hint kbd {
+        font-family: var(--font);
+        font-size: 10px;
+        padding: 1px 6px;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.14);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+      }
+      .actions {
+        display: flex;
+        gap: 7px;
+        margin-top: 11px;
+        pointer-events: auto;
+        flex-wrap: wrap;
+      }
+      .btn {
+        pointer-events: auto;
+        padding: 8px 14px;
+        border-radius: 11px;
+        cursor: pointer;
+        font-family: var(--font);
+        font-size: 11.5px;
+        font-weight: 800;
+        letter-spacing: 0.03em;
+        color: var(--cream);
+        background: rgba(255, 255, 255, 0.09);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        transition:
+          background 0.2s,
+          transform 0.15s;
+      }
+      .btn:hover {
+        background: rgba(255, 255, 255, 0.18);
+      }
+      .btn:active {
+        transform: scale(0.96);
+      }
+      .btn.primary {
+        color: #16301f;
+        background: linear-gradient(145deg, #ffe6a0, var(--gold));
+        border-color: transparent;
+      }
+      .btn.primary:hover {
+        filter: brightness(1.08);
+      }
+      .credits {
+        position: absolute;
+        right: 20px;
+        bottom: 16px;
+        font-size: 9px;
+        letter-spacing: 0.06em;
+        color: rgba(247, 242, 228, 0.5);
+        text-align: right;
+        line-height: 1.7;
+        pointer-events: auto;
+      }
+      .credits a {
+        color: rgba(247, 242, 228, 0.72);
+        text-decoration: none;
+        border-bottom: 1px dotted rgba(247, 242, 228, 0.4);
+      }
+      .credits a:hover {
+        color: var(--gold);
+      }
+
+      .modal {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        pointer-events: auto;
+        background: rgba(5, 16, 11, 0.52);
+        -webkit-backdrop-filter: blur(6px);
+        backdrop-filter: blur(6px);
+      }
+      .modal.show {
+        display: flex;
+        animation: fadeIn 0.28s ease-out;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      .modal-card {
+        width: min(420px, 100%);
+        border-radius: 26px;
+        padding: 26px 26px 22px;
+        text-align: center;
+        background: linear-gradient(
+          160deg,
+          rgba(22, 54, 38, 0.96),
+          rgba(9, 28, 20, 0.97)
+        );
+        border: 1px solid rgba(196, 232, 196, 0.2);
+        box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+        animation: popIn 0.4s cubic-bezier(0.2, 1.4, 0.4, 1);
+      }
+      @keyframes popIn {
+        from {
+          transform: scale(0.88) translateY(14px);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1) translateY(0);
+          opacity: 1;
+        }
+      }
+      .modal-eyebrow {
+        font-size: 9px;
+        letter-spacing: 0.28em;
+        color: var(--mint);
+        opacity: 0.85;
+      }
+      .modal-big {
+        font-size: 58px;
+        font-weight: 800;
+        line-height: 1.05;
+        margin: 10px 0 2px;
+        color: var(--cream);
+        font-variant-numeric: tabular-nums;
+        text-shadow: 0 6px 30px rgba(0, 0, 0, 0.4);
+      }
+      .modal-big span {
+        font-size: 22px;
+        color: var(--mint);
+        margin-left: 4px;
+      }
+      .modal-label {
+        font-size: 11px;
+        color: var(--cream-dim);
+        letter-spacing: 0.12em;
+      }
+      .reward {
+        margin: 20px 0 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--gold);
+      }
+      .reward .coin-dot {
+        width: 19px;
+        height: 19px;
+      }
+      .record {
+        display: inline-block;
+        margin: 6px 0 0;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        color: #173020;
+        background: linear-gradient(145deg, #ffe9a8, var(--gold));
+      }
+      .record.hidden {
+        display: none;
+      }
+      .modal-tip {
+        font-size: 11px;
+        color: var(--cream-dim);
+        line-height: 1.8;
+        margin: 16px 0 20px;
+      }
+      .modal-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+      }
+      .modal-actions .btn {
+        flex: 1;
+        padding: 11px 10px;
+        font-size: 12px;
+      }
+      .help-card {
+        text-align: left;
+        width: min(480px, 100%);
+      }
+      .help-card h2 {
+        margin: 8px 0 14px;
+        font-size: 24px;
+        font-weight: 800;
+      }
+      .help-row {
+        display: flex;
+        gap: 10px;
+        padding: 9px 0;
+        border-bottom: 1px solid rgba(196, 232, 196, 0.1);
+        font-size: 12px;
+        line-height: 1.6;
+        color: var(--cream-dim);
+      }
+      .help-row b {
+        color: var(--cream);
+        min-width: 78px;
+        flex: none;
+        font-size: 12px;
+      }
+      .help-src {
+        font-size: 10.5px;
+        line-height: 1.9;
+        color: var(--cream-dim);
+        margin-top: 16px;
+      }
+      .help-src a {
+        color: var(--mint);
+        text-decoration: none;
+        border-bottom: 1px dotted rgba(179, 233, 189, 0.5);
+      }
+      .help-src a:hover {
+        color: var(--gold);
+      }
+
+      #toast {
+        position: absolute;
+        z-index: 7;
+        left: 50%;
+        top: 96px;
+        transform: translate(-50%, -14px);
+        opacity: 0;
+        pointer-events: none;
+        padding: 10px 20px;
+        border-radius: 14px;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+        color: #173020;
+        background: linear-gradient(145deg, #fff0bd, var(--gold));
+        box-shadow: 0 14px 38px rgba(0, 0, 0, 0.35);
+        transition:
+          opacity 0.25s,
+          transform 0.25s;
+      }
+      #toast.show {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+      #shopToggle {
+        display: none;
+      }
+
+      @media (max-width: 900px) {
+        .topbar {
+          padding: 12px;
+        }
+        .brand-title {
+          font-size: 16px;
+        }
+        .brand-sub {
+          display: none;
+        }
+        .brand-mark {
+          width: 34px;
+          height: 34px;
+          font-size: 17px;
+          border-radius: 10px;
+        }
+        .pill {
+          min-width: 66px;
+          padding: 5px 9px 6px;
+        }
+        .pill b {
+          font-size: 15px;
+        }
+        .pill small {
+          font-size: 9px;
+        }
+        .shop {
+          display: none;
+          top: auto;
+          bottom: 150px;
+          left: 12px;
+          right: 12px;
+          width: auto;
+          max-height: 52vh;
+          overflow-y: auto;
+        }
+        .shop.open {
+          display: block;
+        }
+        #shopToggle {
+          display: inline-block;
+        }
+        .bottom {
+          left: 12px;
+          right: 12px;
+          bottom: 12px;
+          width: auto;
+        }
+        .credits {
+          display: none;
+        }
+        .hint {
+          font-size: 10px;
+        }
+        .modal-big {
+          font-size: 46px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="bg" aria-hidden="true"></canvas>
+      <canvas id="game" aria-label="森林弹射游戏画面"></canvas>
+      <div class="vignette" aria-hidden="true"></div>
+
+      <div id="hud">
+        <header class="topbar">
+          <div class="brand">
+            <div class="brand-mark">&#9992;</div>
+            <div>
+              <div class="brand-title">森林弹射 · Paper Wings</div>
+              <div class="brand-sub">SLING · INTO THE WOODS</div>
+            </div>
+          </div>
+          <div class="stats">
+            <div class="pill coin-pill" id="coinPill">
+              <span class="coin-dot"></span><b id="coinVal">0</b
+              ><small>金币</small>
+            </div>
+            <div class="pill"><b id="bestVal">0</b><small>最佳 m</small></div>
+            <div class="pill"><b id="distVal">0</b><small>本次 m</small></div>
+          </div>
+        </header>
+
+        <aside class="shop" id="shop"></aside>
+
+        <div class="bottom">
+          <div class="power-box">
+            <div class="power-top">
+              <span>拉伸力度 / POWER</span><b id="powerText">0% · 0°</b>
+            </div>
+            <div class="power-track"><div id="powerFill"></div></div>
+          </div>
+          <p class="hint" id="hint">
+            按住画面 <b>向左下方拖动</b> 拉伸弹弓，松手后纸飞机向右飞出 · 或按住
+            <kbd>空格</kbd> 蓄力 · <kbd>V</kbd> 切换视角
+          </p>
+          <div class="actions">
+            <button class="btn primary" id="againBtn" type="button">
+              &#8635; 重新架机
+            </button>
+            <button class="btn" id="viewBtn" type="button">
+              &#8646; 视角：横向
+            </button>
+            <button class="btn" id="shopToggle" type="button">
+              &#9874; 升级工坊
+            </button>
+            <button class="btn" id="helpBtn" type="button">? 玩法</button>
+            <button class="btn" id="soundBtn" type="button">
+              &#9834; 音效开
+            </button>
+          </div>
+        </div>
+
+        <div class="credits">
+          免费素材 / CC0 ·
+          <a
+            href="https://kenney.nl/assets/nature-kit"
+            target="_blank"
+            rel="noopener"
+            >Kenney</a
+          >
+          ·
+          <a
+            href="https://opengameart.org/content/sunnyland-forest"
+            target="_blank"
+            rel="noopener"
+            >OpenGameArt</a
+          >
+          ·
+          <a href="https://fonts.google.com/" target="_blank" rel="noopener"
+            >Google Fonts OFL</a
+          >
+        </div>
+      </div>
+
+      <div class="modal" id="resultModal">
+        <div class="modal-card">
+          <div class="modal-eyebrow">FLIGHT REPORT / 飞行报告</div>
+          <div class="modal-big" id="resultDist">0<span>m</span></div>
+          <div class="modal-label">本次弹射距离</div>
+          <div class="reward">
+            <span class="coin-dot"></span><span id="resultCoin">+0</span
+            ><span
+              style="font-size: 12px; color: var(--cream-dim); font-weight: 600"
+              >金币</span
+            >
+          </div>
+          <div class="record hidden" id="recordBadge">
+            &#10022; 新纪录 BEST!
+          </div>
+          <p class="modal-tip" id="resultTip">
+            升级弹弓能拉得更满，升级机身能滑得更远。
+          </p>
+          <div class="modal-actions">
+            <button class="btn primary" id="resultAgain" type="button">
+              再来一次
+            </button>
+            <button class="btn" id="resultShop" type="button">去升级</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="helpModal">
+        <div class="modal-card help-card">
+          <div class="modal-eyebrow">HOW TO PLAY</div>
+          <h2>把纸飞机弹得更远</h2>
+          <div class="help-row">
+            <b>弹射</b
+            ><span
+              >横向视角下按住画面向左下方拖动，纵向视角下按住画面向下（往自己这边）拖动；拖得越远力度越大，拖动方向微调仰角。也可按住空格让力度条往复，松手发射。</span
+            >
+          </div>
+          <div class="help-row">
+            <b>飞行</b
+            ><span
+              >横向是侧视卷轴，飞机从左往右飞、镜头横向跟随；纵向是纵深透视，飞机从近处飞向画面深处的消失点。落地后都会连续弹跳，虚线是预测轨迹。</span
+            >
+          </div>
+          <div class="help-row">
+            <b>视角</b
+            ><span
+              >默认横向侧视。点底部「视角」按钮或按 V
+              随时切换横向／纵向；飞行途中也能切，物理与金币结算不受影响。纵向视角下再按
+              C 可在「镜头跟随飞机」与「远景收束」之间切换。</span
+            >
+          </div>
+          <div class="help-row">
+            <b>奖励</b><span>距离越远金币越多，赏金倍数会放大每一笔收入。</span>
+          </div>
+          <div class="help-row">
+            <b>升级</b
+            ><span
+              >弹弓与机身各有 5 个进度格，每花金币升级一次点亮 1 格；集满 5
+              格才真正升 1 级（Tier +1），飞机与弹弓外观也会变化。</span
+            >
+          </div>
+          <div class="help-row">
+            <b>快捷键</b
+            ><span
+              >空格蓄力 / R 重新架机 / V 切换视角 / C 纵向镜头 / 1 2 3 购买升级
+              / M 静音 / H 帮助</span
+            >
+          </div>
+          <div class="help-src">
+            素材与许可（飞机 PNG 外链自 jsDelivr CDN 上的 Kenney CC0
+            单图镜像，按机身等级轮换；其余图形由 Canvas 绘制、音效由 Web Audio
+            合成；图片加载失败会自动回退内置绘制）：<br />
+            ·
+            <a
+              href="https://kenney.nl/assets/tappy-plane"
+              target="_blank"
+              rel="noopener"
+              >Kenney Tappy Plane</a
+            >
+            — CC0 侧视小飞机（横向视角）<br />
+            ·
+            <a
+              href="https://kenney.nl/assets/space-shooter-remastered"
+              target="_blank"
+              rel="noopener"
+              >Kenney Space Shooter Remastered</a
+            >
+            — CC0 俯视飞机（纵深视角）<br />
+            ·
+            <a
+              href="https://github.com/shorepine/kenney"
+              target="_blank"
+              rel="noopener"
+              >shorepine/kenney</a
+            >
+            — CC0 单图镜像仓库<br />
+            ·
+            <a
+              href="https://kenney.nl/assets/nature-kit"
+              target="_blank"
+              rel="noopener"
+              >Kenney Nature Kit</a
+            >
+            — CC0 树木 / 岩石<br />
+            ·
+            <a
+              href="https://kenney.nl/assets/foliage-sprites"
+              target="_blank"
+              rel="noopener"
+              >Kenney Foliage Sprites</a
+            >
+            — CC0 叶片<br />
+            ·
+            <a
+              href="https://kenney.nl/assets/ui-pack"
+              target="_blank"
+              rel="noopener"
+              >Kenney UI Pack</a
+            >
+            — CC0 按钮 / HUD<br />
+            ·
+            <a
+              href="https://kenney.nl/assets/impact-sounds"
+              target="_blank"
+              rel="noopener"
+              >Kenney Impact Sounds</a
+            >
+            /
+            <a
+              href="https://kenney.nl/assets/interface-sounds"
+              target="_blank"
+              rel="noopener"
+              >Interface Sounds</a
+            >
+            — CC0 音效<br />
+            ·
+            <a
+              href="https://opengameart.org/content/sunnyland-forest"
+              target="_blank"
+              rel="noopener"
+              >OpenGameArt SunnyLand - Forest</a
+            >
+            — CC0 森林视差背景<br />
+            ·
+            <a
+              href="https://fonts.google.com/specimen/Nunito/license"
+              target="_blank"
+              rel="noopener"
+              >Google Fonts Nunito / Baloo 2</a
+            >
+            — SIL OFL 1.1（本页已引用）
+          </div>
+          <div class="modal-actions" style="margin-top: 20px">
+            <button class="btn primary" id="helpClose" type="button">
+              开始弹射
+            </button>
+            <button class="btn" id="resetSave" type="button">清空存档</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="toast"></div>
+      <div id="flash"></div>
+    </div>
+
+    <script>
+      (function () {
+        "use strict";
+
+        // ---------------------------------------------------------------- 可选 CC0 素材
+        // 把树木 / 音效等可选素材的路径或直链填进来即可替换内置绘制；飞机见下方 PLANE_ART。
+        var ASSETS = {
+          tree: "",
+          sfxLaunch: "",
+          sfxBounce: "",
+          sfxCoin: "",
+          sfxUpgrade: "",
+        };
+        var sprites = { side: [], depth: [] };
+
+        // 飞机改用 Kenney CC0 真素材：横向侧视、纵向俯视，各 5 张按机身 Tier 轮换。
+        // 两个包同属 Kenney 扁平卡通系列（明亮纯色 + 浅色描边），风格成套；
+        // 经 shorepine/kenney 的 CC0 单图镜像 + jsDelivr CDN 直链引用。
+        var KENNEY_SIDE =
+          "https://cdn.jsdelivr.net/gh/shorepine/kenney@main/2d/Tappy%20Plane/Planes/";
+        var KENNEY_DEPTH =
+          "https://cdn.jsdelivr.net/gh/shorepine/kenney@main/2d/Space%20Shooter%20Remastered/";
+        var PLANE_ART = {
+          side: [
+            KENNEY_SIDE + "planeRed1.png",
+            KENNEY_SIDE + "planeGreen1.png",
+            KENNEY_SIDE + "planeBlue1.png",
+            KENNEY_SIDE + "planeYellow1.png",
+            KENNEY_SIDE + "planeRed2.png",
+          ],
+          depth: [
+            KENNEY_DEPTH + "playerShip1_orange.png",
+            KENNEY_DEPTH + "playerShip1_green.png",
+            KENNEY_DEPTH + "playerShip1_blue.png",
+            KENNEY_DEPTH + "playerShip2_orange.png",
+            KENNEY_DEPTH + "playerShip3_orange.png",
+          ],
+        };
+
+        // ---------------------------------------------------------------- 常量
+        var VH = 720; // 逻辑世界高度（物理与屏幕尺寸解耦）
+        var PPM = 6; // 每米对应的逻辑像素
+        var ORIGIN_X = 170;
+        var G = 760;
+        var PLANE_R = 15;
+        var MAX_PULL = 155;
+        var STEP = 1 / 120;
+        var SAVE_KEY = "forest_sling_plane_v1";
+        var TAU = Math.PI * 2;
+
+        // 纵深透视：z 为飞离镜头的距离（米），h 为离基准地面的高度（米），x 为横向偏移（米）
+        var HORIZON = VH * 0.3; // 消失点（屏幕 y）
+        var GROUND_NEAR = VH * 0.99; // d=0 时地面的屏幕 y
+        var GROUND_BASE = VH * 0.795; // 物理地面基准（像素 y）
+        var FOCAL = 45; // 焦距（米）：越小收敛越快，纵深越强
+        var CAM_BACK = 6; // 相机在弹弓后方多少米
+        var CAM_H_M = (GROUND_NEAR - HORIZON) / PPM;
+        var ROAD_HALF_M = 42; // 林间跑道半宽（米）
+        var FAR_Z = 300; // 可见最远距离（米）
+        var CAM_FOLLOW = 9; // 跟随时相机落后飞机的固定距离（米）
+        var FOLLOW_VERT = 0.6; // 相机垂直跟随强度（0 不跟随 / 1 完全跟随）
+        var SIDE_ANCHOR = 0.3; // 横向视角里飞机停留在屏幕宽度的位置
+        var SIDE_SIGN_STEP = 50 * PPM; // 横向里程碑间距（像素）
+        // 窄屏时收窄跑道，保证两侧森林仍然可见
+        function roadHalf() {
+          return Math.min(ROAD_HALF_M, (viewW / (PPM * 0.88)) * 0.42);
+        }
+
+        var clamp = function (v, a, b) {
+          return v < a ? a : v > b ? b : v;
+        };
+        var lerp = function (a, b, t) {
+          return a + (b - a) * t;
+        };
+        function hash(n) {
+          var s = Math.sin(n * 127.1 + 311.7) * 43758.5453123;
+          return s - Math.floor(s);
+        }
+
+        var UP_META = {
+          bow: {
+            name: "弹力弹弓",
+            desc: "拉得更满，初速更快",
+            icon: "\u27B6",
+            color: "#f7c45b",
+          },
+          plane: {
+            name: "滑翔机身",
+            desc: "升力更强，弹跳更远",
+            icon: "\u2708",
+            color: "#9be0ad",
+          },
+          mult: {
+            name: "赏金倍数",
+            desc: "每次飞行获得更多金币",
+            icon: "\u2726",
+            color: "#ffdf8f",
+          },
+        };
+        var PLANE_SKINS = [
+          {
+            body: "#fff4dc",
+            wing: "#f2a95c",
+            trim: "#d76b3c",
+            glass: "#8ed6e8",
+          },
+          {
+            body: "#dff2ff",
+            wing: "#5aa9e6",
+            trim: "#2f6fb5",
+            glass: "#f7d774",
+          },
+          {
+            body: "#efe2ff",
+            wing: "#a67ae0",
+            trim: "#6b47b5",
+            glass: "#ffe9a8",
+          },
+          {
+            body: "#fff0c2",
+            wing: "#f7c45b",
+            trim: "#b9761c",
+            glass: "#8ed6e8",
+          },
+          {
+            body: "#e6fff0",
+            wing: "#49c58a",
+            trim: "#1d7a52",
+            glass: "#ffd0e0",
+          },
+        ];
+
+        // ---------------------------------------------------------------- DOM
+        var byId = function (id) {
+          return document.getElementById(id);
+        };
+        var bgCanvas = byId("bg"),
+          gameCanvas = byId("game");
+        var shopEl = byId("shop");
+        var coinVal = byId("coinVal"),
+          bestVal = byId("bestVal"),
+          distVal = byId("distVal");
+        var coinPill = byId("coinPill");
+        var powerFill = byId("powerFill"),
+          powerText = byId("powerText");
+        var hintEl = byId("hint"),
+          toastEl = byId("toast"),
+          flashEl = byId("flash");
+        var resultModal = byId("resultModal"),
+          helpModal = byId("helpModal");
+
+        // ---------------------------------------------------------------- 存档
+        var save = {
+          coins: 0,
+          best: 0,
+          launches: 0,
+          total: 0,
+          sound: true,
+          view: "side",
+          up: {
+            bow: { tier: 1, pips: 0, buys: 0 },
+            plane: { tier: 1, pips: 0, buys: 0 },
+            mult: { tier: 1, pips: 0, buys: 0 },
+          },
+        };
+        function loadSave() {
+          try {
+            var raw = localStorage.getItem(SAVE_KEY);
+            if (!raw) return;
+            var d = JSON.parse(raw);
+            if (!d || typeof d !== "object") return;
+            save.coins = Math.max(0, Number(d.coins) || 0);
+            save.best = Math.max(0, Number(d.best) || 0);
+            save.launches = Math.max(0, Number(d.launches) || 0);
+            save.total = Math.max(0, Number(d.total) || 0);
+            save.sound = d.sound !== false;
+            save.view = d.view === "depth" ? "depth" : "side";
+            if (d.up) {
+              Object.keys(save.up).forEach(function (k) {
+                var s = d.up[k] || {};
+                save.up[k].tier = clamp(
+                  Math.floor(Number(s.tier) || 1),
+                  1,
+                  999,
+                );
+                save.up[k].pips = clamp(Math.floor(Number(s.pips) || 0), 0, 4);
+                save.up[k].buys = clamp(
+                  Math.floor(Number(s.buys) || 0),
+                  0,
+                  9999,
+                );
+              });
+            }
+          } catch (e) {
+            /* localStorage 不可用时使用默认存档 */
+          }
+        }
+        function persist() {
+          try {
+            localStorage.setItem(SAVE_KEY, JSON.stringify(save));
+          } catch (e) {
+            /* ignore */
+          }
+        }
+
+        function price(kind) {
+          var base = kind === "bow" ? 40 : kind === "plane" ? 55 : 130;
+          var growth = kind === "mult" ? 1.85 : 1.55;
+          return Math.max(
+            5,
+            Math.round((base * Math.pow(growth, save.up[kind].buys)) / 5) * 5,
+          );
+        }
+        function getStats() {
+          var b = save.up.bow,
+            p = save.up.plane,
+            m = save.up.mult;
+          return {
+            bowPower: 1 + (b.tier - 1) * 0.22 + b.pips * 0.035,
+            lift: 1 + (p.tier - 1) * 0.2 + p.pips * 0.035,
+            drag: Math.max(0.42, 1 - (p.tier - 1) * 0.09 - p.pips * 0.015),
+            bounce: Math.min(0.88, 0.5 + (p.tier - 1) * 0.045 + p.pips * 0.008),
+            mult: 1 + m.buys * 0.25,
+          };
+        }
+
+        // ---------------------------------------------------------------- 画布 / WebGL 背景
+        var ctx = gameCanvas.getContext("2d");
+        var dpr = 1,
+          cssW = 0,
+          cssH = 0,
+          scale = 1,
+          viewW = 1280;
+        var bgGL = null,
+          bg2d = null;
+
+        var BG_VS = [
+          "attribute vec2 aPos;",
+          "void main(){ gl_Position = vec4(aPos, 0.0, 1.0); }",
+        ].join("\n");
+        var BG_FS = [
+          "precision mediump float;",
+          "uniform vec2 uRes;",
+          "uniform float uTime;",
+          "uniform float uCam;",
+          "float h(float n){ return fract(sin(n)*43758.5453); }",
+          "void main(){",
+          "  vec2 uv = gl_FragCoord.xy / uRes;",
+          "  float y = uv.y;",
+          "  vec3 horizonC = vec3(0.88,0.91,0.72);",
+          "  vec3 midC = vec3(0.40,0.68,0.63);",
+          "  vec3 zenithC = vec3(0.09,0.29,0.35);",
+          "  vec3 col = mix(horizonC, midC, smoothstep(0.69,0.84,y));",
+          "  col = mix(col, zenithC, smoothstep(0.82,1.0,y));",
+          "  vec2 sun = vec2(0.70,0.86);",
+          "  float d = length((uv-sun)*vec2(uRes.x/max(uRes.y,1.0),1.0));",
+          "  col += vec3(1.0,0.88,0.60)*(0.16*exp(-d*d*7.0)+0.32*exp(-d*d*70.0));",
+          "  float px = uv.x*5.0 + uCam*0.004;",
+          "  float h1 = 0.706 + 0.014*sin(px*1.7+0.4) + 0.008*sin(px*4.3+1.2);",
+          "  float h2 = 0.690 + 0.010*sin(px*2.3+2.0) + 0.006*sin(px*5.7+0.8);",
+          "  float m1 = 1.0 - smoothstep(h1-0.003,h1+0.003,y);",
+          "  float m2 = 1.0 - smoothstep(h2-0.003,h2+0.003,y);",
+          "  col = mix(col, vec3(0.36,0.55,0.49), m1*0.85);",
+          "  col = mix(col, vec3(0.24,0.43,0.40), m2*0.90);",
+          "  float fy = (y-0.70)*18.0;",
+          "  float fog = exp(-fy*fy)*(0.40+0.60*sin(px*2.2+uTime*0.18));",
+          "  col += vec3(0.12,0.14,0.10)*fog;",
+          "  float n = h(gl_FragCoord.x*1.7 + gl_FragCoord.y*53.0 + floor(uTime*8.0));",
+          "  col += (n-0.5)*0.014;",
+          "  gl_FragColor = vec4(col,1.0);",
+          "}",
+        ].join("\n");
+
+        function initBG() {
+          var gl = null;
+          try {
+            gl =
+              bgCanvas.getContext("webgl", {
+                alpha: false,
+                antialias: false,
+                depth: false,
+              }) || bgCanvas.getContext("experimental-webgl");
+          } catch (e) {
+            gl = null;
+          }
+          if (!gl) {
+            try {
+              bg2d = bgCanvas.getContext("2d");
+            } catch (e) {
+              bg2d = null;
+            }
+            return;
+          }
+          function compile(type, src) {
+            var s = gl.createShader(type);
+            gl.shaderSource(s, src);
+            gl.compileShader(s);
+            if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+              gl.deleteShader(s);
+              return null;
+            }
+            return s;
+          }
+          var vs = compile(gl.VERTEX_SHADER, BG_VS),
+            fs = compile(gl.FRAGMENT_SHADER, BG_FS);
+          if (!vs || !fs) {
+            return;
+          }
+          var prog = gl.createProgram();
+          gl.attachShader(prog, vs);
+          gl.attachShader(prog, fs);
+          gl.linkProgram(prog);
+          if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+            return;
+          }
+          gl.useProgram(prog);
+          var buf = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+          gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]),
+            gl.STATIC_DRAW,
+          );
+          var loc = gl.getAttribLocation(prog, "aPos");
+          gl.enableVertexAttribArray(loc);
+          gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+          bgGL = {
+            gl: gl,
+            uRes: gl.getUniformLocation(prog, "uRes"),
+            uTime: gl.getUniformLocation(prog, "uTime"),
+            uCam: gl.getUniformLocation(prog, "uCam"),
+          };
+        }
+
+        function drawGLBG() {
+          var g = bgGL.gl;
+          g.viewport(0, 0, bgCanvas.width, bgCanvas.height);
+          g.uniform2f(bgGL.uRes, bgCanvas.width, bgCanvas.height);
+          g.uniform1f(bgGL.uTime, clock);
+          g.uniform1f(bgGL.uCam, camZ);
+          g.drawArrays(g.TRIANGLE_STRIP, 0, 4);
+        }
+        function draw2DBG() {
+          var c = bg2d;
+          c.setTransform(dpr, 0, 0, dpr, 0, 0);
+          var g = c.createLinearGradient(0, 0, 0, cssH);
+          g.addColorStop(0, "#174950");
+          g.addColorStop(0.16, "#5aa293");
+          g.addColorStop(0.3, "#e0e8b8");
+          g.addColorStop(0.31, "#2b6b4a");
+          g.addColorStop(1, "#194430");
+          c.fillStyle = g;
+          c.fillRect(0, 0, cssW, cssH);
+          c.fillStyle = "rgba(255,238,182,.5)";
+          c.beginPath();
+          c.arc(cssW * 0.7, cssH * 0.14, Math.min(cssW, cssH) * 0.07, 0, TAU);
+          c.fill();
+          c.fillStyle = "#5c8e7d";
+          c.beginPath();
+          c.moveTo(0, cssH);
+          for (var x = 0; x <= cssW; x += 18) {
+            var px = (x / cssW) * 5 + camZ * 0.004;
+            c.lineTo(
+              x,
+              cssH *
+                (1 -
+                  (0.706 +
+                    0.014 * Math.sin(px * 1.7 + 0.4) +
+                    0.008 * Math.sin(px * 4.3 + 1.2))),
+            );
+          }
+          c.lineTo(cssW, cssH);
+          c.closePath();
+          c.fill();
+        }
+        function drawSkyFallback() {
+          var g = ctx.createLinearGradient(0, 0, 0, VH);
+          g.addColorStop(0, "#174950");
+          g.addColorStop(0.3, "#e0e8b8");
+          g.addColorStop(0.31, "#2b6b4a");
+          g.addColorStop(1, "#194430");
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, viewW, VH);
+        }
+
+        function resize() {
+          dpr = Math.min(window.devicePixelRatio || 1, 2);
+          cssW = Math.max(320, window.innerWidth);
+          cssH = Math.max(320, window.innerHeight);
+          scale = cssH / VH;
+          viewW = cssW / scale;
+          [bgCanvas, gameCanvas].forEach(function (cv) {
+            cv.width = Math.round(cssW * dpr);
+            cv.height = Math.round(cssH * dpr);
+          });
+          if (bgGL) bgGL.gl.viewport(0, 0, bgCanvas.width, bgCanvas.height);
+        }
+
+        // ---------------------------------------------------------------- 世界
+        var SLING = { x: ORIGIN_X, y: 0 };
+        function groundY(x) {
+          var f = clamp((x - ORIGIN_X - 220) / 420, 0, 1);
+          return (
+            GROUND_BASE +
+            (Math.sin(x * 0.0016 + 1.3) * 26 +
+              Math.sin(x * 0.0047 + 0.4) * 12 +
+              Math.sin(x * 0.013) * 4) *
+              f
+          );
+        }
+
+        // 透视投影：把（纵深米 z、世界高度米 h、横向米 x）映射为屏幕点
+        function perspQ(zM) {
+          var d = zM - camZ;
+          // 相机身后的物体不再投影，避免尾迹与身后景物被错误放大
+          if (d <= 0.2) return 0.001;
+          return FOCAL / (FOCAL + d);
+        }
+        // 相机横向平移后世界中线在屏幕上的位置；消失点始终固定在画面中央
+        function roadCenter(q) {
+          return viewW * 0.5 - camX * PPM * q;
+        }
+        function project(zM, hM, lateralM) {
+          var q = perspQ(zM);
+          return {
+            x: roadCenter(q) + (lateralM || 0) * PPM * q,
+            y: HORIZON + (camH - hM) * PPM * q,
+            q: q,
+          };
+        }
+        function terrainH(zM) {
+          return (GROUND_BASE - groundY(ORIGIN_X + zM * PPM)) / PPM;
+        }
+        function planeZM() {
+          return (plane.x - ORIGIN_X) / PPM;
+        }
+        function planeHM() {
+          return (GROUND_BASE - plane.y) / PPM;
+        }
+
+        var state = "ready"; // ready | aim | flying | result
+        var plane = { x: 0, y: 0, vx: 0, vy: 0, rot: 0 };
+        var camZ = -CAM_BACK,
+          camH = CAM_H_M,
+          camX = 0,
+          clock = 0,
+          sway = 0;
+        var followCam = true; // 纵向：跟随镜头（C 键可切回远景固定镜头）
+        var viewMode = "side"; // side 横向侧视 | depth 纵深透视
+        var sideCamX = 0,
+          sideCamY = 0; // 横向卷轴相机（世界像素）
+        var flightTime = 0,
+          bounces = 0,
+          grounded = false,
+          launched = false;
+        var drag = null,
+          keyCharging = false,
+          chargeT = 0,
+          curPower = 0,
+          curAngle = 38;
+        var particles = [],
+          trail = [],
+          leaves = [];
+        var lastDist = 0,
+          lastReward = 0;
+
+        function hintForMode() {
+          return viewMode === "side"
+            ? "按住画面 <b>向左下方拖动</b> 拉伸弹弓，松手后纸飞机向右飞出 · 或按住 <kbd>空格</kbd> 蓄力 · <kbd>V</kbd> 切换视角"
+            : "按住画面 <b>向下（往自己这边）拖动</b> 拉伸弹弓，松手后飞机飞向森林深处 · 或按住 <kbd>空格</kbd> 蓄力 · <kbd>V</kbd> 切换视角 · <kbd>C</kbd> 镜头";
+        }
+
+        function resetFlight() {
+          state = "ready";
+          SLING.y = groundY(SLING.x) - 122;
+          plane.x = SLING.x + 4;
+          plane.y = SLING.y;
+          plane.vx = 0;
+          plane.vy = 0;
+          plane.rot = 0;
+          sideCamX = ORIGIN_X - viewW * SIDE_ANCHOR;
+          sideCamY = 0;
+          camZ = viewMode === "side" ? sideCamX / PPM : -CAM_BACK;
+          camH = CAM_H_M;
+          camX = 0;
+          sway = 0;
+          drag = null;
+          keyCharging = false;
+          chargeT = 0;
+          curPower = 0;
+          flightTime = 0;
+          bounces = 0;
+          grounded = false;
+          launched = false;
+          trail.length = 0;
+          resultModal.classList.remove("show");
+          gameCanvas.classList.remove("aiming");
+          hintEl.innerHTML = hintForMode();
+        }
+
+        function initLeaves() {
+          leaves = [];
+          for (var i = 0; i < 34; i++) {
+            leaves.push({
+              x: Math.random() * 1600,
+              y: Math.random() * VH,
+              s: 3 + Math.random() * 5,
+              p: Math.random() * TAU,
+              sp: 12 + Math.random() * 22,
+              drift: 0.4 + Math.random() * 0.8,
+              gold: Math.random() > 0.72,
+            });
+          }
+        }
+
+        // ---------------------------------------------------------------- 物理
+        function integrate(p, dt, s) {
+          var dragK = 0.0003 * s.drag;
+          var ax = -dragK * p.vx * Math.abs(p.vx);
+          var lift = Math.min(G * 1.12, p.vx * p.vx * 0.0006 * s.lift);
+          var ay = G - lift;
+          ax += Math.sin(clock * 0.7 + p.x * 0.002) * 6;
+          p.vx += ax * dt;
+          p.vy += ay * dt;
+          p.vy = clamp(p.vy, -900, 1150);
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+        }
+
+        function emit(x, y, n, opt) {
+          for (var i = 0; i < n; i++) {
+            var a = Math.random() * TAU;
+            var sp = (opt.speed || 60) * (0.3 + Math.random());
+            particles.push({
+              x: x,
+              y: y,
+              vx: Math.cos(a) * sp + (opt.vx || 0),
+              vy: Math.sin(a) * sp + (opt.vy || 0),
+              life: (opt.life || 0.7) * (0.5 + Math.random()),
+              max: opt.life || 0.7,
+              size: (opt.size || 3) * (0.5 + Math.random()),
+              color: opt.color || "#ffffff",
+              grav: opt.grav === undefined ? 160 : opt.grav,
+              lateral: opt.lateral || 0,
+              star: !!opt.star,
+            });
+          }
+          if (particles.length > 420)
+            particles.splice(0, particles.length - 420);
+        }
+
+        function launch(power, angleDeg) {
+          var s = getStats();
+          var speed = (540 + 760 * power) * s.bowPower;
+          var a = (angleDeg * Math.PI) / 180;
+          plane.vx = Math.cos(a) * speed;
+          plane.vy = -Math.sin(a) * speed;
+          plane.rot = -a;
+          state = "flying";
+          launched = true;
+          flightTime = 0;
+          bounces = 0;
+          grounded = false;
+          trail.length = 0;
+          drag = null;
+          keyCharging = false;
+          gameCanvas.classList.remove("aiming");
+          hintEl.textContent =
+            viewMode === "side"
+              ? "飞行中 · 纸飞机沿林间空地向右滑翔，落地后还会连续弹跳 · 按 V 切换视角"
+              : "飞行中 · 镜头跟随飞机掠过森林深处，落地后还会连续弹跳 · 按 V 切换视角 / C 切远景";
+          emit(plane.x, plane.y, 22, {
+            speed: 190,
+            life: 0.7,
+            size: 3.4,
+            color: "#fff0bd",
+            grav: 90,
+            lateral: sway,
+          });
+          sfx("launch");
+        }
+
+        function predict(power, angleDeg) {
+          var s = getStats();
+          var speed = (540 + 760 * power) * s.bowPower;
+          var a = (angleDeg * Math.PI) / 180;
+          var p = {
+            x: plane.x,
+            y: plane.y,
+            vx: Math.cos(a) * speed,
+            vy: -Math.sin(a) * speed,
+          };
+          var pts = [];
+          for (var i = 0; i < 96; i++) {
+            integrate(p, 1 / 60, s);
+            integrate(p, 1 / 60, s);
+            pts.push({ x: p.x, y: p.y });
+            if (p.y > groundY(p.x) - PLANE_R) break;
+            if (pts.length > 90) break;
+          }
+          return pts;
+        }
+
+        function stepPhysics(dt) {
+          if (state !== "flying") return;
+          var s = getStats();
+          flightTime += dt;
+          integrate(plane, dt, s);
+          plane.rot = lerp(
+            plane.rot,
+            clamp(Math.atan2(plane.vy, Math.max(90, plane.vx)), -0.85, 0.92),
+            Math.min(1, dt * 7),
+          );
+
+          // 尾迹
+          if (Math.random() < dt * 42) {
+            trail.push({
+              x: plane.x,
+              y: plane.y,
+              lateral: sway,
+              life: 0.55,
+              max: 0.55,
+              size: 2 + Math.random() * 2.6,
+            });
+            if (trail.length > 160) trail.shift();
+          }
+
+          if (grounded) {
+            plane.vx *= Math.max(0, 1 - 1.9 * dt);
+            plane.y = groundY(plane.x) - PLANE_R;
+            plane.rot = lerp(plane.rot, 0, Math.min(1, dt * 6));
+            if (plane.vx < 34 || flightTime > 30) finishFlight();
+            return;
+          }
+
+          var gy = groundY(plane.x) - PLANE_R;
+          if (plane.y >= gy && plane.vy > 0) {
+            plane.y = gy;
+            var impact = plane.vy;
+            if (impact > 95 && bounces < 14) {
+              plane.vy = -impact * s.bounce;
+              plane.vx *= 0.91;
+              bounces++;
+              emit(plane.x, gy + PLANE_R, 10, {
+                speed: 110,
+                life: 0.55,
+                size: 3.2,
+                color: "#c8dda0",
+                vy: -30,
+              });
+              sfx("bounce");
+            } else {
+              plane.vy = 0;
+              grounded = true;
+              emit(plane.x, gy + PLANE_R, 14, {
+                speed: 90,
+                life: 0.8,
+                size: 3.6,
+                color: "#a9cf94",
+              });
+            }
+          }
+          if (plane.x > 400000 || flightTime > 30) finishFlight();
+        }
+
+        function finishFlight() {
+          if (state !== "flying") return;
+          state = "result";
+          var distM = Math.max(0, (plane.x - ORIGIN_X) / PPM);
+          var reward = Math.max(1, Math.round(distM * 0.55 * getStats().mult));
+          var isBest = Math.round(distM) > save.best;
+          lastDist = distM;
+          lastReward = reward;
+          save.coins += reward;
+          save.best = Math.max(save.best, Math.round(distM));
+          save.launches += 1;
+          save.total += Math.round(distM);
+          persist();
+          coinPill.classList.remove("bump");
+          void coinPill.offsetWidth;
+          coinPill.classList.add("bump");
+          byId("resultDist").innerHTML = Math.round(distM) + "<span>m</span>";
+          byId("resultCoin").textContent = "+" + reward;
+          byId("recordBadge").classList.toggle("hidden", !isBest);
+          byId("resultTip").textContent = isBest
+            ? "刷新了最远纪录！金币可以拿去点亮弹弓和机身的进度格。"
+            : "升级弹弓能拉得更满，升级机身能滑得更远，赏金倍数会放大收入。";
+          resultModal.classList.add("show");
+          emit(plane.x, plane.y, 26, {
+            speed: 170,
+            life: 1.1,
+            size: 3.6,
+            color: "#f7c45b",
+            grav: 40,
+            star: true,
+          });
+          sfx("coin");
+          renderShop();
+        }
+
+        // ---------------------------------------------------------------- 升级
+        function buy(kind) {
+          if (state === "flying" || state === "aim") {
+            toast("飞行中不能升级");
+            return;
+          }
+          var cost = price(kind);
+          if (save.coins < cost) {
+            toast("金币不够，再飞远一点");
+            return;
+          }
+          save.coins -= cost;
+          var u = save.up[kind];
+          u.buys++;
+          if (kind === "mult") {
+            u.tier++;
+            toast("赏金倍数 → ×" + getStats().mult.toFixed(2));
+            sfx("upgrade");
+          } else {
+            u.pips++;
+            if (u.pips >= 5) {
+              u.pips = 0;
+              u.tier++;
+              var label = kind === "bow" ? "弹弓" : "机身";
+              toast("✦ " + label + "真正升级！Tier " + u.tier);
+              flashEl.classList.remove("go");
+              void flashEl.offsetWidth;
+              flashEl.classList.add("go");
+              emit(SLING.x, SLING.y, 34, {
+                speed: 210,
+                life: 1.2,
+                size: 4,
+                color: "#ffe7a0",
+                star: true,
+                grav: 30,
+              });
+              sfx("upgrade");
+            } else {
+              toast("进度格 +1 · " + u.pips + "/5");
+              sfx("upgrade");
+            }
+          }
+          persist();
+          renderShop();
+          renderHUD();
+        }
+
+        function effectText(kind) {
+          var s = getStats();
+          if (kind === "bow") return "初速 ×" + s.bowPower.toFixed(2);
+          if (kind === "plane") return "升力 ×" + s.lift.toFixed(2);
+          return "金币 ×" + s.mult.toFixed(2);
+        }
+
+        function renderShop() {
+          var html =
+            '<div class="shop-head"><span>升级工坊</span><span class="shop-head-sub">WORKSHOP</span></div>';
+          Object.keys(UP_META).forEach(function (k, idx) {
+            var m = UP_META[k],
+              u = save.up[k],
+              cost = price(k),
+              can = save.coins >= cost;
+            var pips = "";
+            if (k === "mult") {
+              pips =
+                '<div class="mult-note">当前 <b>×' +
+                getStats().mult.toFixed(2) +
+                "</b> · 每购买一级 <b>+0.25×</b>，无进度格</div>";
+            } else {
+              pips = '<div class="pips' + (u.pips === 4 ? " ready" : "") + '">';
+              for (var i = 0; i < 5; i++)
+                pips +=
+                  '<div class="pip' + (i < u.pips ? " on" : "") + '"></div>';
+              pips += "</div>";
+            }
+            html +=
+              '<div class="up-card' +
+              (idx === 2 ? " last" : "") +
+              '" data-kind="' +
+              k +
+              '">' +
+              '<div class="up-row">' +
+              '<div class="up-icon" style="--c:' +
+              m.color +
+              '">' +
+              m.icon +
+              "</div>" +
+              '<div class="up-info"><div class="up-name">' +
+              m.name +
+              '</div><div class="up-desc">' +
+              m.desc +
+              "</div></div>" +
+              '<div class="up-tier">等级<b>' +
+              u.tier +
+              "</b></div>" +
+              "</div>" +
+              pips +
+              '<div class="up-foot"><span class="up-effect">' +
+              effectText(k) +
+              "</span>" +
+              '<button class="buy-btn" type="button" data-buy="' +
+              k +
+              '"' +
+              (can ? "" : " disabled") +
+              ">" +
+              (can ? "升级 · " + cost : "需 " + cost) +
+              "</button></div>" +
+              "</div>";
+          });
+          html +=
+            '<div class="shop-hint">弹弓 / 机身每买 5 次点亮 5 格，才真正升 1 级 · 键盘 1 / 2 / 3 快捷购买</div>';
+          shopEl.innerHTML = html;
+        }
+
+        // ---------------------------------------------------------------- 音效
+        var actx = null;
+        function ensureAudio() {
+          if (actx) return actx;
+          try {
+            var AC = window.AudioContext || window.webkitAudioContext;
+            if (AC) actx = new AC();
+          } catch (e) {
+            actx = null;
+          }
+          return actx;
+        }
+        function tone(freq, dur, type, vol, slide) {
+          var a = ensureAudio();
+          if (!a) return;
+          try {
+            var o = a.createOscillator(),
+              g = a.createGain();
+            o.type = type || "sine";
+            o.frequency.setValueAtTime(freq, a.currentTime);
+            if (slide)
+              o.frequency.exponentialRampToValueAtTime(
+                Math.max(40, slide),
+                a.currentTime + dur,
+              );
+            g.gain.setValueAtTime(0.0001, a.currentTime);
+            g.gain.exponentialRampToValueAtTime(
+              vol || 0.08,
+              a.currentTime + 0.012,
+            );
+            g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + dur);
+            o.connect(g);
+            g.connect(a.destination);
+            o.start();
+            o.stop(a.currentTime + dur + 0.02);
+          } catch (e) {
+            /* ignore */
+          }
+        }
+        function sfx(kind) {
+          if (!save.sound) return;
+          var url =
+            ASSETS["sfx" + kind.charAt(0).toUpperCase() + kind.slice(1)];
+          if (url) {
+            try {
+              var au = new Audio(url);
+              au.volume = 0.5;
+              au.play();
+            } catch (e) {
+              /* ignore */
+            }
+            return;
+          }
+          if (kind === "launch") {
+            tone(720, 0.28, "sawtooth", 0.07, 180);
+            tone(1180, 0.16, "triangle", 0.04, 420);
+          } else if (kind === "bounce") {
+            tone(210, 0.13, "sine", 0.075, 95);
+          } else if (kind === "coin") {
+            tone(880, 0.12, "triangle", 0.07);
+            setTimeout(function () {
+              tone(1320, 0.18, "triangle", 0.06);
+            }, 90);
+          } else if (kind === "upgrade") {
+            [523, 659, 784, 1046].forEach(function (f, i) {
+              setTimeout(function () {
+                tone(f, 0.18, "triangle", 0.055);
+              }, i * 75);
+            });
+          } else if (kind === "fail") {
+            tone(180, 0.16, "sine", 0.05, 110);
+          }
+        }
+
+        // ---------------------------------------------------------------- 提示
+        var toastTimer = 0;
+        function toast(msg) {
+          toastEl.textContent = msg;
+          toastEl.classList.add("show");
+          clearTimeout(toastTimer);
+          toastTimer = setTimeout(function () {
+            toastEl.classList.remove("show");
+          }, 1700);
+        }
+
+        // ---------------------------------------------------------------- 绘制
+        function drawCloud(x, y, s, alpha) {
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = "#f2f7e6";
+          ctx.beginPath();
+          ctx.ellipse(x, y, 42 * s, 15 * s, 0, 0, TAU);
+          ctx.ellipse(x - 26 * s, y + 5 * s, 27 * s, 11 * s, 0, 0, TAU);
+          ctx.ellipse(x + 28 * s, y + 4 * s, 30 * s, 12 * s, 0, 0, TAU);
+          ctx.ellipse(x + 4 * s, y - 12 * s, 26 * s, 15 * s, 0, 0, TAU);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        function drawPine(x, baseY, s, dark, light) {
+          ctx.fillStyle = "#4b3a28";
+          ctx.fillRect(x - 4 * s, baseY - 30 * s, 8 * s, 34 * s);
+          for (var i = 0; i < 3; i++) {
+            var w = (34 - i * 7) * s,
+              top = baseY - (96 - i * 27) * s,
+              bot = baseY - (52 - i * 26) * s;
+            ctx.fillStyle = i % 2 ? light : dark;
+            ctx.beginPath();
+            ctx.moveTo(x, top);
+            ctx.lineTo(x + w, bot);
+            ctx.lineTo(x - w, bot);
+            ctx.closePath();
+            ctx.fill();
+          }
+        }
+        function drawOak(x, baseY, s, dark, light) {
+          ctx.fillStyle = "#4b3a28";
+          ctx.fillRect(x - 5 * s, baseY - 54 * s, 10 * s, 58 * s);
+          ctx.fillStyle = dark;
+          ctx.beginPath();
+          ctx.arc(x, baseY - 66 * s, 30 * s, 0, TAU);
+          ctx.fill();
+          ctx.fillStyle = light;
+          ctx.beginPath();
+          ctx.arc(x - 17 * s, baseY - 60 * s, 19 * s, 0, TAU);
+          ctx.arc(x + 16 * s, baseY - 66 * s, 20 * s, 0, TAU);
+          ctx.fill();
+          ctx.fillStyle = dark;
+          ctx.beginPath();
+          ctx.arc(x + 2 * s, baseY - 84 * s, 19 * s, 0, TAU);
+          ctx.fill();
+        }
+
+        function drawClouds() {
+          // 云在天空层缓慢平移，只出现在消失点上方
+          for (var i = 0; i < 6; i++) {
+            var x =
+              ((((i * 280 - camZ * 0.12) % (viewW + 400)) + (viewW + 400)) %
+                (viewW + 400)) -
+              200;
+            var y = 54 + hash(i * 4.3) * 120;
+            drawCloud(
+              x,
+              y,
+              0.7 + hash(i * 2.1) * 0.7,
+              0.22 + hash(i * 3.7) * 0.18,
+            );
+          }
+        }
+
+        function drawForest() {
+          // 沿纵深每 9 米在跑道两侧各放一棵树，远→近绘制保证遮挡正确
+          var z0 = Math.max(0, Math.floor(camZ / 9) * 9);
+          var z1 = camZ + FAR_Z;
+          var list = [];
+          for (var z = z0; z < z1; z += 9) {
+            for (var side = -1; side <= 1; side += 2) {
+              var r = hash(z * 0.13 + side * 7.3);
+              list.push({
+                z: z,
+                lat: side * (roadHalf() + 9 + r * 72),
+                r: r,
+                h: 14 + r * 15,
+              });
+            }
+          }
+          list.sort(function (a, b) {
+            return b.z - a.z;
+          });
+          for (var i = 0; i < list.length; i++) {
+            var t = list[i];
+            var base = project(t.z, terrainH(t.z), t.lat);
+            var q = base.q;
+            if (
+              q < 0.09 ||
+              base.y > VH + 160 ||
+              base.x < -200 ||
+              base.x > viewW + 200
+            )
+              continue;
+            var fog = clamp((FAR_Z - (t.z - camZ)) / 150, 0, 1);
+            var dark = fog > 0.55 ? "#235f3f" : "#4a8a70";
+            var light = fog > 0.55 ? "#3b9560" : "#72ad88";
+            var sc = (t.h / 20) * q * 1.05;
+            if (sprites.tree) {
+              var w = 70 * sc,
+                h = 110 * sc;
+              ctx.drawImage(sprites.tree, base.x - w / 2, base.y - h, w, h);
+            } else if (t.r > 0.42) {
+              drawPine(base.x, base.y, sc, dark, light);
+            } else {
+              drawOak(base.x, base.y, sc, dark, light);
+            }
+          }
+        }
+
+        function drawGroundPlane() {
+          // 靠近消失点处渐隐，让 WebGL 远山与晨雾透出来
+          var g = ctx.createLinearGradient(0, HORIZON - 8, 0, HORIZON + 110);
+          g.addColorStop(0, "rgba(61,125,94,0)");
+          g.addColorStop(0.55, "rgba(45,105,74,.72)");
+          g.addColorStop(1, "#235a3e");
+          ctx.fillStyle = g;
+          ctx.fillRect(0, HORIZON - 8, viewW, 118);
+          ctx.fillStyle = "#235a3e";
+          ctx.fillRect(0, HORIZON + 110, viewW, VH - HORIZON - 110);
+
+          // 由远及近铺透视梯形：越远越窄、越贴近消失点
+          var zNear = camZ + 1.2;
+          var zFar = camZ + FAR_Z;
+          var seg = 6;
+          for (var z1 = zFar; z1 > zNear; z1 -= seg) {
+            var z0 = Math.max(zNear, z1 - seg);
+            var q0 = perspQ(z0),
+              q1 = perspQ(z1);
+            var cx0 = roadCenter(q0),
+              cx1 = roadCenter(q1);
+            var y0 = HORIZON + (camH - terrainH(z0)) * PPM * q0;
+            var y1 = HORIZON + (camH - terrainH(z1)) * PPM * q1;
+            var w0 = roadHalf() * PPM * q0,
+              w1 = roadHalf() * PPM * q1;
+            ctx.fillStyle = Math.floor(z1 / seg) % 2 ? "#3d8a56" : "#347e4e";
+            ctx.beginPath();
+            ctx.moveTo(cx0 - w0, y0);
+            ctx.lineTo(cx0 + w0, y0);
+            ctx.lineTo(cx1 + w1, y1);
+            ctx.lineTo(cx1 - w1, y1);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = "rgba(150,220,135,.30)";
+            ctx.lineWidth = Math.max(1, 2.4 * q0);
+            ctx.beginPath();
+            ctx.moveTo(cx0 - w0, y0);
+            ctx.lineTo(cx1 - w1, y1);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(cx0 + w0, y0);
+            ctx.lineTo(cx1 + w1, y1);
+            ctx.stroke();
+          }
+        }
+
+        function drawRoadMarks() {
+          var zEnd = camZ + FAR_Z;
+          var zStart = Math.max(0, Math.floor(camZ / 8) * 8);
+          // 中线虚线：随相机推进不断从消失点涌向镜头
+          for (var z = zEnd; z >= zStart; z -= 8) {
+            var q = perspQ(z);
+            if (q < 0.09) continue;
+            var ya = HORIZON + (camH - terrainH(z)) * PPM * q;
+            var yb = HORIZON + (camH - terrainH(z + 3)) * PPM * perspQ(z + 3);
+            var w = Math.max(1, 2.2 * q);
+            var cx = roadCenter(q);
+            ctx.fillStyle = "rgba(226,244,196,.40)";
+            ctx.fillRect(
+              cx - w,
+              Math.min(ya, yb),
+              w * 2,
+              Math.max(2, Math.abs(ya - yb)),
+            );
+          }
+          // 路肩草花，同样按透视缩小
+          for (var z2 = zEnd; z2 >= zStart; z2 -= 14) {
+            var r = hash(z2 * 0.31);
+            var side = Math.floor(z2 / 14) % 2 ? 1 : -1;
+            var pr = project(z2, terrainH(z2), side * (roadHalf() + 2 + r * 6));
+            if (pr.q < 0.12 || pr.y > VH + 40) continue;
+            ctx.fillStyle = r > 0.5 ? "#f4d05a" : "#e8796c";
+            ctx.beginPath();
+            ctx.arc(pr.x, pr.y - 4 * pr.q, 3.2 * pr.q, 0, TAU);
+            ctx.fill();
+          }
+        }
+
+        function drawSigns() {
+          var i0 = Math.max(1, Math.ceil(camZ / 50));
+          var i1 = Math.floor((camZ + FAR_Z) / 50);
+          ctx.textAlign = "center";
+          for (var i = i1; i >= i0; i--) {
+            var m = i * 50;
+            var q = perspQ(m);
+            if (q < 0.12) continue;
+            var b = project(m, terrainH(m), roadHalf() + 7);
+            var pole = 7 * PPM * q,
+              bw = 10 * PPM * q,
+              bh = 4.2 * PPM * q;
+            ctx.fillStyle = "#6b4d31";
+            ctx.fillRect(b.x - 1.4 * q, b.y - pole, 2.8 * q, pole);
+            ctx.fillStyle = "#f3e4bd";
+            ctx.fillRect(b.x - bw / 2, b.y - pole - bh, bw, bh);
+            ctx.strokeStyle = "#a9814b";
+            ctx.lineWidth = Math.max(0.6, 1.2 * q);
+            ctx.strokeRect(b.x - bw / 2, b.y - pole - bh, bw, bh);
+            if (q > 0.28) {
+              ctx.fillStyle = "#4b3a28";
+              ctx.font =
+                "800 " + (2.1 * PPM * q).toFixed(1) + "px Nunito, sans-serif";
+              ctx.fillText(m + "m", b.x, b.y - pole - bh * 0.25);
+            }
+          }
+          if (save.best > 0 && perspQ(save.best) > 0.12) {
+            var bq = perspQ(save.best);
+            var f = project(save.best, terrainH(save.best), roadHalf() + 12);
+            var ph = 11 * PPM * bq;
+            ctx.fillStyle = "#6b4d31";
+            ctx.fillRect(f.x - 1.4 * bq, f.y - ph, 2.8 * bq, ph);
+            ctx.fillStyle = "#f7c45b";
+            ctx.beginPath();
+            ctx.moveTo(f.x + 2 * bq, f.y - ph);
+            ctx.lineTo(f.x + 12 * PPM * bq, f.y - ph + 3 * PPM * bq);
+            ctx.lineTo(f.x + 2 * bq, f.y - ph + 6 * PPM * bq);
+            ctx.closePath();
+            ctx.fill();
+          }
+          ctx.textAlign = "left";
+        }
+
+        function drawSling() {
+          // 相机起飞后会前进，弹弓落到身后便不再绘制
+          if (camZ > 12) return;
+          var base = project(0, terrainH(0), 0);
+          var q = clamp(base.q, 0.3, 1.2);
+          var tier = save.up.bow.tier;
+          var wood = tier >= 3 ? "#c9a86a" : "#7a5636";
+          var wood2 = tier >= 3 ? "#f0d391" : "#a4764c";
+          var H = 230 * q,
+            W = 150 * q;
+          var xL = base.x - W / 2,
+            xR = base.x + W / 2,
+            yTop = base.y - H;
+
+          ctx.save();
+          ctx.globalAlpha = 0.22;
+          ctx.fillStyle = "#0b2417";
+          ctx.beginPath();
+          ctx.ellipse(base.x, base.y + 2, 62 * q, 12 * q, 0, 0, TAU);
+          ctx.fill();
+          ctx.restore();
+
+          // 从背后看到的弹弓：两根立柱 + 弧形横梁
+          ctx.fillStyle = wood;
+          ctx.fillRect(xL - 7 * q, yTop, 14 * q, H);
+          ctx.fillRect(xR - 7 * q, yTop, 14 * q, H);
+          ctx.strokeStyle = wood2;
+          ctx.lineWidth = 10 * q;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(xL, yTop);
+          ctx.quadraticCurveTo(base.x, yTop - 26 * q, xR, yTop);
+          ctx.stroke();
+          if (tier >= 2) {
+            ctx.strokeStyle = "#f7c45b";
+            ctx.lineWidth = 4 * q;
+            ctx.beginPath();
+            ctx.moveTo(xL - 10 * q, yTop + H * 0.42);
+            ctx.lineTo(xL + 10 * q, yTop + H * 0.42);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(xR - 10 * q, yTop + H * 0.42);
+            ctx.lineTo(xR + 10 * q, yTop + H * 0.42);
+            ctx.stroke();
+          }
+          if (tier >= 4) {
+            ctx.fillStyle = "#ffe7a0";
+            ctx.beginPath();
+            ctx.arc(xL, yTop, 5 * q, 0, TAU);
+            ctx.arc(xR, yTop, 5 * q, 0, TAU);
+            ctx.fill();
+          }
+
+          var pl = project(planeZM(), planeHM(), sway);
+          if (state === "flying" || state === "result") {
+            ctx.strokeStyle = "rgba(90,62,40,.5)";
+            ctx.lineWidth = 4 * q;
+            ctx.beginPath();
+            ctx.moveTo(xL, yTop);
+            ctx.quadraticCurveTo(base.x, yTop + 34 * q, xR, yTop);
+            ctx.stroke();
+          } else {
+            ctx.strokeStyle = "#8d5a3b";
+            ctx.lineWidth = 4 * q;
+            ctx.beginPath();
+            ctx.moveTo(xL, yTop);
+            ctx.lineTo(pl.x, pl.y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(xR, yTop);
+            ctx.lineTo(pl.x, pl.y);
+            ctx.stroke();
+          }
+        }
+
+        // 按机身 Tier 取对应视角的 CC0 图片；未加载成功时返回 null，回退内置绘制
+        function planeImage(mode) {
+          var art = PLANE_ART[mode];
+          var list = sprites[mode] || [];
+          var i = (save.up.plane.tier - 1) % art.length;
+          return list[i] || list[0] || null;
+        }
+        // 两个视角用同一个绘制宽度，按原图比例算高度，保证显示尺寸一致
+        function drawPlaneImage(img) {
+          var iw = img.naturalWidth || img.width || 64;
+          var ih = img.naturalHeight || img.height || 48;
+          var w = 64,
+            h = (w * ih) / iw;
+          ctx.drawImage(img, -w / 2, -h / 2, w, h);
+        }
+
+        // 两种视角共用的飞机造型：图片加载失败时的回退绘制
+        function paintPlaneBody(skin) {
+          ctx.fillStyle = skin.wing;
+          ctx.beginPath();
+          ctx.moveTo(-7, -2);
+          ctx.lineTo(-32, 6);
+          ctx.lineTo(-30, 12);
+          ctx.lineTo(-6, 9);
+          ctx.closePath();
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(7, -2);
+          ctx.lineTo(32, 6);
+          ctx.lineTo(30, 12);
+          ctx.lineTo(6, 9);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = skin.trim;
+          ctx.fillRect(-32, 5, 7, 7);
+          ctx.fillRect(25, 5, 7, 7);
+          ctx.fillStyle = skin.body;
+          ctx.beginPath();
+          ctx.moveTo(0, -24);
+          ctx.quadraticCurveTo(9, -14, 8, 4);
+          ctx.quadraticCurveTo(6, 13, 0, 15);
+          ctx.quadraticCurveTo(-6, 13, -8, 4);
+          ctx.quadraticCurveTo(-9, -14, 0, -24);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = "rgba(60,44,28,.22)";
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+          ctx.fillStyle = skin.glass;
+          ctx.beginPath();
+          ctx.ellipse(0, -6, 4.6, 7, 0, 0, TAU);
+          ctx.fill();
+          ctx.fillStyle = skin.trim;
+          ctx.beginPath();
+          ctx.moveTo(0, -24);
+          ctx.lineTo(-5, -15);
+          ctx.lineTo(5, -15);
+          ctx.closePath();
+          ctx.fill();
+          if (save.up.plane.tier >= 3) {
+            ctx.fillStyle = "#ffe7a0";
+            ctx.beginPath();
+            ctx.arc(-22, 8, 2.2, 0, TAU);
+            ctx.arc(22, 8, 2.2, 0, TAU);
+            ctx.fill();
+          }
+        }
+
+        function drawPlane() {
+          var zM = planeZM(),
+            hM = planeHM();
+          var pr = project(zM, hM, sway);
+          var q = clamp(pr.q, 0.2, 1.2);
+          var ground = project(zM, terrainH(zM), sway);
+          var above = Math.max(0, hM - terrainH(zM));
+          var skin = PLANE_SKINS[(save.up.plane.tier - 1) % PLANE_SKINS.length];
+
+          // 地面影子：飞得越高越淡越小，是重要的纵深线索
+          ctx.save();
+          ctx.globalAlpha = clamp(0.26 - above * 0.003, 0.02, 0.26);
+          ctx.fillStyle = "#0b2417";
+          ctx.beginPath();
+          ctx.ellipse(ground.x, ground.y, 34 * q, 10 * q, 0, 0, TAU);
+          ctx.fill();
+          ctx.restore();
+
+          var S = q * 2.0;
+          ctx.save();
+          ctx.translate(pr.x, pr.y);
+          ctx.rotate(
+            clamp(plane.rot * 0.16, -0.18, 0.18) + Math.sin(clock * 2.1) * 0.04,
+          );
+          ctx.scale(S, S * (1 + clamp(plane.vy / 2600, -0.14, 0.14)));
+          var img = planeImage("depth");
+          if (img) {
+            drawPlaneImage(img);
+            ctx.restore();
+            return;
+          }
+          paintPlaneBody(skin);
+          ctx.restore();
+        }
+
+        function drawAimGuide() {
+          if (state !== "aim" || curPower < 0.06) return;
+          var pts = predict(curPower, curAngle);
+          for (var i = 3; i < pts.length; i += 4) {
+            var pr = project(
+              (pts[i].x - ORIGIN_X) / PPM,
+              (GROUND_BASE - pts[i].y) / PPM,
+              0,
+            );
+            if (pr.y < HORIZON - 60) continue;
+            var a = (1 - i / pts.length) * 0.8;
+            ctx.fillStyle = "rgba(255,250,214," + a + ")";
+            ctx.beginPath();
+            ctx.arc(pr.x, pr.y, 2.2 * pr.q + 0.8, 0, TAU);
+            ctx.fill();
+          }
+          var last = pts[pts.length - 1];
+          if (last) {
+            var lp = project(
+              (last.x - ORIGIN_X) / PPM,
+              (GROUND_BASE - last.y) / PPM,
+              0,
+            );
+            ctx.strokeStyle = "rgba(255,235,160,.85)";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(lp.x, lp.y, 7 * lp.q + 2, 0, TAU);
+            ctx.stroke();
+          }
+        }
+
+        function drawParticles() {
+          // 尾迹与粒子同样按纵深投影，越远越小
+          for (var i = 0; i < trail.length; i++) {
+            var t = trail[i],
+              f = t.life / t.max;
+            var tp = project(
+              (t.x - ORIGIN_X) / PPM,
+              (GROUND_BASE - t.y) / PPM,
+              t.lateral || 0,
+            );
+            if (tp.q < 0.05) continue;
+            ctx.fillStyle = "rgba(255,246,214," + f * 0.38 + ")";
+            ctx.beginPath();
+            ctx.arc(tp.x, tp.y, t.size * f * tp.q * 1.6, 0, TAU);
+            ctx.fill();
+          }
+          for (var j = 0; j < particles.length; j++) {
+            var p = particles[j],
+              a = clamp(p.life / p.max, 0, 1);
+            var pr = project(
+              (p.x - ORIGIN_X) / PPM,
+              (GROUND_BASE - p.y) / PPM,
+              p.lateral || 0,
+            );
+            if (pr.q < 0.05) continue;
+            ctx.save();
+            ctx.globalAlpha = a;
+            ctx.fillStyle = p.color;
+            if (p.star) {
+              ctx.translate(pr.x, pr.y);
+              ctx.rotate(clock * 3 + j);
+              var s = p.size * pr.q * 1.3;
+              ctx.beginPath();
+              for (var k = 0; k < 8; k++) {
+                var r = k % 2 ? s * 0.45 : s * 1.4;
+                var ang = (k / 8) * TAU;
+                if (k === 0) ctx.moveTo(Math.cos(ang) * r, Math.sin(ang) * r);
+                else ctx.lineTo(Math.cos(ang) * r, Math.sin(ang) * r);
+              }
+              ctx.closePath();
+              ctx.fill();
+            } else {
+              ctx.beginPath();
+              ctx.arc(
+                pr.x,
+                pr.y,
+                p.size * (0.4 + a * 0.6) * pr.q * 1.4,
+                0,
+                TAU,
+              );
+              ctx.fill();
+            }
+            ctx.restore();
+          }
+        }
+
+        function drawLeaves() {
+          for (var i = 0; i < leaves.length; i++) {
+            var l = leaves[i];
+            var x =
+              ((((l.x - camZ * l.drift * 0.4) % (viewW + 120)) +
+                (viewW + 120)) %
+                (viewW + 120)) -
+              60;
+            var y = l.y + Math.sin(clock * 0.8 + l.p) * 8;
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(clock * 0.6 + l.p);
+            ctx.globalAlpha = 0.35 + 0.3 * Math.sin(clock + l.p) * 0.5;
+            ctx.fillStyle = l.gold ? "#f7d27a" : "#a9dc9a";
+            ctx.beginPath();
+            ctx.ellipse(0, 0, l.s, l.s * 0.45, 0, 0, TAU);
+            ctx.fill();
+            ctx.restore();
+          }
+        }
+
+        function drawForeground() {
+          // 屏幕空间的近景枝叶，压住画面边缘强化「从林间望向深处」
+          ctx.save();
+          ctx.fillStyle = "rgba(9,34,22,.55)";
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(viewW, 0);
+          ctx.lineTo(viewW, 18);
+          for (var x = viewW; x >= 0; x -= 34) {
+            ctx.lineTo(
+              x,
+              10 + Math.abs(Math.sin(x * 0.031)) * 26 + hash(x) * 14,
+            );
+          }
+          ctx.closePath();
+          ctx.fill();
+          for (var i = 0; i < 7; i++) {
+            var bx = (i * viewW) / 6;
+            ctx.beginPath();
+            ctx.ellipse(bx, 8, 46, 24, 0, 0, TAU);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+
+        function drawSpeedLines() {
+          if (state !== "flying") return;
+          var sp = Math.sqrt(plane.vx * plane.vx + plane.vy * plane.vy) / 1300;
+          if (sp < 0.12) return;
+          var cx = viewW * 0.5,
+            cy = HORIZON;
+          ctx.save();
+          ctx.strokeStyle = "rgba(255,255,235," + (0.04 + sp * 0.11) + ")";
+          ctx.lineWidth = 1.4;
+          for (var i = 0; i < 26; i++) {
+            var a = hash(i * 3.3) * TAU;
+            var r0 =
+              ((hash(i * 7.1) * 300 + clock * 190 * (0.4 + sp)) % 340) + 40;
+            var len = 18 + sp * 68 * (0.5 + hash(i * 5.9));
+            ctx.beginPath();
+            ctx.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0 * 0.72);
+            ctx.lineTo(
+              cx + Math.cos(a) * (r0 + len),
+              cy + Math.sin(a) * (r0 + len) * 0.72,
+            );
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        // ------------------------------------------------ 横向侧视（side）渲染层
+        // 两种视角共用世界坐标：plane.x 是距离轴、plane.y 是高度。
+        // 区别只在投影：横版屏幕坐标 = 世界坐标 - 横向相机；纵深走 project()。
+        function sideX(wx) {
+          return wx - sideCamX;
+        }
+        function sideY(wy) {
+          return wy - sideCamY;
+        }
+
+        function drawSideClouds() {
+          for (var i = 0; i < 6; i++) {
+            var x =
+              ((((i * 300 - sideCamX * 0.06) % (viewW + 420)) + (viewW + 420)) %
+                (viewW + 420)) -
+              210;
+            drawCloud(
+              x,
+              66 + hash(i * 4.3) * 130,
+              0.7 + hash(i * 2.1) * 0.7,
+              0.2 + hash(i * 3.7) * 0.16,
+            );
+          }
+        }
+
+        function drawSideHills() {
+          // 中景丘陵剪影：填住天空与地面之间的空档，随相机缓慢视差
+          var off = sideCamX * 0.16;
+          ctx.save();
+          ctx.globalAlpha = 0.35;
+          ctx.fillStyle = "#2e6b53";
+          ctx.beginPath();
+          ctx.moveTo(0, VH + 4);
+          for (var sx = 0; sx <= viewW + 30; sx += 30) {
+            var wx = off + sx;
+            ctx.lineTo(
+              sx,
+              sideY(GROUND_BASE) -
+                92 -
+                Math.sin(wx * 0.0031) * 46 -
+                Math.sin(wx * 0.0077 + 1.2) * 22,
+            );
+          }
+          ctx.lineTo(viewW, VH + 4);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+
+        function drawSideFarTrees() {
+          var off = sideCamX * 0.3;
+          var baseY = sideY(GROUND_BASE) - 4;
+          var sp = 58;
+          var first = Math.floor(off / sp) * sp;
+          ctx.save();
+          ctx.globalAlpha = 0.5;
+          for (var wx = first; wx < off + viewW + sp * 2; wx += sp) {
+            var r = hash(wx * 0.021);
+            var s = 0.32 + r * 0.26;
+            if (r > 0.62) drawOak(wx - off, baseY, s, "#2a6849", "#3e8960");
+            else drawPine(wx - off, baseY, s, "#2a6849", "#3e8960");
+          }
+          ctx.restore();
+        }
+
+        function drawSideGround() {
+          var step = 10;
+          ctx.beginPath();
+          ctx.moveTo(0, VH + 4);
+          for (var sx = 0; sx <= viewW + step; sx += step) {
+            ctx.lineTo(sx, sideY(groundY(sideCamX + sx)));
+          }
+          ctx.lineTo(viewW, VH + 4);
+          ctx.closePath();
+          ctx.fillStyle = "#235a3e";
+          ctx.fill();
+          ctx.beginPath();
+          for (var sx2 = 0; sx2 <= viewW + step; sx2 += step) {
+            var gy = sideY(groundY(sideCamX + sx2));
+            if (sx2 === 0) ctx.moveTo(sx2, gy);
+            else ctx.lineTo(sx2, gy);
+          }
+          ctx.strokeStyle = "#4f9e63";
+          ctx.lineWidth = 7;
+          ctx.stroke();
+        }
+
+        function drawSideNearTrees() {
+          var sp = 118;
+          var first = Math.floor(sideCamX / sp) * sp;
+          for (var wx = first; wx < sideCamX + viewW + sp * 2; wx += sp) {
+            var r = hash(wx * 0.013);
+            if (r < 0.16) continue;
+            var sx = sideX(wx);
+            var baseY = sideY(groundY(wx)) + 5;
+            var s = 0.7 + r * 0.5;
+            if (sprites.tree) {
+              var w = 74 * s,
+                h = 116 * s;
+              ctx.drawImage(sprites.tree, sx - w / 2, baseY - h, w, h);
+            } else if (r > 0.55) {
+              drawPine(sx, baseY, s, "#1c5537", "#347f51");
+            } else {
+              drawOak(sx, baseY, s, "#205c3d", "#3b8a5b");
+            }
+          }
+        }
+
+        function drawSideSigns() {
+          var i0 = Math.max(
+            1,
+            Math.ceil((sideCamX - ORIGIN_X) / SIDE_SIGN_STEP),
+          );
+          var i1 = Math.floor((sideCamX + viewW - ORIGIN_X) / SIDE_SIGN_STEP);
+          ctx.textAlign = "center";
+          for (var i = i0; i <= i1; i++) {
+            var wx = ORIGIN_X + i * SIDE_SIGN_STEP;
+            var sx = sideX(wx),
+              by = sideY(groundY(wx));
+            ctx.fillStyle = "#6b4d31";
+            ctx.fillRect(sx - 2, by - 52, 4, 52);
+            ctx.fillStyle = "#f3e4bd";
+            ctx.fillRect(sx - 26, by - 76, 52, 24);
+            ctx.strokeStyle = "#a9814b";
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(sx - 26, by - 76, 52, 24);
+            ctx.fillStyle = "#4b3a28";
+            ctx.font = "800 13px Nunito, sans-serif";
+            ctx.fillText(i * 50 + "m", sx, by - 59);
+          }
+          if (save.best > 0) {
+            var bx = sideX(ORIGIN_X + save.best * PPM);
+            if (bx > -60 && bx < viewW + 60) {
+              var byy = sideY(groundY(ORIGIN_X + save.best * PPM));
+              ctx.fillStyle = "#6b4d31";
+              ctx.fillRect(bx - 2, byy - 82, 4, 82);
+              ctx.fillStyle = "#f7c45b";
+              ctx.beginPath();
+              ctx.moveTo(bx + 2, byy - 82);
+              ctx.lineTo(bx + 56, byy - 70);
+              ctx.lineTo(bx + 2, byy - 58);
+              ctx.closePath();
+              ctx.fill();
+            }
+          }
+          ctx.textAlign = "left";
+        }
+
+        function drawSideSling() {
+          var sx = sideX(SLING.x);
+          if (sx < -140 || sx > viewW + 140) return;
+          var baseY = sideY(groundY(SLING.x));
+          var topY = baseY - 196;
+          var tier = save.up.bow.tier;
+          var wood = tier >= 3 ? "#c9a86a" : "#7a5636";
+          var wood2 = tier >= 3 ? "#f0d391" : "#a4764c";
+
+          ctx.save();
+          ctx.globalAlpha = 0.22;
+          ctx.fillStyle = "#0b2417";
+          ctx.beginPath();
+          ctx.ellipse(sx, baseY + 2, 46, 11, 0, 0, TAU);
+          ctx.fill();
+          ctx.restore();
+
+          ctx.strokeStyle = wood;
+          ctx.lineWidth = 15;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(sx, baseY);
+          ctx.lineTo(sx, baseY - 84);
+          ctx.moveTo(sx, baseY - 74);
+          ctx.lineTo(sx - 26, topY);
+          ctx.moveTo(sx, baseY - 74);
+          ctx.lineTo(sx + 26, topY);
+          ctx.stroke();
+          ctx.strokeStyle = wood2;
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.moveTo(sx, baseY - 74);
+          ctx.lineTo(sx - 26, topY);
+          ctx.moveTo(sx, baseY - 74);
+          ctx.lineTo(sx + 26, topY);
+          ctx.stroke();
+          if (tier >= 2) {
+            ctx.strokeStyle = "#f7c45b";
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(sx - 12, baseY - 40);
+            ctx.lineTo(sx + 12, baseY - 40);
+            ctx.stroke();
+          }
+          if (tier >= 4) {
+            ctx.fillStyle = "#ffe7a0";
+            ctx.beginPath();
+            ctx.arc(sx - 26, topY, 5, 0, TAU);
+            ctx.arc(sx + 26, topY, 5, 0, TAU);
+            ctx.fill();
+          }
+
+          var px = sideX(plane.x),
+            py = sideY(plane.y);
+          if (state === "flying" || state === "result") {
+            ctx.strokeStyle = "rgba(90,62,40,.5)";
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(sx - 26, topY);
+            ctx.quadraticCurveTo(sx, topY + 22, sx + 26, topY);
+            ctx.stroke();
+          } else {
+            ctx.strokeStyle = "#8d5a3b";
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(sx - 26, topY);
+            ctx.lineTo(px, py);
+            ctx.moveTo(sx + 26, topY);
+            ctx.lineTo(px, py);
+            ctx.stroke();
+          }
+        }
+
+        function drawSidePlane() {
+          var sx = sideX(plane.x),
+            sy = sideY(plane.y);
+          var gy = sideY(groundY(plane.x));
+          var aboveM = Math.max(0, (gy - sy) / PPM);
+          var skin = PLANE_SKINS[(save.up.plane.tier - 1) % PLANE_SKINS.length];
+          // 与纵深视角 q≈0.83 时保持同样的显示尺寸、影子与涂装
+          var S = 1.66,
+            q = S / 2;
+
+          ctx.save();
+          ctx.globalAlpha = clamp(0.26 - aboveM * 0.003, 0.02, 0.26);
+          ctx.fillStyle = "#0b2417";
+          ctx.beginPath();
+          ctx.ellipse(sx, gy + 2, 34 * q, 10 * q, 0, 0, TAU);
+          ctx.fill();
+          ctx.restore();
+
+          ctx.save();
+          ctx.translate(sx, sy);
+          ctx.rotate(clamp(plane.rot, -0.85, 0.92));
+          ctx.scale(S, S * (1 + clamp(plane.vy / 2600, -0.14, 0.14)));
+          var img = planeImage("side");
+          if (img) {
+            drawPlaneImage(img);
+            ctx.restore();
+            return;
+          }
+          paintPlaneBody(skin);
+          ctx.restore();
+        }
+
+        function drawSideAimGuide() {
+          if (state !== "aim" || curPower < 0.06) return;
+          var pts = predict(curPower, curAngle);
+          for (var i = 3; i < pts.length; i += 3) {
+            var a = (1 - i / pts.length) * 0.8;
+            ctx.fillStyle = "rgba(255,250,214," + a + ")";
+            ctx.beginPath();
+            ctx.arc(sideX(pts[i].x), sideY(pts[i].y), 2.4, 0, TAU);
+            ctx.fill();
+          }
+          var last = pts[pts.length - 1];
+          if (last) {
+            ctx.strokeStyle = "rgba(255,235,160,.85)";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(sideX(last.x), sideY(last.y), 8, 0, TAU);
+            ctx.stroke();
+          }
+        }
+
+        function drawSideParticles() {
+          for (var i = 0; i < trail.length; i++) {
+            var t = trail[i],
+              f = t.life / t.max;
+            ctx.fillStyle = "rgba(255,246,214," + f * 0.38 + ")";
+            ctx.beginPath();
+            ctx.arc(sideX(t.x), sideY(t.y), t.size * f * 1.5, 0, TAU);
+            ctx.fill();
+          }
+          for (var j = 0; j < particles.length; j++) {
+            var p = particles[j],
+              a = clamp(p.life / p.max, 0, 1);
+            var sx = sideX(p.x),
+              sy = sideY(p.y);
+            ctx.save();
+            ctx.globalAlpha = a;
+            ctx.fillStyle = p.color;
+            if (p.star) {
+              ctx.translate(sx, sy);
+              ctx.rotate(clock * 3 + j);
+              var s = p.size * 1.3;
+              ctx.beginPath();
+              for (var k = 0; k < 8; k++) {
+                var r = k % 2 ? s * 0.45 : s * 1.4;
+                var ang = (k / 8) * TAU;
+                if (k === 0) ctx.moveTo(Math.cos(ang) * r, Math.sin(ang) * r);
+                else ctx.lineTo(Math.cos(ang) * r, Math.sin(ang) * r);
+              }
+              ctx.closePath();
+              ctx.fill();
+            } else {
+              ctx.beginPath();
+              ctx.arc(sx, sy, p.size * (0.4 + a * 0.6) * 1.4, 0, TAU);
+              ctx.fill();
+            }
+            ctx.restore();
+          }
+        }
+
+        function drawSideSpeedLines() {
+          if (state !== "flying") return;
+          var sp = Math.sqrt(plane.vx * plane.vx + plane.vy * plane.vy) / 1300;
+          if (sp < 0.12) return;
+          ctx.save();
+          ctx.strokeStyle = "rgba(255,255,235," + (0.05 + sp * 0.12) + ")";
+          ctx.lineWidth = 1.6;
+          for (var i = 0; i < 20; i++) {
+            var y = hash(i * 5.7) * VH;
+            var x =
+              ((((hash(i * 3.1) * viewW - clock * 700 * (0.4 + sp)) %
+                (viewW + 160)) +
+                (viewW + 160)) %
+                (viewW + 160)) -
+              80;
+            var len = 20 + sp * 90 * (0.5 + hash(i * 9.3));
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + len, y);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        function render() {
+          ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+          ctx.clearRect(0, 0, viewW, VH);
+          if (bgGL) drawGLBG();
+          else if (bg2d) draw2DBG();
+          else drawSkyFallback();
+
+          if (viewMode === "side") {
+            drawSideClouds();
+            drawSideHills();
+            drawSideFarTrees();
+            drawSideGround();
+            drawSideNearTrees();
+            drawSideSigns();
+            drawSideSpeedLines();
+            drawSideSling();
+            drawSideAimGuide();
+            drawSideParticles();
+            drawSidePlane();
+          } else {
+            drawClouds();
+            drawGroundPlane();
+            drawRoadMarks();
+            drawForest();
+            drawSigns();
+            drawSpeedLines();
+            drawSling();
+            drawAimGuide();
+            drawParticles();
+            drawPlane();
+          }
+          drawLeaves();
+          drawForeground();
+        }
+
+        // ---------------------------------------------------------------- HUD
+        function renderHUD() {
+          coinVal.textContent = Math.floor(save.coins).toLocaleString("en-US");
+          bestVal.textContent = Math.round(save.best).toLocaleString("en-US");
+          var d = launched ? Math.max(0, (plane.x - ORIGIN_X) / PPM) : 0;
+          distVal.textContent = Math.round(d).toLocaleString("en-US");
+          powerFill.style.width = (curPower * 100).toFixed(1) + "%";
+          powerText.textContent =
+            Math.round(curPower * 100) + "% · " + Math.round(curAngle) + "°";
+        }
+
+        // ---------------------------------------------------------------- 循环
+        var last = performance.now(),
+          acc = 0;
+        function update(dt) {
+          clock += dt;
+          if (state === "ready" && keyCharging) {
+            chargeT += dt;
+            curPower = 0.1 + 0.9 * (0.5 - 0.5 * Math.cos(chargeT * 3.1));
+            curAngle = 38;
+            state = "aim";
+            gameCanvas.classList.add("aiming");
+          } else if (state === "aim" && keyCharging) {
+            chargeT += dt;
+            curPower = 0.1 + 0.9 * (0.5 - 0.5 * Math.cos(chargeT * 3.1));
+            curAngle = 38;
+          }
+          if (state === "aim" && drag) {
+            var dx = drag.cur.x - drag.start.x,
+              dy = drag.cur.y - drag.start.y;
+            var raw = Math.sqrt(dx * dx + dy * dy) || 1;
+            var len = Math.min(raw, MAX_PULL);
+            curPower = clamp(len / MAX_PULL, 0, 1);
+            curAngle = clamp((Math.atan2(dy, -dx) * 180) / Math.PI, 8, 65);
+            if (viewMode === "side") {
+              // 横版：飞机被真正拉向左下方，皮筋方向即发射方向
+              plane.x = SLING.x + 4 + dx * 0.55;
+              plane.y = Math.min(SLING.y + dy * 0.55, groundY(plane.x) - 12);
+              plane.rot = (-curAngle * Math.PI) / 180;
+              sway = 0;
+            } else {
+              // 纵深：保持 z 不变，只把飞机往画面下方（近处）拉，避免投影跳变
+              plane.x = SLING.x + 4;
+              plane.y = SLING.y + len * 0.62;
+              plane.rot = ((-curAngle * Math.PI) / 180) * 0.35;
+              sway = (dx / raw) * (len / PPM) * 0.5;
+            }
+          } else if (state === "flying") {
+            sway = lerp(
+              sway,
+              Math.sin(planeZM() * 0.05 + clock * 0.4) * 4,
+              Math.min(1, dt * 1.5),
+            );
+          } else if (state !== "result") {
+            sway = lerp(sway, 0, Math.min(1, dt * 4));
+          }
+          acc += dt;
+          var guard = 0;
+          while (acc >= STEP && guard < 12) {
+            stepPhysics(STEP);
+            acc -= STEP;
+            guard++;
+          }
+          if (acc > STEP * 12) acc = 0;
+
+          if (viewMode === "side") {
+            // 横版镜头贴身跟随：水平刚性同步（飞机可达 200m/s，插值会被甩开）
+            var tSX =
+              state === "flying" || state === "result"
+                ? plane.x - viewW * SIDE_ANCHOR
+                : ORIGIN_X - viewW * SIDE_ANCHOR;
+            sideCamX = tSX;
+            // 垂直按与纵深一致的强度跟随；快速平滑用来过滤落地弹跳的抖动
+            var tSY = clamp((plane.y - 430) * FOLLOW_VERT, -130, 0);
+            sideCamY += (tSY - sideCamY) * Math.min(1, dt * 9);
+            camZ = sideCamX / PPM; // 供云、落叶、WebGL 远山做缓慢视差
+          } else {
+            // 跟随镜头：纵深紧贴飞机，高度与横向柔性跟随，飞机始终留在画面里
+            var targetZ = -CAM_BACK,
+              targetH = CAM_H_M,
+              targetX = 0;
+            if (state === "flying" || state === "result") {
+              var zM = planeZM();
+              if (followCam) {
+                targetZ = zM - CAM_FOLLOW;
+                targetH =
+                  CAM_H_M + Math.max(0, planeHM() - terrainH(zM)) * FOLLOW_VERT;
+                targetX = sway * 0.8;
+              } else {
+                // 远景模式：镜头滞后量随距离增大，飞机逐渐缩小并收束到消失点
+                var lag = CAM_BACK + Math.min(20, Math.max(0, zM) * 0.035);
+                targetZ = zM - lag;
+              }
+            }
+            // 纵深必须刚性同步：飞机可达 200m/s，平滑插值会把镜头远远甩开
+            if (followCam) camZ = targetZ;
+            else camZ += (targetZ - camZ) * Math.min(1, dt * 2.4);
+            camH += (targetH - camH) * Math.min(1, dt * 6.0);
+            camX += (targetX - camX) * Math.min(1, dt * 6.0);
+          }
+
+          // 粒子
+          for (var i = particles.length - 1; i >= 0; i--) {
+            var p = particles[i];
+            p.life -= dt;
+            if (p.life <= 0) {
+              particles.splice(i, 1);
+              continue;
+            }
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.vy += p.grav * dt;
+            p.vx *= 1 - dt * 1.1;
+          }
+          for (var j = trail.length - 1; j >= 0; j--) {
+            trail[j].life -= dt;
+            if (trail[j].life <= 0) trail.splice(j, 1);
+          }
+          for (var k = 0; k < leaves.length; k++) {
+            var l = leaves[k];
+            l.y += l.sp * dt;
+            l.x += Math.sin(clock * 0.7 + l.p) * 9 * dt;
+            if (l.y > VH + 20) {
+              l.y = -20;
+              l.x = Math.random() * (viewW + 200);
+            }
+          }
+        }
+
+        function frame(now) {
+          var dt = Math.min((now - last) / 1000, 0.05);
+          last = now;
+          if (!document.hidden) {
+            update(dt);
+            render();
+            renderHUD();
+          }
+          requestAnimationFrame(frame);
+        }
+
+        // ---------------------------------------------------------------- 输入
+        function toWorld(e) {
+          var r = gameCanvas.getBoundingClientRect();
+          return {
+            x: (e.clientX - r.left) / scale,
+            y: (e.clientY - r.top) / scale,
+          };
+        }
+        gameCanvas.addEventListener("pointerdown", function (e) {
+          if (state === "flying" || state === "result") return;
+          if (e.button !== undefined && e.button !== 0) return;
+          e.preventDefault();
+          ensureAudio();
+          drag = { start: toWorld(e), cur: toWorld(e) };
+          keyCharging = false;
+          state = "aim";
+          gameCanvas.classList.add("aiming");
+          try {
+            gameCanvas.setPointerCapture(e.pointerId);
+          } catch (err) {
+            /* ignore */
+          }
+        });
+        window.addEventListener("pointermove", function (e) {
+          if (!drag) return;
+          drag.cur = toWorld(e);
+        });
+        window.addEventListener("pointerup", function () {
+          if (!drag) return;
+          var d = drag;
+          drag = null;
+          gameCanvas.classList.remove("aiming");
+          var dx = d.cur.x - d.start.x,
+            dy = d.cur.y - d.start.y;
+          var raw = Math.sqrt(dx * dx + dy * dy) || 1;
+          if (raw < 16) {
+            state = "ready";
+            curPower = 0;
+            resetPlanePos();
+            return;
+          }
+          var len = Math.min(raw, MAX_PULL);
+          var p = clamp(len / MAX_PULL, 0, 1);
+          var ang = clamp((Math.atan2(dy, -dx) * 180) / Math.PI, 8, 65);
+          if (viewMode === "side") {
+            plane.x = SLING.x + 4 + dx * 0.55;
+            plane.y = Math.min(SLING.y + dy * 0.55, groundY(plane.x) - 12);
+          } else {
+            plane.x = SLING.x + 4;
+            plane.y = SLING.y + len * 0.62;
+          }
+          launch(p, ang);
+        });
+        window.addEventListener("pointercancel", function () {
+          if (!drag) return;
+          drag = null;
+          state = "ready";
+          curPower = 0;
+          resetPlanePos();
+          gameCanvas.classList.remove("aiming");
+        });
+        function resetPlanePos() {
+          plane.x = SLING.x + 4;
+          plane.y = SLING.y;
+          plane.rot = 0;
+        }
+
+        window.addEventListener("keydown", function (e) {
+          if (
+            e.target &&
+            (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")
+          )
+            return;
+          var key = (e.key || "").toLowerCase();
+          if (helpModal.classList.contains("show")) {
+            if (key === "escape" || key === "h")
+              helpModal.classList.remove("show");
+            return;
+          }
+          if (e.code === "Space") {
+            e.preventDefault();
+            if (e.repeat || keyCharging) return;
+            if (state === "flying" || state === "result") return;
+            ensureAudio();
+            keyCharging = true;
+            chargeT = 0;
+            curPower = 0.1;
+            curAngle = 38;
+            return;
+          }
+          var k = key;
+          if (k === "r") resetFlight();
+          else if (k === "h") helpModal.classList.toggle("show");
+          else if (k === "m") toggleSound();
+          else if (k === "v") toggleViewMode();
+          else if (k === "c") {
+            if (viewMode !== "depth") {
+              toast("C 仅在纵向视角切换镜头 · 按 V 可切到纵向");
+            } else {
+              followCam = !followCam;
+              toast(
+                followCam
+                  ? "镜头已跟随飞机 · C 可切回远景"
+                  : "已切回远景镜头 · C 可跟随飞机",
+              );
+            }
+          } else if (k === "1") buy("bow");
+          else if (k === "2") buy("plane");
+          else if (k === "3") buy("mult");
+          else if (k === "escape") {
+            resultModal.classList.remove("show");
+            helpModal.classList.remove("show");
+            shopEl.classList.remove("open");
+          }
+        });
+        window.addEventListener("keyup", function (e) {
+          if (e.code !== "Space" || !keyCharging) return;
+          e.preventDefault();
+          keyCharging = false;
+          if (state === "aim") launch(curPower, 38);
+        });
+
+        function setViewMode(mode, quiet) {
+          viewMode = mode === "depth" ? "depth" : "side";
+          save.view = viewMode;
+          persist();
+          // 切换时把两套相机都对齐到飞机当前位置，避免画面跳变
+          sideCamX =
+            state === "flying" || state === "result"
+              ? plane.x - viewW * SIDE_ANCHOR
+              : ORIGIN_X - viewW * SIDE_ANCHOR;
+          sideCamY = clamp((plane.y - 430) * FOLLOW_VERT, -130, 0);
+          if (viewMode === "side") {
+            camZ = sideCamX / PPM;
+          } else if (state === "flying" || state === "result") {
+            camZ = planeZM() - CAM_FOLLOW;
+          } else {
+            camZ = -CAM_BACK;
+          }
+          camH = CAM_H_M;
+          camX = 0;
+          byId("viewBtn").innerHTML =
+            viewMode === "side" ? "&#8646; 视角：横向" : "&#8646; 视角：纵向";
+          if (!quiet) {
+            toast(
+              viewMode === "side"
+                ? "已切换为横向侧视 · 从左往右飞"
+                : "已切换为纵深透视 · 飞向画面深处",
+            );
+          }
+          if (state !== "flying" && state !== "result")
+            hintEl.innerHTML = hintForMode();
+        }
+        function toggleViewMode() {
+          setViewMode(viewMode === "side" ? "depth" : "side");
+        }
+
+        function toggleSound() {
+          save.sound = !save.sound;
+          byId("soundBtn").innerHTML = save.sound
+            ? "&#9834; 音效开"
+            : "&#9834; 音效关";
+          persist();
+        }
+
+        byId("againBtn").addEventListener("click", resetFlight);
+        byId("viewBtn").addEventListener("click", toggleViewMode);
+        byId("resultAgain").addEventListener("click", resetFlight);
+        byId("resultShop").addEventListener("click", function () {
+          resultModal.classList.remove("show");
+          resetFlight();
+          shopEl.classList.add("open");
+        });
+        byId("helpBtn").addEventListener("click", function () {
+          helpModal.classList.add("show");
+        });
+        byId("helpClose").addEventListener("click", function () {
+          helpModal.classList.remove("show");
+        });
+        byId("soundBtn").addEventListener("click", toggleSound);
+        byId("shopToggle").addEventListener("click", function () {
+          shopEl.classList.toggle("open");
+        });
+        byId("resetSave").addEventListener("click", function () {
+          if (!window.confirm("确定清空金币、等级与最佳纪录吗？")) return;
+          try {
+            localStorage.removeItem(SAVE_KEY);
+          } catch (e) {
+            /* ignore */
+          }
+          save.coins = 0;
+          save.best = 0;
+          save.launches = 0;
+          save.total = 0;
+          save.up.bow = { tier: 1, pips: 0, buys: 0 };
+          save.up.plane = { tier: 1, pips: 0, buys: 0 };
+          save.up.mult = { tier: 1, pips: 0, buys: 0 };
+          persist();
+          renderShop();
+          renderHUD();
+          resetFlight();
+          toast("存档已清空");
+        });
+        helpModal.addEventListener("click", function (e) {
+          if (e.target === helpModal) helpModal.classList.remove("show");
+        });
+        resultModal.addEventListener("click", function (e) {
+          if (e.target === resultModal) resultModal.classList.remove("show");
+        });
+        shopEl.addEventListener("click", function (e) {
+          var btn = e.target.closest ? e.target.closest(".buy-btn") : null;
+          if (btn && !btn.disabled) {
+            ensureAudio();
+            buy(btn.getAttribute("data-buy"));
+          }
+        });
+
+        // ---------------------------------------------------------------- 启动
+        // 预加载两套飞机图；任一张失败都保持 null，渲染时自动回退内置绘制
+        function loadPlaneArt() {
+          ["side", "depth"].forEach(function (mode) {
+            PLANE_ART[mode].forEach(function (url, i) {
+              try {
+                var img = new Image();
+                img.onload = function () {
+                  sprites[mode][i] = img;
+                };
+                img.onerror = function () {
+                  /* CDN 不可用时回退内置绘制 */
+                };
+                img.src = url;
+              } catch (e) {
+                /* ignore */
+              }
+            });
+          });
+        }
+
+        function loadAssets() {
+          Object.keys(ASSETS).forEach(function (k) {
+            if (k.indexOf("sfx") === 0 || !ASSETS[k]) return;
+            try {
+              var img = new Image();
+              img.crossOrigin = "anonymous";
+              img.onload = function () {
+                sprites[k] = img;
+              };
+              img.onerror = function () {
+                /* 外链失效时继续用内置绘制 */
+              };
+              img.src = ASSETS[k];
+            } catch (e) {
+              /* ignore */
+            }
+          });
+        }
+
+        loadSave();
+        viewMode = save.view === "depth" ? "depth" : "side";
+        initBG();
+        resize();
+        initLeaves();
+        resetFlight();
+        setViewMode(viewMode, true);
+        loadAssets();
+        loadPlaneArt();
+        renderShop();
+        renderHUD();
+        byId("soundBtn").innerHTML = save.sound
+          ? "&#9834; 音效开"
+          : "&#9834; 音效关";
+        window.addEventListener("resize", resize);
+        requestAnimationFrame(frame);
+      })();
+    </script>
+  </body>
+</html>

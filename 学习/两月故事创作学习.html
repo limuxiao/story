@@ -329,20 +329,171 @@
       .exercise-block textarea {
         min-height: 280px;
       }
+
+      /* ===== 移动端：左右侧栏改为抽屉 ===== */
+      body.h-screen {
+        height: 100vh;
+        height: 100dvh;
+      }
+      #appLayout {
+        height: 100vh;
+        height: 100dvh;
+      }
+
+      /* Header 两侧的抽屉触发按钮 */
+      .drawer-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+        width: 40px;
+        height: 40px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background: #fff;
+        color: #334155;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+      }
+      .drawer-toggle svg {
+        width: 20px;
+        height: 20px;
+      }
+      .drawer-toggle-accent {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #fff;
+      }
+      .drawer-toggle[aria-expanded="true"] {
+        border-color: #93c5fd;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+      }
+
+      /* 抽屉内的关闭按钮 */
+      .drawer-close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        color: #475569;
+        font-size: 20px;
+        line-height: 1;
+      }
+      .drawer-close-light {
+        border-color: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.08);
+        color: #e2e8f0;
+      }
+
+      /* 抽屉遮罩 */
+      #drawerBackdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        background: rgba(15, 23, 42, 0.45);
+        opacity: 0;
+        visibility: hidden;
+        transition:
+          opacity 0.28s ease,
+          visibility 0s linear 0.28s;
+      }
+      #drawerBackdrop.visible {
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 0.28s ease;
+      }
+
+      /* 桌面（≥1024px）：恢复常驻三栏，不显示抽屉相关控件 */
+      @media (min-width: 1024px) {
+        .drawer-toggle,
+        .drawer-close,
+        #drawerBackdrop {
+          display: none;
+        }
+      }
+
+      @media (max-width: 1023px) {
+        aside.drawer {
+          position: fixed;
+          top: 0;
+          z-index: 70;
+          height: 100vh;
+          height: 100dvh;
+          box-shadow: 0 12px 40px rgba(15, 23, 42, 0.28);
+          overscroll-behavior: contain;
+          visibility: hidden;
+          transition:
+            transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            visibility 0s linear 0.3s;
+        }
+        aside.drawer-left {
+          left: 0;
+          width: min(86vw, 340px);
+          transform: translateX(-100%);
+        }
+        aside.drawer-right {
+          right: 0;
+          width: min(92vw, 420px);
+          transform: translateX(100%);
+        }
+        aside.drawer.open {
+          transform: translateX(0);
+          visibility: visible;
+          transition:
+            transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            visibility 0s;
+        }
+      }
+
+      /* 小屏排版微调 */
+      @media (max-width: 640px) {
+        .tab-content h2.text-xl {
+          font-size: 1.25rem;
+        }
+        .tab-content h3 {
+          font-size: 1rem;
+        }
+        .tab-content.active > div.p-6 {
+          padding: 1rem;
+        }
+        #practice section {
+          padding: 14px;
+        }
+        .exercise-block textarea {
+          min-height: 200px;
+        }
+      }
     </style>
   </head>
   <body class="bg-slate-50 text-slate-800 h-screen overflow-hidden">
     <div
-      class="grid grid-cols-[220px_1fr_420px] h-full lg:grid-cols-[220px_1fr_420px] md:grid-cols-1 md:overflow-auto">
-      <!-- 左侧 Aside 目录 -->
+      id="appLayout"
+      class="grid grid-cols-1 lg:grid-cols-[220px_1fr_420px] h-full">
+      <!-- 左侧 Aside 目录（移动端为左抽屉） -->
       <aside
-        class="bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white p-4 overflow-y-auto">
-        <div class="mb-6 pb-4 border-b border-slate-700">
-          <div class="text-[12px] uppercase tracking-[.22em] text-slate-400">
-            Story Craft
+        id="navDrawer"
+        aria-label="章节目录"
+        class="drawer drawer-left bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white p-4 overflow-y-auto">
+        <div
+          class="mb-6 pb-4 border-b border-slate-700 flex items-start justify-between gap-3">
+          <div>
+            <div class="text-[12px] uppercase tracking-[.22em] text-slate-400">
+              Story Craft
+            </div>
+            <h2 class="text-lg font-bold mt-1">故事创作学习</h2>
+            <p class="text-xs text-slate-400 mt-1">体系化 · 两个月训练计划</p>
           </div>
-          <h2 class="text-lg font-bold mt-1">故事创作学习</h2>
-          <p class="text-xs text-slate-400 mt-1">体系化 · 两个月训练计划</p>
+          <button
+            type="button"
+            class="drawer-close drawer-close-light"
+            data-drawer-close
+            aria-label="关闭目录">
+            &times;
+          </button>
         </div>
         <nav class="space-y-1">
           <button
@@ -440,21 +591,61 @@
       </aside>
 
       <!-- 中间：学习+练习主区域 -->
-      <main class="p-6 flex flex-col overflow-hidden">
+      <main class="p-4 sm:p-6 flex flex-col overflow-hidden">
         <header
-          class="mb-5 pb-4 flex items-baseline justify-between flex-wrap gap-2 flex-none">
-          <div>
-            <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">
+          class="mb-4 pb-3 sm:mb-5 sm:pb-4 flex items-center justify-between gap-2 sm:gap-3 flex-none">
+          <button
+            id="navToggle"
+            type="button"
+            class="drawer-toggle"
+            aria-label="打开章节目录"
+            aria-controls="navDrawer"
+            aria-expanded="false"
+            title="章节目录">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              aria-hidden="true">
+              <path d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <div class="flex-1 min-w-0">
+            <h1
+              class="text-lg sm:text-2xl font-extrabold tracking-tight text-slate-900">
               故事创作体系化学习手册
             </h1>
-            <p class="text-sm text-slate-500 mt-1">
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">
               九大核心模块 · 八周训练计划 · 边学边练
             </p>
           </div>
           <span
-            class="text-xs px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100"
+            class="hidden sm:inline-flex text-xs px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100 whitespace-nowrap"
             >本地离线 · 数据仅存浏览器</span
           >
+          <button
+            id="aiToggle"
+            type="button"
+            class="drawer-toggle drawer-toggle-accent"
+            aria-label="打开 AI 故事分析"
+            aria-controls="aiDrawer"
+            aria-expanded="false"
+            title="AI 故事分析">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true">
+              <path
+                d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+              <path d="M8 9h8M8 13h5" />
+            </svg>
+          </button>
         </header>
         <div class="middle-wapper flex-1 min-h-0 overflow-y-auto pr-1">
           <!-- ========== 两个月计划表 ========== -->
@@ -2244,10 +2435,21 @@
         </div>
       </main>
 
-      <!-- 右侧常驻 AI 分析面板 -->
+      <!-- 右侧 AI 分析面板（移动端为右抽屉） -->
       <aside
-        class="bg-white border-l border-slate-200 p-4 overflow-y-auto flex flex-col">
-        <h2 class="text-lg font-bold mb-3">AI 故事分析</h2>
+        id="aiDrawer"
+        aria-label="AI 故事分析"
+        class="drawer drawer-right bg-white border-l border-slate-200 p-4 overflow-y-auto flex flex-col">
+        <div class="flex items-center justify-between gap-3 mb-3">
+          <h2 class="text-lg font-bold">AI 故事分析</h2>
+          <button
+            type="button"
+            class="drawer-close"
+            data-drawer-close
+            aria-label="关闭 AI 面板">
+            &times;
+          </button>
+        </div>
         <div class="flex flex-wrap gap-2 mb-3">
           <button
             onclick="loadCharToAi()"
@@ -2303,7 +2505,86 @@
       </aside>
     </div>
 
+    <!-- 移动端抽屉遮罩 -->
+    <div id="drawerBackdrop" aria-hidden="true"></div>
+
     <script>
+      // ===== 移动端左右抽屉 =====
+      const MOBILE_BREAKPOINT = 1024;
+      const navDrawer = document.getElementById("navDrawer");
+      const aiDrawer = document.getElementById("aiDrawer");
+      const drawerBackdrop = document.getElementById("drawerBackdrop");
+      const navToggle = document.getElementById("navToggle");
+      const aiToggle = document.getElementById("aiToggle");
+
+      function isMobileLayout() {
+        return window.innerWidth < MOBILE_BREAKPOINT;
+      }
+
+      // 同步按钮状态与抽屉可访问性（隐藏时不可聚焦）
+      function syncDrawerState() {
+        const mobile = isMobileLayout();
+        [navDrawer, aiDrawer].forEach((drawer) => {
+          const hidden = mobile && !drawer.classList.contains("open");
+          drawer.setAttribute("aria-hidden", String(hidden));
+          if (hidden) drawer.setAttribute("inert", "");
+          else drawer.removeAttribute("inert");
+        });
+        navToggle.setAttribute(
+          "aria-expanded",
+          String(navDrawer.classList.contains("open"))
+        );
+        aiToggle.setAttribute(
+          "aria-expanded",
+          String(aiDrawer.classList.contains("open"))
+        );
+      }
+
+      function closeDrawers() {
+        const wasOpen =
+          navDrawer.classList.contains("open") ||
+          aiDrawer.classList.contains("open");
+        const focusTarget = navDrawer.classList.contains("open")
+          ? navToggle
+          : aiToggle;
+        navDrawer.classList.remove("open");
+        aiDrawer.classList.remove("open");
+        drawerBackdrop.classList.remove("visible");
+        syncDrawerState();
+        if (wasOpen && isMobileLayout()) focusTarget.focus();
+      }
+
+      function toggleDrawer(side) {
+        if (!isMobileLayout()) return;
+        const target = side === "nav" ? navDrawer : aiDrawer;
+        if (target.classList.contains("open")) {
+          closeDrawers();
+          return;
+        }
+        const other = side === "nav" ? aiDrawer : navDrawer;
+        other.classList.remove("open");
+        target.classList.add("open");
+        drawerBackdrop.classList.add("visible");
+        syncDrawerState();
+        const closeBtn = target.querySelector("[data-drawer-close]");
+        if (closeBtn) closeBtn.focus();
+      }
+
+      navToggle.addEventListener("click", () => toggleDrawer("nav"));
+      aiToggle.addEventListener("click", () => toggleDrawer("ai"));
+      drawerBackdrop.addEventListener("click", () => closeDrawers());
+      document.querySelectorAll("[data-drawer-close]").forEach((btn) => {
+        btn.addEventListener("click", () => closeDrawers());
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeDrawers();
+      });
+      window.addEventListener("resize", () => {
+        if (!isMobileLayout()) closeDrawers();
+        else syncDrawerState();
+      });
+      syncDrawerState();
+
       // 切换标签页
       function switchTab(tabId) {
         // 隐藏所有tab
@@ -2319,6 +2600,11 @@
           btn.classList.remove("active");
         });
         event.target.classList.add("active");
+
+        // 移动端选中章节后收起抽屉，并回到内容顶部
+        const scroller = document.querySelector(".middle-wapper");
+        if (scroller) scroller.scrollTop = 0;
+        closeDrawers();
       }
 
       // 读取角色表单到AI输入框

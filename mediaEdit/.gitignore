@@ -1,0 +1,33 @@
+# 依赖
+node_modules/
+venv/
+.venv/
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+
+# 前端构建产物与工具缓存
+dist/
+.vite/
+*.tsbuildinfo
+
+# 运行时数据：上传素材、代理视频、导出成片、sqlite 元数据
+# 体积大且只属于本机，勿入库
+storage/
+*.db
+*.sqlite
+*.sqlite3
+
+# 本地环境与密钥
+.env
+.env.*
+!.env.example
+*.local
+
+# 日志
+*.log
+
+# 系统 / 编辑器文件
+.DS_Store
+Thumbs.db
