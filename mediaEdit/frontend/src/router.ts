@@ -1,13 +1,19 @@
 import { useEffect, useState } from "react";
 
 // 极简 History 路由：不引入 react-router，避免为两个页面增加依赖。
-export type Route = { view: "home" } | { view: "editor"; projectId: string };
+export type Route =
+  | { view: "home" }
+  | { view: "editor"; projectId: string }
+  | { view: "canvasEditor"; projectId: string };
 
 const NAV_EVENT = "me:navigate";
 
 export function parseRoute(path: string = window.location.pathname): Route {
   const m = /^\/project\/([A-Za-z0-9_-]+)\/?$/.exec(path);
   if (m) return { view: "editor", projectId: m[1] };
+  // 同一工程的 canvas 时间轴实验页；与 DOM 版共用项目数据，可来回切换对比。
+  const c = /^\/canvas\/([A-Za-z0-9_-]+)\/?$/.exec(path);
+  if (c) return { view: "canvasEditor", projectId: c[1] };
   return { view: "home" };
 }
 
@@ -20,6 +26,10 @@ export function navigate(path: string) {
 
 export function editorPath(id: string): string {
   return `/project/${id}`;
+}
+
+export function canvasEditorPath(id: string): string {
+  return `/canvas/${id}`;
 }
 
 export function useRoute(): Route {

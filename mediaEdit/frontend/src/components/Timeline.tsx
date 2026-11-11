@@ -29,6 +29,8 @@ const RULER_H = 20;
 const TOP_GAP = 12;
 const HOLDER_H = 8;
 const TRACK_VIEWPORT_H = 264;
+// 刻度槽位池上限，与 tickStride 的抽稀目标一致：缩放时只更新坐标/文本，不增删节点。
+const MAX_TICKS = 400;
 // 兼容旧交互：拖到轨道行上边缘同样视为插入（holder 是 8px，边缘容差给到 9px）。
 const INSERT_EDGE_PX = 9;
 // 空时间轴：整块虚线框占满轨道区（参考 trackPanelEmpty），不渲染任何轨道头/轨道行。
@@ -637,15 +639,18 @@ export default function Timeline() {
             className="relative min-w-full"
             style={{ width, height: isEmpty ? RULER_H + EMPTY_H : contentH }}
           >
-            {/* 20px 刻度尺 */}
+            {/* 20px 刻度尺：固定 400 个槽位，key 为槽位下标 k。
+                缩放只更新 left / 刻度线高度 / 文本，多余槽位用 hidden 隐藏，
+                DOM 节点零增删，不会在反复拖动滑块时堆积 detached 节点。 */}
             <div data-ruler="" onMouseDown={startScrub} className="relative z-[3] h-5 cursor-ew-resize bg-me-app">
-              {Array.from({ length: tickCount }, (_, k) => {
+              {Array.from({ length: MAX_TICKS }, (_, k) => {
+                const active = k < tickCount;
                 const i = k * tickStride;
                 const t = i * step;
                 return (
-                  <div key={i} className="absolute top-0 h-5 w-px" style={{ left: t * pxPerSec }}>
-                    <div className="absolute left-0 top-0 w-px bg-me-minor" style={{ height: k === 0 || k === tickCount - 1 ? 10 : 6 }} />
-                    <span className="absolute left-[3px] top-[5px] whitespace-nowrap text-[10px] text-me-major">{fmtTick(t)}</span>
+                  <div key={k} className={`absolute top-0 h-5 w-px ${active ? "" : "hidden"}`} style={{ left: active ? t * pxPerSec : 0 }}>
+                    <div className="absolute left-0 top-0 w-px bg-me-minor" style={{ height: active && (k === 0 || k === tickCount - 1) ? 10 : 6 }} />
+                    <span className="absolute left-[3px] top-[5px] whitespace-nowrap text-[10px] text-me-major">{active ? fmtTick(t) : ""}</span>
                   </div>
                 );
               })}

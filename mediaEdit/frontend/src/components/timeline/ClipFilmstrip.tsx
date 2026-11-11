@@ -6,6 +6,8 @@ import { clipDuration } from "../../utils/timelineTime";
 // 后端规格：每 1 秒一张，高度 60px 等比缩放。
 const THUMB_INTERVAL = 1;
 const THUMB_HEIGHT = 60;
+// 防御上限：可视窗口 + overscan 除以最小格宽远小于此值，仅避免异常视口尺寸时建出海量节点。
+const MAX_CELLS = 256;
 
 interface Props {
   clip: Clip;
@@ -40,9 +42,9 @@ function ClipFilmstripImpl({ clip, source, pxPerSec, viewportLeft, viewportWidth
   const cellW = Math.max(24, Math.round(nativeW * heightPx / THUMB_HEIGHT));
   const maxN = Math.max(1, Math.ceil(source.duration / THUMB_INTERVAL));
 
-  const cells: { key: string; n: number; x: number; w: number }[] = [];
+  const cells: { n: number; x: number; w: number }[] = [];
   const from = Math.floor(visL / cellW);
-  const to = Math.ceil(visR / cellW);
+  const to = Math.min(Math.ceil(visR / cellW), from + MAX_CELLS);
   for (let i = from; i <= to; i++) {
     const x = i * cellW;
     if (x >= clipW) break;
@@ -59,15 +61,20 @@ function ClipFilmstripImpl({ clip, source, pxPerSec, viewportLeft, viewportWidth
     if (right <= left) continue;
     // 多画 1px 让相邻格子轻微重叠：浏览器子像素抗锯齿不会在边界留下
     // 一条露出底色（clip 背景）的发丝缝，后一格自然盖住前一格。
-    cells.push({ key: `${i}:${n}`, n, x: left, w: right - left + 1 });
+    cells.push({ n, x: left, w: right - left + 1 });
   }
   if (cells.length === 0) return null;
 
+  // 节点池：key 固定为「槽位下标」，不随缩放值变化。
+  // 缩放时格子对应的帧号 / 坐标会变，但 <img> 节点被复用，只更新 src / left / width；
+  // 只有可见格数变化时才在尾部增删节点（收缩时自然减少）。
+  // 若 key 用「格子索引 + 帧号」，每次拖动缩放滑块都会整批销毁重建，
+  // 旧节点变成 detached 节点堆积，GC 前 DOM 计数只增不减。
   return (
     <div data-filmstrip="" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-      {cells.map((c) => (
+      {cells.map((c, slot) => (
         <img
-          key={c.key}
+          key={slot}
           data-thumb-n={c.n}
           src={thumbUrl(clip.sourceId, c.n)}
           alt=""
