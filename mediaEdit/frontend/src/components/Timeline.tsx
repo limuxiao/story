@@ -1,5 +1,6 @@
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { canRedo, canUndo, useEditor } from "../store";
+import { ClipFilmstrip } from "./timeline/ClipFilmstrip";
 import { MEDIA_MIME } from "./MediaLibrary";
 import { fmtTime } from "../utils/time";
 import {
@@ -16,31 +17,11 @@ import {
   snapTime,
   tickStep,
 } from "../utils/timelineTime";
-import type { Clip, Track } from "../types";
+import type { Clip, Source, Track } from "../types";
 
-// 视觉规范对齐 mobvoi_media_editor/src/components/timeline/*.vue：
-// 该项目没有 CSS 变量体系，全部是硬编码色值 + constData.ts 常量，这里按等价字面量落地。
-const C = {
-  app: "#232329",
-  track: "#28282e",
-  trackSelected: "#303035",
-  toolbarBorder: "#2a2a2c",
-  divider: "#2a2a2e",
-  scaleMinor: "#343337",
-  scaleMajor: "#505057",
-  text: "#fafafa",
-  textDim: "#aeaeb2",
-  textMute: "#7c7c84",
-  insert: "rgba(244,208,0,1)",
-  suck: "rgba(117,98,255,1)",
-  clipSelect: "#eeeeee",
-  handle: "rgba(250,250,250,.5)",
-  emptyBg: "#2e2e35",
-  clipVideo: "rgba(48,141,255,.3)",
-  clipAudio: "rgba(67,204,139,.3)",
-  selection: "rgba(117,117,119,.7)",
-  menuBg: "#2e2e35",
-};
+// 视觉规范对齐 mobvoi_media_editor/src/components/timeline/*.vue。
+// 静态色值统一走 tailwind.config.js 的 me.* token / className；
+// 仅轨道色、片段坐标等运行时数值保留 inline style（Tailwind 无法静态扫描动态类名）。
 
 const TOOLBAR_H = 40;
 const HEAD_W = 148;
@@ -54,6 +35,8 @@ const INSERT_EDGE_PX = 9;
 const EMPTY_H = 200;
 
 const trackHeight = (t: Track) => (t.type === "audio" ? 40 : 52);
+// 缩略图可视窗口左右各多算一段，滚动时不会出现空白闪烁。
+const FILMSTRIP_OVERSCAN = 160;
 
 type IconName =
   | "undo" | "redo" | "cut" | "audio" | "copy" | "trash"
@@ -93,37 +76,22 @@ function ToolButton({ icon, label, disabled, active, onClick }: {
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      style={{
-        width: 20, height: 20, marginRight: 16, padding: 0, flexShrink: 0,
-        display: "inline-flex", alignItems: "center", justifyContent: "center",
-        border: "none", borderRadius: 3,
-        background: active ? "#3a3a42" : "transparent",
-        color: disabled ? "#55555c" : C.text,
-        cursor: disabled ? "not-allowed" : "pointer",
-      }}
+      className={`mr-4 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-[3px] p-0 ${
+        active ? "bg-me-border" : "bg-transparent"
+      } ${disabled ? "cursor-not-allowed text-me-disabled" : "cursor-pointer text-me-text"}`}
     >
       <Icon name={icon} />
     </button>
   );
 }
 
-const textBtn: React.CSSProperties = {
-  background: "transparent", color: "#c8c8cc", border: "1px solid #3a3a42",
-  borderRadius: 4, padding: "2px 8px", fontSize: 11, cursor: "pointer", whiteSpace: "nowrap",
-};
+const TEXT_BTN = "cursor-pointer whitespace-nowrap rounded border border-me-border bg-transparent px-2 py-[2px] text-[11px] text-[#c8c8cc]";
+const HEAD_BTN = "h-4 min-w-[18px] cursor-pointer rounded-[3px] border px-[2px] text-[10px] leading-[14px]";
 
-const headBtn: React.CSSProperties = {
-  background: "transparent", border: "1px solid #3a3a42", borderRadius: 3,
-  minWidth: 18, height: 16, padding: "0 2px", fontSize: 10, lineHeight: "14px",
-  cursor: "pointer", color: C.textMute,
-};
-
-const trimHandle = (side: "left" | "right", w: number, selected: boolean): React.CSSProperties => ({
-  position: "absolute", top: 0, bottom: 0, width: w >= 30 ? 14 : 2,
-  background: selected ? C.handle : "transparent",
-  cursor: "ew-resize", zIndex: 10,
-  ...(side === "left" ? { left: 0 } : { right: 0 }),
-});
+const trimHandleClass = (side: "left" | "right", w: number, selected: boolean) =>
+  `absolute bottom-0 top-0 z-10 cursor-ew-resize ${w >= 30 ? "w-[14px]" : "w-[2px]"} ${
+    side === "left" ? "left-0" : "right-0"
+  } ${selected ? "bg-white/50" : "bg-transparent"}`;
 
 const fmtTick = (t: number) => {
   const m = Math.floor(t / 60);
@@ -137,6 +105,7 @@ type CtxMenu = { x: number; y: number; trackId: string | null; clipId: string | 
 
 export default function Timeline() {
   const clips = useEditor((s) => s.clips);
+  const sources = useEditor((s) => s.sources);
   const tracks = useEditor((s) => s.tracks);
   const time = useEditor((s) => s.time);
   const duration = useEditor((s) => s.duration);
@@ -166,8 +135,42 @@ export default function Timeline() {
   const pasteAt = useEditor((s) => s.pasteAt);
 
   const laneRef = useRef<HTMLDivElement>(null);
+  const scrollerRef = useRef<HTMLDivElement>(null);
   const insertRef = useRef<InsertHint>(null);
   const heldSnap = useRef<number | null>(null);
+  // 时间区横向可视窗口（内容坐标）。缩略图只在这个范围内建 DOM / 发请求。
+  const [viewport, setViewport] = useState({ left: 0, width: 1200 });
+  const sourceById = useMemo(
+    () => new Map<string, Source>(sources.map((s) => [s.id, s])),
+    [sources]
+  );
+
+  // 滚动 / 尺寸变化时才更新可视窗口：48px 阈值配合 overscan，
+  // 小幅滚动不触发整棵时间轴重渲染。
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    let raf = 0;
+    const measure = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const left = el.scrollLeft;
+        const width = el.clientWidth;
+        setViewport((prev) =>
+          prev.width === width && Math.abs(prev.left - left) < 48 ? prev : { left, width }
+        );
+      });
+    };
+    measure();
+    el.addEventListener("scroll", measure, { passive: true });
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", measure);
+      ro.disconnect();
+      cancelAnimationFrame(raf);
+    };
+  }, []);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [dropTarget, setDropTarget] = useState<string | null>(null);
@@ -510,53 +513,45 @@ export default function Timeline() {
     <div
       data-timeline-root=""
       onContextMenu={openCtx}
-      style={{ background: C.app, color: C.text, display: "flex", flexDirection: "column", flexShrink: 0, borderTop: "1px solid #111114", fontFamily: "system-ui, sans-serif" }}
+      className="flex shrink-0 flex-col border-t border-t-[#111114] bg-me-app font-sans text-me-text"
     >
-      <style>{`
-        .me-tl-scroll::-webkit-scrollbar{height:8px;width:8px}
-        .me-tl-scroll::-webkit-scrollbar-track{background:#2d2d32}
-        .me-tl-scroll::-webkit-scrollbar-thumb{background:#404247;border-radius:4px}
-        .me-tl-range{-webkit-appearance:none;appearance:none;height:2px;background:#343337;border-radius:1px;outline:none}
-        .me-tl-range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:8px;height:12px;border-radius:2px 2px 6px 6px;background:#fafafa;cursor:pointer}
-      `}</style>
 
       {/* 40px 工具栏：左侧编辑动作，右侧缩放（参考 toolBar / toolBarBtn / toolBarSetting） */}
-      <div style={{ position: "relative", height: TOOLBAR_H, boxSizing: "border-box", flexShrink: 0, display: "flex", alignItems: "center", paddingLeft: 24, borderBottom: `1px solid ${C.toolbarBorder}` }}>
+      <div className="relative flex h-10 shrink-0 items-center border-b border-me-line pl-6">
         <ToolButton icon="undo" label="撤销 (Ctrl+Z)" disabled={!canUndo()} onClick={undo} />
         <ToolButton icon="redo" label="重做 (Ctrl+Shift+Z)" disabled={!canRedo()} onClick={redo} />
         <ToolButton icon="cut" label="分割于播放头 (Ctrl+B)" disabled={!canSplit} onClick={() => splitAt(time)} />
         <ToolButton icon="audio" label="分离音频（当前引擎不支持，暂不可用）" disabled />
         <ToolButton icon="copy" label="创建副本 (Ctrl+D；Ctrl+C 复制后可右键粘贴)" disabled={!hasSelection} onClick={duplicateSelected} />
         <ToolButton icon="trash" label="删除片段 (Delete)" disabled={!hasSelection} onClick={deleteSelected} />
-        <div style={{ width: 1, height: 16, background: "#3a3a42", margin: "0 12px 0 -4px" }} />
-        <button type="button" title="新建视频轨" style={{ ...textBtn, marginRight: 6 }} onClick={() => addTrack("video", 0)}>+ 视频轨</button>
-        <button type="button" title="新建音频轨" style={{ ...textBtn, marginRight: 12 }} onClick={() => addTrack("audio")}>+ 音频轨</button>
+        <div className="m-[0_12px_0_-4px] h-4 w-px bg-me-border" />
+        <button type="button" title="新建视频轨" className={`${TEXT_BTN} mr-[6px]`} onClick={() => addTrack("video", 0)}>+ 视频轨</button>
+        <button type="button" title="新建音频轨" className={`${TEXT_BTN} mr-3`} onClick={() => addTrack("audio")}>+ 音频轨</button>
         <span
           title="磁吸对齐（片段起止点 / 播放头）"
           onClick={() => setSnapEnabled(!snapEnabled)}
-          style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: snapEnabled ? C.text : C.textMute, cursor: "pointer" }}
+          className={`inline-flex cursor-pointer items-center gap-1 text-[11px] ${snapEnabled ? "text-me-text" : "text-me-mute"}`}
         >
           <Icon name="magnet" size={14} /> 磁吸 {snapEnabled ? "开" : "关"}
         </span>
 
-        <div style={{ position: "absolute", right: 24, top: 0, bottom: 0, display: "flex", alignItems: "center", gap: 8 }}>
+        <div className="absolute inset-y-0 right-6 flex items-center gap-2">
           <button type="button" title="缩小" aria-label="缩小时间线" onClick={() => setPxPerSec(pxPerSec / 1.5)}
-            style={{ width: 16, height: 16, padding: 0, border: "none", background: "transparent", color: C.text, cursor: "pointer", display: "inline-flex" }}>
+            className="inline-flex h-4 w-4 cursor-pointer items-center justify-center bg-transparent p-0 text-me-text">
             <Icon name="zoomOut" size={14} />
           </button>
           <input
-            className="me-tl-range"
+            className="me-tl-range m-0 w-[100px]"
             type="range"
             min={MIN_PX_PER_SEC}
             max={MAX_PX_PER_SEC}
             step={10}
             value={pxPerSec}
             onChange={(e) => setPxPerSec(Number(e.target.value))}
-            style={{ width: 100, margin: 0 }}
             aria-label="时间轴缩放"
           />
           <button type="button" title="放大" aria-label="放大时间线" onClick={() => setPxPerSec(pxPerSec * 1.5)}
-            style={{ width: 16, height: 16, padding: 0, border: "none", background: "transparent", color: C.text, cursor: "pointer", display: "inline-flex" }}>
+            className="inline-flex h-4 w-4 cursor-pointer items-center justify-center bg-transparent p-0 text-me-text">
             <Icon name="zoomIn" size={14} />
           </button>
         </div>
@@ -565,36 +560,33 @@ export default function Timeline() {
       {/* 轨道头与时间区同处一个垂直滚动容器，轨道再多也始终左右对齐、且不会挤压预览 */}
       <div
         data-track-scroll=""
-        className="me-tl-scroll"
-        style={{ display: "flex", background: C.app, maxHeight: TRACK_VIEWPORT_H, overflowY: "auto", overflowX: "hidden" }}
+        className="me-tl-scroll flex max-h-[264px] overflow-x-hidden overflow-y-auto bg-me-app"
       >
         {/* 148px 轨道头（参考 trackMark：20px 刻度占位 + 12px 留白 + 8px holder + 行） */}
-        <div style={{ width: HEAD_W, boxSizing: "border-box", flexShrink: 0, background: C.app, borderRight: `1px solid ${C.divider}` }}>
-          <div style={{ height: RULER_H, borderBottom: `1px solid ${C.toolbarBorder}`, display: "flex", alignItems: "center", paddingLeft: 10, fontSize: 10, color: C.scaleMajor }}>
+        <div className="w-[148px] shrink-0 border-r border-r-me-divider bg-me-app">
+          <div className="flex h-5 items-center border-b border-me-line pl-[10px] text-[10px] text-me-major">
             {!isEmpty && "轨道 / 控制"}
           </div>
           {isEmpty ? (
-            <div style={{ height: EMPTY_H }} />
+            <div className="h-[200px]" />
           ) : (
             <>
-              <div style={{ height: TOP_GAP }} />
+              <div className="h-3" />
               {tracks.map((t, i) => {
             const selected = t.id === selectedTrackId;
             return (
               <Fragment key={t.id}>
-                <div style={{ height: HOLDER_H }} />
+                <div className="h-2" />
                 <div
                   onClick={() => selectTrack(t.id)}
-                  style={{
-                    height: trackHeight(t), boxSizing: "border-box", padding: "3px 8px",
-                    background: selected ? C.trackSelected : C.app,
-                    borderLeft: selected ? "2px solid #308dff" : "2px solid transparent",
-                    borderBottom: "1px solid #2a2a2e",
-                    cursor: "pointer", opacity: t.hidden ? 0.5 : 1, overflow: "hidden",
-                  }}
+                  className={`box-border cursor-pointer overflow-hidden border-b border-b-me-divider border-l-2 px-2 py-[3px] ${
+                    t.type === "audio" ? "h-10" : "h-[52px]"
+                  } ${selected ? "border-l-me-primary bg-me-track-active" : "border-l-transparent bg-me-app"} ${
+                    t.hidden ? "opacity-50" : ""
+                  }`}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                    <span style={{ width: 7, height: 7, borderRadius: 2, background: t.color, flexShrink: 0 }} />
+                  <div className="flex items-center gap-[5px]">
+                    <span className="h-[7px] w-[7px] shrink-0 rounded-[2px]" style={{ backgroundColor: t.color }} />
                     {editingId === t.id ? (
                       <input
                         autoFocus
@@ -603,76 +595,72 @@ export default function Timeline() {
                         onBlur={() => commitRename(t.id)}
                         onKeyDown={(e) => e.key === "Enter" && commitRename(t.id)}
                         onClick={(e) => e.stopPropagation()}
-                        style={{ width: 96, fontSize: 11, padding: "1px 2px", background: "#343337", color: C.text, border: "1px solid #505057", borderRadius: 3 }}
+                        className="w-24 rounded-[3px] border border-me-major bg-me-minor px-[2px] py-px text-[11px] text-me-text"
                       />
                     ) : (
                       <span
                         onDoubleClick={(e) => { e.stopPropagation(); setEditingId(t.id); setEditName(t.name); }}
                         title="双击重命名"
-                        style={{ fontSize: 11, fontWeight: 600, flex: 1, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}
+                        className="flex-1 truncate text-[11px] font-semibold"
                       >
                         {t.name}
                       </span>
                     )}
                   </div>
-                  <div style={{ fontSize: 10, color: C.textMute, marginTop: 1 }}>
+                  <div className="mt-px text-[10px] text-me-mute">
                     {t.type === "audio" ? "音频" : "视频"} · {clips.filter((c) => c.track === t.id).length}段 · {i + 1}层
                   </div>
-                  <div style={{ display: "flex", gap: 2, marginTop: 2 }}>
-                    <button style={headBtn} title="上移一层" onClick={(e) => { e.stopPropagation(); moveTrack(t.id, -1); }}>↑</button>
-                    <button style={headBtn} title="下移一层" onClick={(e) => { e.stopPropagation(); moveTrack(t.id, 1); }}>↓</button>
-                    <button style={{ ...headBtn, ...(t.locked ? { color: "#308dff", borderColor: "#308dff" } : {}) }} title="锁定/解锁" onClick={(e) => { e.stopPropagation(); updateTrack(t.id, { locked: !t.locked }); }}>锁</button>
-                    <button style={{ ...headBtn, ...(t.hidden ? { color: "#f4d000", borderColor: "#f4d000" } : {}) }} title="隐藏/显示" onClick={(e) => { e.stopPropagation(); updateTrack(t.id, { hidden: !t.hidden }); }}>显</button>
-                    <button style={{ ...headBtn, ...(t.muted ? { color: "#43cc8b", borderColor: "#43cc8b" } : {}) }} title="静音/取消静音" onClick={(e) => { e.stopPropagation(); updateTrack(t.id, { muted: !t.muted }); }}>静</button>
-                    <button style={{ ...headBtn, color: "#e06c6c" }} title="删除轨道（连片段一起删除）" onClick={(e) => { e.stopPropagation(); removeTrack(t.id); }}>×</button>
+                  <div className="mt-[2px] flex gap-[2px]">
+                    <button className={`${HEAD_BTN} border-me-border text-me-mute`} title="上移一层" onClick={(e) => { e.stopPropagation(); moveTrack(t.id, -1); }}>↑</button>
+                    <button className={`${HEAD_BTN} border-me-border text-me-mute`} title="下移一层" onClick={(e) => { e.stopPropagation(); moveTrack(t.id, 1); }}>↓</button>
+                    <button className={`${HEAD_BTN} ${t.locked ? "border-me-primary text-me-primary" : "border-me-border text-me-mute"}`} title="锁定/解锁" onClick={(e) => { e.stopPropagation(); updateTrack(t.id, { locked: !t.locked }); }}>锁</button>
+                    <button className={`${HEAD_BTN} ${t.hidden ? "border-me-warn text-me-warn" : "border-me-border text-me-mute"}`} title="隐藏/显示" onClick={(e) => { e.stopPropagation(); updateTrack(t.id, { hidden: !t.hidden }); }}>显</button>
+                    <button className={`${HEAD_BTN} ${t.muted ? "border-me-green text-me-green" : "border-me-border text-me-mute"}`} title="静音/取消静音" onClick={(e) => { e.stopPropagation(); updateTrack(t.id, { muted: !t.muted }); }}>静</button>
+                    <button className={`${HEAD_BTN} border-me-border text-me-red`} title="删除轨道（连片段一起删除）" onClick={(e) => { e.stopPropagation(); removeTrack(t.id); }}>×</button>
                   </div>
                 </div>
               </Fragment>
             );
               })}
-              <div style={{ height: HOLDER_H }} />
+              <div className="h-2" />
             </>
           )}
         </div>
 
         {/* 时间区（参考 trackBox：刻度 + 轨道区 + 播放头为兄弟层，统一横向滚动） */}
-        <div className="me-tl-scroll" style={{ overflowX: "auto", overflowY: "hidden", flex: 1, minWidth: 0 }}>
+        <div ref={scrollerRef} className="me-tl-scroll min-w-0 flex-1 overflow-x-auto overflow-y-hidden">
           <div
             ref={laneRef}
             onMouseDown={startLanePointer}
             onDragOver={(e) => e.preventDefault()}
             onDrop={dropOnBlank}
-            style={{ position: "relative", width, minWidth: "100%", height: isEmpty ? RULER_H + EMPTY_H : contentH }}
+            className="relative min-w-full"
+            style={{ width, height: isEmpty ? RULER_H + EMPTY_H : contentH }}
           >
             {/* 20px 刻度尺 */}
-            <div data-ruler="" onMouseDown={startScrub} style={{ position: "relative", height: RULER_H, background: C.app, cursor: "ew-resize", zIndex: 3 }}>
+            <div data-ruler="" onMouseDown={startScrub} className="relative z-[3] h-5 cursor-ew-resize bg-me-app">
               {Array.from({ length: tickCount }, (_, k) => {
                 const i = k * tickStride;
                 const t = i * step;
                 return (
-                  <div key={i} style={{ position: "absolute", left: t * pxPerSec, top: 0, height: RULER_H, width: 1 }}>
-                    <div style={{ position: "absolute", top: 0, left: 0, width: 1, height: k === 0 || k === tickCount - 1 ? 10 : 6, background: C.scaleMinor }} />
-                    <span style={{ position: "absolute", left: 3, top: 5, fontSize: 10, color: C.scaleMajor, whiteSpace: "nowrap" }}>{fmtTick(t)}</span>
+                  <div key={i} className="absolute top-0 h-5 w-px" style={{ left: t * pxPerSec }}>
+                    <div className="absolute left-0 top-0 w-px bg-me-minor" style={{ height: k === 0 || k === tickCount - 1 ? 10 : 6 }} />
+                    <span className="absolute left-[3px] top-[5px] whitespace-nowrap text-[10px] text-me-major">{fmtTick(t)}</span>
                   </div>
                 );
               })}
             </div>
 
             {isEmpty ? (
-              <div data-empty-tracks="" style={{ position: "relative", height: EMPTY_H }}>
-                <div style={{
-                  position: "absolute", top: 12, left: 16, right: 16, bottom: 16,
-                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8,
-                  background: C.emptyBg, border: `1px dashed ${C.scaleMajor}`, borderRadius: 4,
-                  color: C.textDim, fontSize: 13, pointerEvents: "none",
-                }}>
-                  <span style={{ color: C.scaleMajor }}><Icon name="box" size={44} /></span>
+              <div data-empty-tracks="" className="relative h-[200px]">
+                <div className="pointer-events-none absolute bottom-4 left-4 right-4 top-3 flex flex-col items-center justify-center gap-2 rounded border border-dashed border-me-major bg-me-raised text-[13px] text-me-dim">
+                  <span className="text-me-major"><Icon name="box" size={44} /></span>
                   暂无内容，点击左侧功能栏或直接拖放侧边栏素材到这里
                 </div>
               </div>
             ) : (
               <>
-                <div style={{ height: TOP_GAP }} />
+                <div className="h-3" />
 
                 {tracks.map((t, ti) => {
               const isTarget = dropTarget === t.id;
@@ -685,10 +673,10 @@ export default function Timeline() {
                     onDragOver={(e) => allowHolder(e, ti)}
                     onDragLeave={clearHint}
                     onDrop={(e) => dropOnHolder(e, ti)}
-                    style={{ position: "relative", height: HOLDER_H, background: C.app }}
+                    className="relative h-2 bg-me-app"
                   >
                     {showHolderLine && (
-                      <div data-holder-line="" style={{ position: "absolute", left: 0, right: 0, top: 3, height: 2, background: C.insert, boxShadow: `0 0 4px ${C.insert}`, zIndex: 4, pointerEvents: "none" }} />
+                      <div data-holder-line="" className="pointer-events-none absolute inset-x-0 top-[3px] z-[4] h-[2px] bg-me-warn shadow-[0_0_4px_#f4d000]" />
                     )}
                   </div>
                   <div
@@ -696,47 +684,54 @@ export default function Timeline() {
                     onDragOver={(e) => allowDrop(e, t.id, ti)}
                     onDragLeave={clearHint}
                     onDrop={(e) => dropOnTrack(e, t.id, ti)}
-                    style={{
-                      position: "relative", height: trackHeight(t), boxSizing: "border-box",
-                      borderTop: `1px solid ${C.app}`, borderBottom: "1px solid #25252b",
-                      background: isTarget ? C.trackSelected : C.track,
-                      opacity: t.hidden ? 0.5 : 1,
-                    }}
+                    className={`relative box-border border-b border-b-[#25252b] border-t border-t-me-app ${
+                      t.type === "audio" ? "h-10" : "h-[52px]"
+                    } ${isTarget ? "bg-me-track-active" : "bg-me-track"} ${t.hidden ? "opacity-50" : ""}`}
                   >
                     {showEdgeLine && (
-                      <div data-insert-line="" style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: C.insert, boxShadow: `0 0 4px ${C.insert}`, zIndex: 4, pointerEvents: "none" }} />
+                      <div data-insert-line="" className="pointer-events-none absolute inset-x-0 top-0 z-[4] h-[2px] bg-me-warn shadow-[0_0_4px_#f4d000]" />
                     )}
                     {clips
                       .filter((c) => c.track === t.id)
                       .map((c) => {
                         const w = Math.max(12, clipDuration(c) * pxPerSec);
                         const selected = selectedClipIds.includes(c.id);
+                        const showFilmstrip = t.type === "video" && !c.isAudio;
                         return (
                           <div
                             key={c.id}
                             data-clip-id={c.id}
                             onMouseDown={(e) => startDrag(e, c, "move")}
                             title={`${t.name} · 起点 ${fmtTime(c.timelineStart)}${t.locked ? " · 已锁定" : ""} · 拖左右边缘裁剪`}
-                            style={{
-                              position: "absolute", left: c.timelineStart * pxPerSec, width: w,
-                              top: 0, height: "100%", boxSizing: "border-box",
-                              background: t.type === "audio" ? C.clipAudio : C.clipVideo,
-                              borderLeft: `2px solid ${t.color}`,
-                              color: C.text, borderRadius: 4, fontSize: 11,
-                              padding: "4px 16px", overflow: "hidden", whiteSpace: "nowrap",
-                              boxShadow: selected ? `inset 0 0 0 2px ${C.clipSelect}` : "none",
-                              cursor: t.locked ? "not-allowed" : "grab",
-                              zIndex: selected ? 22 : 1,
-                            }}
+                            className={`absolute top-0 box-border h-full overflow-hidden whitespace-nowrap rounded border-l-2 px-4 py-1 text-[11px] text-me-text ${
+                              t.type === "audio" ? "bg-me-green/30" : "bg-me-primary/30"
+                            } ${t.locked ? "cursor-not-allowed" : "cursor-grab"}`}
+                            style={{ left: c.timelineStart * pxPerSec, width: w, borderLeftColor: t.color, zIndex: selected ? 22 : 1 }}
                           >
+                            {showFilmstrip && (
+                              <ClipFilmstrip
+                                clip={c}
+                                source={sourceById.get(c.sourceId)}
+                                pxPerSec={pxPerSec}
+                                viewportLeft={Math.max(0, viewport.left - FILMSTRIP_OVERSCAN)}
+                                viewportWidth={viewport.width + FILMSTRIP_OVERSCAN * 2}
+                                heightPx={trackHeight(t)}
+                              />
+                            )}
                             {!t.locked && (
                               <>
-                                <div data-trim="left" title="向左裁剪入点" onMouseDown={(e) => { e.stopPropagation(); startDrag(e, c, "trimLeft"); }} style={trimHandle("left", w, selected)} />
-                                <div data-trim="right" title="向右裁剪出点" onMouseDown={(e) => { e.stopPropagation(); startDrag(e, c, "trimRight"); }} style={trimHandle("right", w, selected)} />
+                                <div data-trim="left" title="向左裁剪入点" onMouseDown={(e) => { e.stopPropagation(); startDrag(e, c, "trimLeft"); }} className={trimHandleClass("left", w, selected)} />
+                                <div data-trim="right" title="向右裁剪出点" onMouseDown={(e) => { e.stopPropagation(); startDrag(e, c, "trimRight"); }} className={trimHandleClass("right", w, selected)} />
                               </>
                             )}
-                            {t.type === "audio" ? "♪ " : ""}
-                            {fmtTime(c.srcIn)}→{fmtTime(c.srcOut)} ×{c.speed}
+                            <span className="relative z-[2] rounded-[2px] bg-black/50 px-[3px]">
+                              {t.type === "audio" ? "♪ " : ""}
+                              {fmtTime(c.srcIn)}→{fmtTime(c.srcOut)} ×{c.speed}
+                            </span>
+                            {/* 选中框改为独立层：inset boxShadow 会被缩略图层盖住 */}
+                            {selected && (
+                              <div className="pointer-events-none absolute inset-0 z-[3] box-border rounded border-2 border-me-select" />
+                            )}
                           </div>
                         );
                       })}
@@ -748,10 +743,10 @@ export default function Timeline() {
                   onDragOver={(e) => allowHolder(e, tracks.length)}
                   onDragLeave={clearHint}
                   onDrop={(e) => dropOnHolder(e, tracks.length)}
-                  style={{ position: "relative", height: HOLDER_H, background: C.app }}
+                  className="relative h-2 bg-me-app"
                 >
                   {insertHint?.kind === "holder" && insertHint.index === tracks.length && (
-                    <div data-holder-line="" style={{ position: "absolute", left: 0, right: 0, top: 3, height: 2, background: C.insert, boxShadow: `0 0 4px ${C.insert}`, pointerEvents: "none" }} />
+                    <div data-holder-line="" className="pointer-events-none absolute inset-x-0 top-[3px] h-[2px] bg-me-warn shadow-[0_0_4px_#f4d000]" />
                   )}
                 </div>
               </>
@@ -759,21 +754,21 @@ export default function Timeline() {
 
             {/* 紫色吸附虚线（参考 TrackSuck） */}
             {snapLine !== null && (
-              <div data-snap-line={snapLine} style={{ position: "absolute", left: snapLine * pxPerSec, top: 0, bottom: 0, width: 1, borderLeft: `1px dashed ${C.suck}`, zIndex: 90, pointerEvents: "none" }} />
+              <div data-snap-line={snapLine} className="pointer-events-none absolute inset-y-0 z-[90] w-px border-l border-dashed border-l-me-violet" style={{ left: snapLine * pxPerSec }} />
             )}
 
             {/* 框选蒙层（参考 SelectionBox） */}
             {marquee && (
-              <div style={{ position: "absolute", left: marquee.left, top: marquee.top, width: marquee.width, height: marquee.height, background: C.selection, border: "1px solid #757577", borderRadius: 2, zIndex: 26, pointerEvents: "none" }} />
+              <div className="pointer-events-none absolute z-[26] rounded-[2px] border border-[#757577] bg-[rgba(117,117,119,.7)]" style={{ left: marquee.left, top: marquee.top, width: marquee.width, height: marquee.height }} />
             )}
 
             {/* 白色播放头：9×12 下圆角头 + 1px 竖线，贯穿刻度与全部轨道（参考 trackSeeker） */}
-            <div data-playhead="" style={{ position: "absolute", left: time * pxPerSec - 4, top: 0, bottom: 0, width: 9, zIndex: 88, pointerEvents: "none" }}>
-              <div style={{ position: "absolute", top: 0, left: 0, width: 9, height: 12, borderBottomLeftRadius: 4, borderBottomRightRadius: 4, background: C.text }} />
-              <div style={{ position: "absolute", top: 10, left: 4, bottom: 0, width: 1, background: C.text }} />
+            <div data-playhead="" className="pointer-events-none absolute inset-y-0 z-[88] w-[9px]" style={{ left: time * pxPerSec - 4 }}>
+              <div className="absolute left-0 top-0 h-3 w-[9px] rounded-b-[4px] bg-me-text" />
+              <div className="absolute bottom-0 left-1 top-[10px] w-px bg-me-text" />
             </div>
             <div data-playhead="" onMouseDown={startScrub} title="拖动播放头"
-              style={{ position: "absolute", left: time * pxPerSec - 4, top: 0, width: 9, height: 14, cursor: "ew-resize", zIndex: 89 }} />
+              className="absolute top-0 z-[89] h-[14px] w-[9px] cursor-ew-resize" style={{ left: time * pxPerSec - 4 }} />
           </div>
         </div>
       </div>
@@ -783,44 +778,34 @@ export default function Timeline() {
         onDragOver={(e) => { e.preventDefault(); setDropTarget("__blank__"); }}
         onDragLeave={() => setDropTarget(null)}
         onDrop={dropOnBlank}
-        style={{
-          height: isEmpty ? HOLDER_H : undefined, boxSizing: "border-box",
-          padding: isEmpty ? 0 : "3px 10px", fontSize: 10, color: C.textMute, textAlign: "center",
-          borderTop: `1px solid ${C.toolbarBorder}`,
-          background: dropTarget === "__blank__" ? C.trackSelected : C.app,
-        }}
+        className={`border-t border-me-line text-center text-[10px] text-me-mute ${
+          isEmpty ? "h-2" : "px-[10px] py-[3px]"
+        } ${dropTarget === "__blank__" ? "bg-me-track-active" : "bg-me-app"}`}
       >
         {!isEmpty && "把素材拖到此处 → 自动新建一条上层视频轨并放置（拖到轨道间隙可在该层插入新轨）"}
       </div>
 
       <div data-footer="" data-time={time} data-duration={duration} data-clip-count={clips.length}
-        style={{ fontSize: 10, color: C.textMute, padding: "3px 10px 5px", borderTop: `1px solid ${C.toolbarBorder}` }}>
+        className="border-t border-me-line px-[10px] pb-[5px] pt-[3px] text-[10px] text-me-mute">
         {fmtTime(time)} / {fmtTime(duration)} · {clips.length} 段 · {tracks.length} 轨 · {FPS}fps 帧对齐 · {snapEnabled ? `${SNAP_PX}px 吸附` : "吸附关闭"}
       </div>
 
       {/* 右键菜单（参考 timeline.vue 的 contextmenu + 深色 popover） */}
       {ctx && (
-        <div style={{
-          position: "fixed", left: Math.min(ctx.x, window.innerWidth - 190), top: Math.min(ctx.y, window.innerHeight - 340),
-          width: 180, background: C.menuBg, border: "1px solid #505057", borderRadius: 5,
-          boxShadow: "0 8px 24px rgba(0,0,0,.5)", padding: 4, zIndex: 999,
-        }}>
+        <div
+          className="fixed z-[999] w-[180px] rounded-[5px] border border-me-major bg-me-raised p-1 shadow-[0_8px_24px_rgba(0,0,0,.5)]"
+          style={{ left: Math.min(ctx.x, window.innerWidth - 190), top: Math.min(ctx.y, window.innerHeight - 340) }}
+        >
           {menuItems.map((item, i) => item === "divider"
-            ? <div key={i} style={{ height: 1, background: "#3a3a42", margin: "4px 2px" }} />
+            ? <div key={i} className="mx-[2px] my-1 h-px bg-me-border" />
             : (
               <div
                 key={i}
                 onClick={(e) => { e.stopPropagation(); item.run(); setCtx(null); }}
-                style={{
-                  display: "flex", justifyContent: "space-between", alignItems: "center",
-                  padding: "5px 8px", fontSize: 12, borderRadius: 3, cursor: "pointer",
-                  color: item.danger ? "#e06c6c" : C.text,
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "#3a3a42"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                className={`flex cursor-pointer items-center justify-between rounded-[3px] px-2 py-[5px] text-xs hover:bg-me-border ${item.danger ? "text-me-red" : "text-me-text"}`}
               >
                 <span>{item.label}</span>
-                {item.hint && <span style={{ color: C.textMute, fontSize: 10 }}>{item.hint}</span>}
+                {item.hint && <span className="text-[10px] text-me-mute">{item.hint}</span>}
               </div>
             ))}
         </div>

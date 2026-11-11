@@ -247,8 +247,11 @@ function enqueue(seg: number) {
 }
 
 function cancel(keepFrom: number) {
-  queue = queue.filter((s) => Math.abs(s - keepFrom) <= 1);
-  queued = new Set(queue);
+  // 大跨度 seek 时清空排队段：主线程随后会重新发目标段的 decode，目标段
+  // 因此一定排在队首，不必先解完旧的预取段（会让画面长时间停在旧帧）。
+  // 正在解码的段无法中断，但它的迟到帧由 allowedSegs 过滤掉。
+  queue = [];
+  queued = new Set();
   // 回退/跳转后只保留目标附近的段，避免旧段的迟到帧混入帧池。
   for (const s of [...allowedSegs]) if (Math.abs(s - keepFrom) > 2) allowedSegs.delete(s);
 }

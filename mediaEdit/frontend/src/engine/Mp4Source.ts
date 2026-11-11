@@ -214,15 +214,24 @@ export class Mp4Source {
         best = f;
       }
     }
+    // 起点附近：首帧时间戳常略大于 0（如 0.067），它仍是该位置的正确画面。
+    if (!best && t <= 0.5 && this.anchorKey !== null) {
+      best = this.pool.get(this.anchorKey) ?? null;
+      bestT = this.anchorKey / 1000;
+    }
     if (best) {
       this.holdKey = Math.round(bestT * 1000);
       return best;
     }
     // 空窗（seek 后新段尚未解码完）：保持最后实际绘制的帧，而不是回退到首帧。
-    const hold = this.holdKey !== null ? this.pool.get(this.holdKey) : null;
+    // hold 恰好是 anchor 时不能把首帧当成任意时间点的通用兜底。
+    const hold = this.holdKey !== null && this.holdKey !== this.anchorKey
+      ? this.pool.get(this.holdKey) : null;
     if (hold) return hold;
-    // 仅在从未绘制过任何帧时（素材刚加载）用 anchor 防黑屏。
-    return this.anchorKey !== null ? this.pool.get(this.anchorKey) ?? null : null;
+    // 从未绘制过任何帧（素材刚加载）才用 anchor 防黑屏；否则不重绘，
+    // 画布保留上一画面，等新段帧到达后由 frameRevision 触发刷新。
+    return this.holdKey === null && this.anchorKey !== null
+      ? this.pool.get(this.anchorKey) ?? null : null;
   }
 
   dispose() {

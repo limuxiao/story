@@ -92,20 +92,20 @@ export default function Preview() {
   }, [playing]);
 
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", background: "#0b0b0f", minHeight: 0, justifyContent: "center" }}>
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center bg-me-stage">
       <canvas
         ref={canvasRef}
-        style={{ width: "100%", maxHeight: "72%", aspectRatio: "16 / 9", background: "#000" }}
+        className="aspect-video max-h-[72%] w-full bg-black"
       />
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: 8 }}>
-        <button style={pbtn} onClick={() => setPlaying(!playing)}>
+      <div className="flex items-center gap-[10px] p-2">
+        <button className="cursor-pointer rounded-md bg-me-blue px-4 py-[6px] text-[13px] text-white" onClick={() => setPlaying(!playing)}>
           {playing ? "暂停" : "播放"}
         </button>
-        <span style={{ color: "#e5e7eb", fontSize: 12 }}>{time.toFixed(2)}s</span>
+        <span className="text-xs text-[#e5e7eb]">{time.toFixed(2)}s</span>
         <select
           value={quality}
           onChange={(e) => setQuality(e.target.value as any)}
-          style={{ fontSize: 12 }}
+          className="rounded border border-me-border bg-me-raised px-1 py-[2px] text-xs text-me-text"
         >
           <option value="high">高质量(720)</option>
           <option value="low">低质量(480)</option>
@@ -114,13 +114,3 @@ export default function Preview() {
     </div>
   );
 }
-
-const pbtn: React.CSSProperties = {
-  background: "#2563eb",
-  color: "#fff",
-  border: "none",
-  borderRadius: 6,
-  padding: "6px 16px",
-  fontSize: 13,
-  cursor: "pointer",
-};

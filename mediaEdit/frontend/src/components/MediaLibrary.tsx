@@ -41,26 +41,15 @@ export default function MediaLibrary() {
     addClip({ sourceId: id, timelineStart: useEditor.getState().time });
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#232329" }}>
-      <style>{`
-        .me-src-add{opacity:0;pointer-events:none;transition:opacity .12s}
-        .me-src-card:hover .me-src-add{opacity:1;pointer-events:auto}
-        .me-src-add:hover{background:#5aa8ff !important}
-        .me-src-card:hover .me-src-thumb{outline:1px solid #308dff}
-      `}</style>
-
-      <div style={{
-        height: 40, flexShrink: 0, boxSizing: "border-box", padding: "0 16px",
-        borderBottom: "1px solid #2a2a2c", display: "flex", alignItems: "center",
-        justifyContent: "space-between", fontSize: 13, fontWeight: 600,
-      }}>
+    <div className="flex h-full flex-col bg-me-app">
+      <div className="flex h-10 shrink-0 items-center justify-between border-b border-me-line px-4 text-[13px] font-semibold">
         <span>素材</span>
-        <span style={{ fontSize: 11, fontWeight: 400, color: "#7c7c84" }}>{sources.length}</span>
+        <span className="text-[11px] font-normal text-me-mute">{sources.length}</span>
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "16px 16px 16px", boxSizing: "border-box" }}>
+      <div className="flex-1 overflow-y-auto p-4">
         {sources.length === 0 && (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, paddingTop: 48, color: "#7c7c84", fontSize: 12 }}>
+          <div className="flex flex-col items-center gap-2 pt-12 text-xs text-me-mute">
             <FilmIcon />
             暂无素材，点击右上角上传
           </div>
@@ -68,7 +57,7 @@ export default function MediaLibrary() {
         {sources.map((s: Source) => (
           <div
             key={s.id}
-            className="me-src-card"
+            className="me-src-card group relative mb-3 w-full cursor-grab"
             data-source-id={s.id}
             draggable
             onDragStart={(e) => {
@@ -78,53 +67,37 @@ export default function MediaLibrary() {
             }}
             onDoubleClick={() => addAtPlayhead(s.id)}
             title={`${s.name} · 拖到时间轴，或悬停点击 + 添加到播放头`}
-            style={{ position: "relative", width: "100%", marginBottom: 12, cursor: "grab" }}
           >
             {/* 94px 缩略图区（参考 imgFlex.vue 的 .img_img） */}
-            <div className="me-src-thumb" style={{
-              position: "relative", height: 94, width: "100%", marginBottom: 5,
-              borderRadius: 4, background: "#19191d", overflow: "hidden",
-            }}>
-              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#3a3a42" }}>
+            <div className="me-src-thumb relative mb-[5px] h-[94px] w-full overflow-hidden rounded bg-[#19191d] group-hover:outline group-hover:outline-1 group-hover:outline-me-primary">
+              <div className="absolute inset-0 flex items-center justify-center text-me-border">
                 <FilmIcon />
               </div>
               <img
                 src={absUrl(`/api/poster/${s.id}`)}
                 alt=""
                 draggable={false}
-                onError={(e) => { e.currentTarget.style.display = "none"; }}
-                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", borderRadius: 4 }}
+                onError={(e) => { e.currentTarget.classList.add("hidden"); }}
+                className="absolute inset-0 h-full w-full rounded object-cover"
               />
               {/* 时长角标：左上角常显 */}
-              <span style={{
-                position: "absolute", left: 0, top: 0, height: 18, lineHeight: "18px",
-                padding: "0 4px", borderRadius: "0 0 2px 0", background: "rgba(0,0,0,.5)",
-                fontSize: 12, color: "#fafafa",
-              }}>
+              <span className="absolute left-0 top-0 h-[18px] rounded-br-[2px] bg-black/50 px-1 text-xs leading-[18px] text-me-text">
                 {fmtDuration(s.duration)}
               </span>
               {/* 加号：右上角，仅 hover 出现（参考 AddBt + .addImg） */}
               <button
                 type="button"
-                className="me-src-add"
+                className="me-src-add pointer-events-none absolute right-2 top-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-me-primary p-0 opacity-0 transition-opacity duration-[120ms] hover:bg-[#5aa8ff] group-hover:pointer-events-auto group-hover:opacity-100"
                 data-add-source={s.id}
                 draggable={false}
                 title="添加到时间轴（播放头位置）"
                 onMouseDown={(e) => e.stopPropagation()}
                 onClick={(e) => { e.stopPropagation(); addAtPlayhead(s.id); }}
-                style={{
-                  position: "absolute", top: 8, right: 8, width: 20, height: 20, padding: 0,
-                  display: "inline-flex", alignItems: "center", justifyContent: "center",
-                  border: "none", borderRadius: "50%", background: "#308dff", cursor: "pointer",
-                }}
               >
                 <PlusIcon />
               </button>
             </div>
-            <div style={{
-              height: 22, lineHeight: "22px", fontSize: 14, color: "#aeaeb2",
-              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-            }}>
+            <div className="h-[22px] truncate text-sm leading-[22px] text-me-dim">
               {s.name}
             </div>
           </div>

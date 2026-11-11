@@ -3,6 +3,7 @@ import {
   findTrack,
   initialTracks,
   makeTrack,
+  reserveTrackIds,
   type Clip,
   type Quality,
   type Source,
@@ -20,6 +21,13 @@ import {
 
 let cid = 0;
 export const newClipId = () => `c${++cid}`;
+// 恢复工程时把自增计数器推到已存在 id 之后，避免新建片段与旧片段撞 id。
+const reserveClipIds = (ids: string[]) => {
+  for (const id of ids) {
+    const m = /^c(\d+)$/.exec(id);
+    if (m) cid = Math.max(cid, Number(m[1]));
+  }
+};
 
 // 隐藏轨不参与预览/导出，也不该撑长总时长（参考 mobvoi TimelineTool.findMaxPoint 跳过 !track.show）。
 const recalcDuration = (clips: Clip[], tracks: Track[]) => {
@@ -88,6 +96,8 @@ export interface EditorState {
 
   setSources: (s: Source[]) => void;
   addSource: (s: Source) => void;
+  // 从项目 XML 一次性恢复整个工程：同时清空撤销栈并推进 id 计数器。
+  hydrate: (doc: { sources: Source[]; tracks: Track[]; clips: Clip[] }) => void;
   addClip: (c: Partial<Clip> & { sourceId: string }) => void;
   updateClip: (id: string, patch: Partial<Clip>) => void;
   removeClip: (id: string) => void;
@@ -179,6 +189,29 @@ export const useEditor = create<EditorState>((set) => ({
 
   setSources: (s) => set({ sources: s }),
   addSource: (s) => set((st) => ({ sources: [s, ...st.sources] })),
+
+  hydrate: (doc) => {
+    const clips = doc.clips || [];
+    const tracks = doc.tracks || [];
+    const sources = doc.sources || [];
+    // history 是模块级变量，跨项目残留会让一次 undo 回退到上一个工程。
+    history.past.length = 0;
+    history.future.length = 0;
+    reserveClipIds(clips.map((c) => c.id));
+    reserveTrackIds(tracks.map((t) => t.id));
+    set({
+      sources,
+      clips,
+      tracks,
+      duration: recalcDuration(clips, tracks),
+      time: 0,
+      playing: false,
+      selectedClipId: null,
+      selectedClipIds: [],
+      selectedTrackId: null,
+      loadError: null,
+    });
+  },
 
   addClip: (c) => {
     record();

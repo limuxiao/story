@@ -14,6 +14,13 @@ export interface Track {
 
 let tid = 0;
 export const newTrackId = () => `t${++tid}`;
+// 恢复工程时把自增计数器推到已存在 id 之后，避免新建轨道与旧轨道撞 id。
+export const reserveTrackIds = (ids: string[]) => {
+  for (const id of ids) {
+    const m = /^t(\d+)$/.exec(id);
+    if (m) tid = Math.max(tid, Number(m[1]));
+  }
+};
 
 const VIDEO_COLORS = ["#3b82f6", "#0ea5e9", "#6366f1", "#14b8a6", "#f97316"];
 const AUDIO_COLORS = ["#a855f7", "#c084fc", "#ec4899", "#8b5cf6", "#d946ef"];
@@ -79,4 +86,41 @@ export interface Project {
     type: "video" | "audio";
     clips: Clip[];
   }[];
+}
+
+export interface ProjectSequence {
+  width: number;
+  height: number;
+  fps: number;
+}
+
+export interface ProjectMeta {
+  id: string;
+  name: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ProjectSummary extends ProjectMeta {
+  duration: number;
+  trackCount: number;
+  clipCount: number;
+}
+
+// 完整工程状态：后端以 XML 保存，前端加载后一次性 hydrate 进 store。
+export interface ProjectDoc extends ProjectMeta {
+  duration: number;
+  sequence: ProjectSequence;
+  sources: Source[];
+  tracks: Track[];
+  clips: Clip[];
+}
+
+// 保存时提交给后端的工程内容（项目名单独由重命名接口维护）。
+export interface ProjectPayload {
+  sequence: ProjectSequence;
+  duration: number;
+  sources: Source[];
+  tracks: Track[];
+  clips: Clip[];
 }
