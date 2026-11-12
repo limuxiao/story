@@ -572,6 +572,21 @@
         font-size: 10px;
         margin-left: 2px;
       }
+      .src-link {
+        color: var(--accent);
+        text-decoration: none;
+        border-bottom: 1px dotted #d9b98c;
+        white-space: nowrap;
+      }
+      .src-link:hover {
+        background: var(--accent-soft);
+        border-bottom-style: solid;
+      }
+      .src-link::after {
+        content: "↗";
+        font-size: 10px;
+        margin-left: 2px;
+      }
 
       /* lists */
       ul.plain {
@@ -988,8 +1003,13 @@
         .docs a::after {
           content: "";
         }
-        .docs a {
+        .docs a,
+        .src-link {
           border-bottom: 0;
+        }
+        .docs a::after,
+        .src-link::after {
+          content: "";
         }
         .phases,
         .grid-3,
@@ -1367,7 +1387,8 @@
             <h2>12 周逐周执行表</h2>
           </div>
           <p class="sec-desc">
-            每周只设一个主题。周内所有学习都服务于本周产出，避免「学了一堆但没提交代码」。
+            每周只设一个主题。周内所有学习都服务于本周产出，避免「学了一堆但没提交代码」。每行末尾附本周对应的官方文档直达链接（新窗口打开，已核对可访问）；只按链接读本周需要的章节，不要顺着链接无限展开，资料纪律仍以第
+            05 节的「一个主题只留一个主来源」为准。
           </p>
           <div class="table-wrap">
             <table>
@@ -1387,6 +1408,14 @@
                     HTTP 语义与 REST 设计；NestJS 的 Module / Controller /
                     Service / Repository 分层（统一栈，不再二选一）；Docker 起
                     MySQL + Redis；Git 仓库与 CI 骨架
+                    <span class="docs">
+                      <b>官方文档</b>
+                      <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods" target="_blank" rel="noopener noreferrer">MDN · HTTP 方法</a>
+                      <a href="https://docs.nestjs.com/controllers" target="_blank" rel="noopener noreferrer">NestJS · Controllers</a>
+                      <a href="https://docs.nestjs.com/modules" target="_blank" rel="noopener noreferrer">NestJS · Modules</a>
+                      <a href="https://docs.docker.com/reference/compose-file/" target="_blank" rel="noopener noreferrer">Docker · Compose 参考</a>
+                      <a href="https://docs.github.com/en/actions/get-started/quickstart" target="_blank" rel="noopener noreferrer">Actions · 快速入门</a>
+                    </span>
                   </td>
                   <td>能启动的空服务 + 分层目录 + 一条能跑通的 CI</td>
                 </tr>
@@ -1396,6 +1425,14 @@
                   <td>
                     DDL、约束、JOIN、事务与隔离级别、复合索引与最左前缀、EXPLAIN；主项目
                     ER 图设计
+                    <span class="docs">
+                      <b>官方文档</b>
+                      <a href="https://dev.mysql.com/doc/refman/8.0/en/sql-statements.html" target="_blank" rel="noopener noreferrer">MySQL · SQL 语句</a>
+                      <a href="https://dev.mysql.com/doc/refman/8.0/en/innodb-locking-transaction-model.html" target="_blank" rel="noopener noreferrer">MySQL · 事务与锁</a>
+                      <a href="https://dev.mysql.com/doc/refman/8.0/en/multiple-column-indexes.html" target="_blank" rel="noopener noreferrer">MySQL · 多列索引</a>
+                      <a href="https://dev.mysql.com/doc/refman/8.0/en/explain.html" target="_blank" rel="noopener noreferrer">MySQL · EXPLAIN</a>
+                      <a href="https://typeorm.io/migrations/" target="_blank" rel="noopener noreferrer">TypeORM · Migrations</a>
+                    </span>
                   </td>
                   <td>ER 图 + migrations + seed + 一份索引说明</td>
                 </tr>
@@ -1405,6 +1442,15 @@
                   <td>
                     TypeORM 增删改查、分页、N+1 排查；参数校验与统一错误码；OpenAPI
                     作为单一真源生成前端类型
+                    <span class="docs">
+                      <b>官方文档</b>
+                      <a href="https://typeorm.io/relations/" target="_blank" rel="noopener noreferrer">TypeORM · Relations</a>
+                      <a href="https://typeorm.io/select-query-builder/" target="_blank" rel="noopener noreferrer">TypeORM · QueryBuilder</a>
+                      <a href="https://docs.nestjs.com/techniques/validation" target="_blank" rel="noopener noreferrer">NestJS · Validation</a>
+                      <a href="https://docs.nestjs.com/openapi/introduction" target="_blank" rel="noopener noreferrer">NestJS · OpenAPI</a>
+                      <a href="https://docs.nestjs.com/openapi/cli-plugin" target="_blank" rel="noopener noreferrer">NestJS · CLI 插件</a>
+                      <a href="https://openapi-ts.dev/" target="_blank" rel="noopener noreferrer">openapi-typescript</a>
+                    </span>
                   </td>
                   <td>核心 CRUD 接口 + 契约文件 + 类型共享</td>
                 </tr>
@@ -1414,6 +1460,15 @@
                   <td>
                     密码哈希、JWT + refresh 轮换或 Session、RBAC
                     与资源归属校验（防 IDOR）；集成测试与测试数据隔离
+                    <span class="docs">
+                      <b>官方文档</b>
+                      <a href="https://docs.nestjs.com/recipes/passport" target="_blank" rel="noopener noreferrer">NestJS · Passport</a>
+                      <a href="https://docs.nestjs.com/guards" target="_blank" rel="noopener noreferrer">NestJS · Guards</a>
+                      <a href="https://docs.nestjs.com/security/authorization" target="_blank" rel="noopener noreferrer">NestJS · Authorization</a>
+                      <a href="https://docs.nestjs.com/exception-filters" target="_blank" rel="noopener noreferrer">NestJS · 异常过滤器</a>
+                      <a href="https://docs.nestjs.com/fundamentals/testing" target="_blank" rel="noopener noreferrer">NestJS · Testing</a>
+                      <a href="https://jestjs.io/docs/getting-started" target="_blank" rel="noopener noreferrer">Jest · 入门</a>
+                    </span>
                   </td>
                   <td>
                     <span class="pill">G1</span> 带登录、迁移、测试的服务骨架
@@ -1426,6 +1481,14 @@
                     Redis 缓存 / 限流 /
                     会话；幂等设计（唯一键、状态机、重复提交）；结构化日志与
                     request-id 贯穿
+                    <span class="docs">
+                      <b>官方文档</b>
+                      <a href="https://docs.nestjs.com/techniques/caching" target="_blank" rel="noopener noreferrer">NestJS · Caching</a>
+                      <a href="https://docs.nestjs.com/security/rate-limiting" target="_blank" rel="noopener noreferrer">NestJS · 限流</a>
+                      <a href="https://redis.io/docs/latest/commands/expire/" target="_blank" rel="noopener noreferrer">Redis · EXPIRE</a>
+                      <a href="https://redis.io/docs/latest/commands/setnx/" target="_blank" rel="noopener noreferrer">Redis · SETNX</a>
+                      <a href="https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html" target="_blank" rel="noopener noreferrer">MySQL · ON DUPLICATE KEY</a>
+                    </span>
                   </td>
                   <td>可重放不退化的接口 + 能追一个请求的日志</td>
                 </tr>
@@ -1435,6 +1498,15 @@
                   <td>
                     任务队列（BullMQ 一类）、异步执行、失败重试与死信；SSE 或
                     WebSocket 回传进度
+                    <span class="docs">
+                      <b>官方文档</b>
+                      <a href="https://docs.nestjs.com/techniques/queues" target="_blank" rel="noopener noreferrer">NestJS · Queues</a>
+                      <a href="https://docs.bullmq.io/guide/queues/" target="_blank" rel="noopener noreferrer">BullMQ · Queues</a>
+                      <a href="https://docs.bullmq.io/guide/retrying-failing-jobs" target="_blank" rel="noopener noreferrer">BullMQ · 失败重试</a>
+                      <a href="https://docs.nestjs.com/techniques/server-sent-events" target="_blank" rel="noopener noreferrer">NestJS · SSE</a>
+                      <a href="https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events" target="_blank" rel="noopener noreferrer">MDN · SSE</a>
+                      <a href="https://docs.nestjs.com/websockets/gateways" target="_blank" rel="noopener noreferrer">NestJS · WebSocket</a>
+                    </span>
                   </td>
                   <td>提交任务 → 后台执行 → 前端实时看到进度</td>
                 </tr>
@@ -1444,6 +1516,13 @@
                   <td>
                     分片上传、流式读写、对象存储或本地存储 + 预签名
                     URL；上传类型 / 大小 / 内容校验
+                    <span class="docs">
+                      <b>官方文档</b>
+                      <a href="https://docs.nestjs.com/techniques/file-upload" target="_blank" rel="noopener noreferrer">NestJS · File upload</a>
+                      <a href="https://nodejs.org/api/stream.html" target="_blank" rel="noopener noreferrer">Node.js · Stream</a>
+                      <a href="https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html" target="_blank" rel="noopener noreferrer">OWASP · 文件上传</a>
+                      <a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/ShareObjectPreSignedURL.html" target="_blank" rel="noopener noreferrer">S3 · 预签名 URL</a>
+                    </span>
                   </td>
                   <td>可用的文件上传链路 + 上传安全自查记录</td>
                 </tr>
@@ -1453,6 +1532,15 @@
                   <td>
                     单测 / 集成 / E2E 补齐；CORS、CSRF、XSS、CSP、注入自查；CI
                     加测试与迁移门禁
+                    <span class="docs">
+                      <b>官方文档</b>
+                      <a href="https://docs.nestjs.com/fundamentals/testing" target="_blank" rel="noopener noreferrer">NestJS · Testing</a>
+                      <a href="https://playwright.dev/docs/intro" target="_blank" rel="noopener noreferrer">Playwright · 入门</a>
+                      <a href="https://cheatsheetseries.owasp.org/" target="_blank" rel="noopener noreferrer">OWASP · Cheat Sheets</a>
+                      <a href="https://owasp.org/projects/top-ten" target="_blank" rel="noopener noreferrer">OWASP · Top 10</a>
+                      <a href="https://docs.nestjs.com/security/cors" target="_blank" rel="noopener noreferrer">NestJS · CORS</a>
+                      <a href="https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax" target="_blank" rel="noopener noreferrer">Actions · workflow 语法</a>
+                    </span>
                   </td>
                   <td>
                     <span class="pill">G2</span> 核心链路完整、CI 成为合并门槛
@@ -1464,6 +1552,13 @@
                   <td>
                     用最熟的前端栈接入契约类型；核心页面、进度 UI、加载态 /
                     错误态 / 重试；不引入新技术
+                    <span class="docs">
+                      <b>官方文档</b>
+                      <a href="https://openapi-ts.dev/" target="_blank" rel="noopener noreferrer">openapi-typescript</a>
+                      <a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch" target="_blank" rel="noopener noreferrer">MDN · Fetch</a>
+                      <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS" target="_blank" rel="noopener noreferrer">MDN · CORS</a>
+                      <a href="https://vite.dev/config/server-options.html" target="_blank" rel="noopener noreferrer">Vite · server.proxy</a>
+                    </span>
                   </td>
                   <td>端到端可操作的产品界面</td>
                 </tr>
@@ -1473,6 +1568,15 @@
                   <td>
                     Dockerfile 多阶段构建、docker-compose 编排前后端 + DB +
                     Redis；Nginx 反代与 SPA fallback；HTTPS；环境变量与密钥管理
+                    <span class="docs">
+                      <b>官方文档</b>
+                      <a href="https://docs.docker.com/reference/dockerfile/" target="_blank" rel="noopener noreferrer">Docker · Dockerfile 参考</a>
+                      <a href="https://docs.docker.com/build/building/multi-stage/" target="_blank" rel="noopener noreferrer">Docker · 多阶段构建</a>
+                      <a href="https://docs.docker.com/reference/compose-file/" target="_blank" rel="noopener noreferrer">Docker · Compose 参考</a>
+                      <a href="https://nginx.org/en/docs/beginners_guide.html" target="_blank" rel="noopener noreferrer">Nginx · 入门指南</a>
+                      <a href="https://nginx.org/en/docs/http/ngx_http_proxy_module.html" target="_blank" rel="noopener noreferrer">Nginx · proxy 模块</a>
+                      <a href="https://certbot.eff.org/instructions" target="_blank" rel="noopener noreferrer">Certbot · HTTPS</a>
+                    </span>
                   </td>
                   <td>域名可访问的线上环境</td>
                 </tr>
@@ -1483,6 +1587,15 @@
                     CI/CD（build → migrate →
                     deploy）、回滚脚本、错误上报与基础监控告警、备份恢复演练；压一次基线并记录
                     P95
+                    <span class="docs">
+                      <b>官方文档</b>
+                      <a href="https://docs.github.com/en/actions/how-tos/deploy/deploy-to-third-party-platforms" target="_blank" rel="noopener noreferrer">Actions · 部署</a>
+                      <a href="https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets" target="_blank" rel="noopener noreferrer">Actions · Secrets</a>
+                      <a href="https://typeorm.io/migrations/" target="_blank" rel="noopener noreferrer">TypeORM · Migrations</a>
+                      <a href="https://dev.mysql.com/doc/refman/8.0/en/mysqldump.html" target="_blank" rel="noopener noreferrer">MySQL · mysqldump</a>
+                      <a href="https://grafana.com/docs/k6/latest/" target="_blank" rel="noopener noreferrer">k6 · 文档</a>
+                      <a href="https://docs.sentry.io/platforms/javascript/guides/node/" target="_blank" rel="noopener noreferrer">Sentry · Node</a>
+                    </span>
                   </td>
                   <td>一次完整发布 + 一次回滚演练 + 性能基线数字</td>
                 </tr>
@@ -1492,6 +1605,14 @@
                   <td>
                     架构图、ER 图、README、ADR
                     取舍说明；简历改写；内部争取跨端职责或开始投全栈岗；准备项目叙述与踩坑故事
+                    <span class="docs">
+                      <b>官方文档</b>
+                      <a href="https://adr.github.io/" target="_blank" rel="noopener noreferrer">ADR · 架构决策记录</a>
+                      <a href="https://mermaid.js.org/intro/" target="_blank" rel="noopener noreferrer">Mermaid · 图表语法</a>
+                      <a href="https://c4model.com/" target="_blank" rel="noopener noreferrer">C4 model · 架构图</a>
+                      <a href="https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes" target="_blank" rel="noopener noreferrer">GitHub · README</a>
+                      <a href="https://www.markdownguide.org/basic-syntax/" target="_blank" rel="noopener noreferrer">Markdown · 基础语法</a>
+                    </span>
                   </td>
                   <td>
                     <span class="pill">G3</span> 上线作品 + 完整文档 + 转型材料
@@ -1551,13 +1672,17 @@
               <tbody>
                 <tr>
                   <td><strong>HTTP / REST</strong></td>
-                  <td>MDN Web Docs「HTTP」+ 一篇 REST 设计规范</td>
+                  <td>
+                    <a class="src-link" href="https://developer.mozilla.org/en-US/docs/Web/HTTP" target="_blank" rel="noopener noreferrer">MDN · HTTP</a>、<a class="src-link" href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status" target="_blank" rel="noopener noreferrer">状态码</a>
+                  </td>
                   <td>方法与幂等性、状态码、常见 Header、CORS、缓存；资源命名与嵌套层级</td>
                   <td>W1</td>
                 </tr>
                 <tr>
                   <td><strong>NestJS</strong></td>
-                  <td>docs.nestjs.com 官方文档</td>
+                  <td>
+                    <a class="src-link" href="https://docs.nestjs.com/" target="_blank" rel="noopener noreferrer">NestJS 官方文档</a>、<a class="src-link" href="https://docs.nestjs.com/openapi/introduction" target="_blank" rel="noopener noreferrer">OpenAPI</a>
+                  </td>
                   <td>
                     Overview：Modules / Providers / Controllers / Pipes / Guards /
                     Interceptors / Exception filters；Techniques：Configuration /
@@ -1568,7 +1693,10 @@
                 </tr>
                 <tr>
                   <td><strong>MySQL 8</strong></td>
-                  <td>MySQL 官方手册 + 一本教材的索引 / 查询优化章节选读</td>
+                  <td>
+                    <a class="src-link" href="https://dev.mysql.com/doc/refman/8.0/en/" target="_blank" rel="noopener noreferrer">MySQL 8.0 官方手册</a>
+                    + 教材索引 / 查询优化章节选读
+                  </td>
                   <td>
                     SQL 语法与约束、InnoDB 事务与锁、EXPLAIN 输出、索引设计；教材只挑两章，不精读全书
                   </td>
@@ -1576,13 +1704,18 @@
                 </tr>
                 <tr>
                   <td><strong>TypeORM</strong></td>
-                  <td>typeorm.io 官方文档</td>
+                  <td>
+                    <a class="src-link" href="https://typeorm.io/" target="_blank" rel="noopener noreferrer">TypeORM 官方文档</a>
+                  </td>
                   <td>Entities、Relations、Find Options、QueryBuilder、Migrations、Transactions</td>
                   <td>W2–W4</td>
                 </tr>
                 <tr>
                   <td><strong>Redis / BullMQ</strong></td>
-                  <td>Redis 命令文档 + docs.bullmq.io</td>
+                  <td>
+                    <a class="src-link" href="https://redis.io/docs/latest/commands/" target="_blank" rel="noopener noreferrer">Redis 命令文档</a>
+                    + <a class="src-link" href="https://docs.bullmq.io/" target="_blank" rel="noopener noreferrer">BullMQ 文档</a>
+                  </td>
                   <td>
                     数据类型与 <code>EXPIRE</code> / <code>SETNX</code>；Queue / Worker /
                     Job、并发、重试与退避、失败任务处理
@@ -1591,13 +1724,18 @@
                 </tr>
                 <tr>
                   <td><strong>测试</strong></td>
-                  <td>Jest + Supertest 官方文档</td>
+                  <td>
+                    <a class="src-link" href="https://jestjs.io/docs/getting-started" target="_blank" rel="noopener noreferrer">Jest</a>
+                    + <a class="src-link" href="https://github.com/forwardemail/supertest" target="_blank" rel="noopener noreferrer">Supertest</a>
+                  </td>
                   <td><code>describe</code> / <code>test</code> / <code>expect</code>、mock、请求断言、测试库隔离与事务回滚</td>
                   <td>W4 / W8</td>
                 </tr>
                 <tr>
                   <td><strong>部署交付</strong></td>
-                  <td>Docker、Nginx、GitHub Actions 官方文档</td>
+                  <td>
+                    <a class="src-link" href="https://docs.docker.com/get-started/" target="_blank" rel="noopener noreferrer">Docker</a>、<a class="src-link" href="https://nginx.org/en/docs/" target="_blank" rel="noopener noreferrer">Nginx</a>、<a class="src-link" href="https://docs.github.com/en/actions" target="_blank" rel="noopener noreferrer">GitHub Actions</a>
+                  </td>
                   <td>
                     Dockerfile 多阶段构建、Compose 文件与 volume、Nginx reverse proxy 与
                     <code>try_files</code>、workflow 语法与 Secrets
@@ -1606,7 +1744,10 @@
                 </tr>
                 <tr>
                   <td><strong>安全与文档</strong></td>
-                  <td>OWASP Top 10 + Cheat Sheet Series；ADR 模板</td>
+                  <td>
+                    <a class="src-link" href="https://owasp.org/projects/top-ten" target="_blank" rel="noopener noreferrer">OWASP Top 10</a>
+                    + <a class="src-link" href="https://cheatsheetseries.owasp.org/" target="_blank" rel="noopener noreferrer">Cheat Sheets</a>；<a class="src-link" href="https://adr.github.io/" target="_blank" rel="noopener noreferrer">ADR</a>
+                  </td>
                   <td>
                     注入、失效的访问控制、认证失败、文件上传校验；ADR 四段式「背景 / 选项 / 决定 / 后果」
                   </td>
@@ -1616,8 +1757,9 @@
             </table>
           </div>
           <div class="callout">
-            <strong>怎么用：</strong>体系化学习的 4
-            小时只用来读上表对应章节，先跑通一个官方最小例子，再回主项目自己实现一遍。教程只用于「第一次跑通」，不跟做完整系列；全期不新增第二套框架、第二本教材。
+            <strong>怎么用：</strong>上表来源均可直接点开，第 04
+            节逐周表还按周列了更细的章节直达链接。体系化学习的 4
+            小时只用来读本周对应章节，先跑通一个官方最小例子，再回主项目自己实现一遍。教程只用于「第一次跑通」，不跟做完整系列；全期不新增第二套框架、第二本教材。
           </div>
 
           <h3 class="subhead">12 周知识点 · 配套练习 · 学会的判据</h3>
