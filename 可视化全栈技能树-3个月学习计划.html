@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>全栈技能树｜NestJS 路线 3个月学习计划</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css"
+      rel="stylesheet" />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              nest: "#e0234e",
+              db: "#3498db",
+              redis: "#dc382d",
+              docker: "#2496ed",
+              ops1: "#27ae60",
+              ops2: "#f39c12",
+              ops3: "#9b59b6",
+              front: "#06b6d4",
+            },
+          },
+        },
+      };
+    </script>
+    <style type="text/tailwindcss">
+      @layer utilities {
+        .tree-card {
+          @apply rounded-xl p-4 shadow-md border border-gray-200 bg-white;
+        }
+        .plan-card {
+          @apply rounded-xl p-5 shadow border;
+        }
+        .tag {
+          @apply inline-block px-2 py-0.5 rounded text-white text-xs mr-1 mb-1;
+        }
+        .check-item {
+          @apply flex items-center gap-2 py-1;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-800">
+    <div class="max-w-6xl mx-auto px-4 py-8">
+      <header class="mb-10 text-center">
+        <h1 class="text-3xl font-bold mb-2">全栈技能树 · NestJS 路线</h1>
+        <p class="text-slate-500">
+          主线：NestJS + MySQL + TypeORM + Redis + Docker + 运维 +
+          前端可选｜三个月学习计划
+        </p>
+      </header>
+
+      <section class="mb-12">
+        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+          <i class="fa fa-sitemap text-nest"></i> 完整技能树
+        </h2>
+        <div class="grid md:grid-cols-2 gap-4">
+          <!-- 后端核心 -->
+          <div class="tree-card">
+            <h3 class="font-bold text-nest mb-2">🟢 后端核心（主线优先）</h3>
+            <div class="space-y-1 text-sm">
+              <div class="tag bg-nest">RESTful API</div>
+              <div class="tag bg-nest">NestJS Module/Controller/Service</div>
+              <div class="tag bg-nest">Pipe / Guard / Interceptor / Filter</div>
+              <div class="tag bg-nest">TypeORM Entity / Repository</div>
+              <div class="tag bg-nest">TypeORM 关联、事务、Migration</div>
+              <div class="tag bg-nest">JWT / RefreshToken</div>
+              <div class="tag bg-nest">RBAC权限</div>
+              <div class="tag bg-nest">Redis缓存、分布式锁、限流</div>
+              <div class="tag bg-nest">DTO、VO、分页封装</div>
+            </div>
+          </div>
+
+          <!-- 数据库缓存 -->
+          <div class="tree-card">
+            <h3 class="font-bold text-db mb-2">🟡 数据库 & 缓存专项</h3>
+            <div class="space-y-1 text-sm">
+              <div class="tag bg-db">MySQL索引、Explain慢查询</div>
+              <div class="tag bg-db">事务隔离级别、锁</div>
+              <div class="tag bg-redis">Redis RDB/AOF持久化</div>
+              <div class="tag bg-redis">缓存穿透/击穿/雪崩</div>
+              <div class="tag bg-db">表结构设计、范式取舍</div>
+            </div>
+          </div>
+
+          <!-- Docker -->
+          <div class="tree-card">
+            <h3 class="font-bold text-docker mb-2">🔵 Docker 容器</h3>
+            <div class="space-y-1 text-sm">
+              <div class="tag bg-docker">镜像、容器、Volume、Network</div>
+              <div class="tag bg-docker">Dockerfile 多阶段构建</div>
+              <div class="tag bg-docker">docker-compose 编排</div>
+              <div class="tag bg-docker">多环境 .env 隔离</div>
+            </div>
+          </div>
+
+          <!-- 运维第一层 必学 -->
+          <div class="tree-card">
+            <h3 class="font-bold text-ops1 mb-2">🟠 运维第一层｜上线必备</h3>
+            <div class="space-y-1 text-sm">
+              <div class="tag bg-ops1">Linux基础命令</div>
+              <div class="tag bg-ops1">systemd、crontab</div>
+              <div class="tag bg-ops1">Nginx反向代理、HTTPS</div>
+              <div class="tag bg-ops1">MySQL定时备份&恢复</div>
+              <div class="tag bg-ops1">SSH密钥、服务器安全加固</div>
+            </div>
+          </div>
+
+          <!-- 运维第二层 进阶 -->
+          <div class="tree-card">
+            <h3 class="font-bold text-ops2 mb-2">🟠 运维第二层｜进阶可观测</h3>
+            <div class="space-y-1 text-sm">
+              <div class="tag bg-ops2">Prometheus + Grafana</div>
+              <div class="tag bg-ops2">Loki + Promtail 日志收集</div>
+              <div class="tag bg-ops2">Github Actions CI/CD</div>
+              <div class="tag bg-ops2">Docker资源限制</div>
+            </div>
+          </div>
+
+          <!-- 运维第三层 企业高可用 -->
+          <div class="tree-card">
+            <h3 class="font-bold text-ops3 mb-2">
+              🟠 运维第三层｜企业高可用（延后）
+            </h3>
+            <div class="space-y-1 text-sm">
+              <div class="tag bg-ops3">K8s基础概念</div>
+              <div class="tag bg-ops3">消息队列 MQ</div>
+              <div class="tag bg-ops3">OpenTelemetry 链路追踪</div>
+              <div class="tag bg-ops3">灰度/蓝绿发布</div>
+            </div>
+          </div>
+
+          <!-- 前端分支 -->
+          <div class="tree-card">
+            <h3 class="font-bold text-front mb-2">🟣 前端分支（三选一）</h3>
+            <div class="space-y-1 text-sm">
+              <div class="tag bg-front">Vue3 + Vite + Pinia</div>
+              <div class="tag bg-front">React + Vite + TanStack Query</div>
+              <div class="tag bg-front">Next.js（SSR+BFF）</div>
+            </div>
+          </div>
+
+          <!-- 配套工程能力 -->
+          <div class="tree-card">
+            <h3 class="font-bold text-slate-700 mb-2">⚫ 配套工程能力</h3>
+            <div class="space-y-1 text-sm">
+              <div class="tag bg-slate-600">Git 分支规范</div>
+              <div class="tag bg-slate-600">Jest单元测试</div>
+              <div class="tag bg-slate-600">Swagger OpenAPI</div>
+              <div class="tag bg-slate-600">ESLint + Prettier</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="mb-12">
+        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+          <i class="fa fa-calendar text-ops1"></i> 三个月学习计划（每周目标）
+        </h2>
+        <div class="space-y-6">
+          <!-- 第1个月：后端底座 + Docker本地环境 -->
+          <div class="plan-card border-nest bg-rose-50">
+            <h3 class="font-bold text-nest text-lg">
+              📅 第 1
+              个月：后端底座搭建，写出标准REST接口（重点：Nest+TypeORM+Redis+Docker本地环境）
+            </h3>
+            <div class="mt-3 space-y-2 text-sm">
+              <p><strong>第1周：NestJS基础</strong></p>
+              <ul class="list-disc pl-5">
+                <li>搭建Nest项目，理解Module/Controller/Service/Provider</li>
+                <li>熟悉依赖注入、基础模块划分</li>
+                <li>学习DTO、Pipe参数校验，统一返回格式</li>
+              </ul>
+              <p><strong>第2周：TypeORM + MySQL</strong></p>
+              <ul class="list-disc pl-5">
+                <li>Entity定义、主键、字段约束、索引</li>
+                <li>Repository、基础CRUD、QueryBuilder</li>
+                <li>Migrations迁移管理，学会生成、执行迁移</li>
+                <li>一对多、多对一关系映射</li>
+              </ul>
+              <p><strong>第3周：Redis、鉴权、权限、缓存策略</strong></p>
+              <ul class="list-disc pl-5">
+                <li>Nest集成Redis，基础缓存封装</li>
+                <li>JWT登录、刷新令牌、Guard鉴权</li>
+                <li>分布式锁、接口限流简单实现</li>
+                <li>缓存雪崩、穿透、击穿方案理解</li>
+              </ul>
+              <p>
+                <strong>第4周：Docker + docker-compose 本地整套环境</strong>
+              </p>
+              <ul class="list-disc pl-5">
+                <li>Docker基础、Volume、网络</li>
+                <li>编写Nest多阶段Dockerfile</li>
+                <li>docker-compose编排 Nest + MySQL + Redis</li>
+                <li>
+                  本地一键拉起开发环境，完成一个完整资源REST（用户/文章）CRUD项目
+                </li>
+              </ul>
+              <p class="mt-2 text-rose-700 bg-white p-2 rounded">
+                ✅
+                月度产出：一个可本地docker启动的RESTful后端项目，带用户模块、JWT鉴权、Redis缓存
+              </p>
+            </div>
+          </div>
+
+          <!-- 第2个月：运维第一层（上线必备） + 前端对接 -->
+          <div class="plan-card border-ops1 bg-green-50">
+            <h3 class="font-bold text-ops1 text-lg">
+              📅 第 2 个月：运维上线能力 + 前端对接（重点：Linux / Nginx / 备份
+              / 前端）
+            </h3>
+            <div class="mt-3 space-y-2 text-sm">
+              <p><strong>第5周：Linux基础 & 服务器安全</strong></p>
+              <ul class="list-disc pl-5">
+                <li>常用命令：进程、磁盘、网络、日志查看</li>
+                <li>systemd、crontab定时任务、防火墙</li>
+                <li>SSH密钥登录，服务器安全加固</li>
+              </ul>
+              <p><strong>第6周：Nginx + HTTPS部署</strong></p>
+              <ul class="list-disc pl-5">
+                <li>Nginx反向代理配置，转发到后端服务</li>
+                <li>acme.sh申请SSL证书，配置HTTPS</li>
+                <li>跨域、静态资源配置</li>
+              </ul>
+              <p><strong>第7周：MySQL备份恢复 + 线上部署项目</strong></p>
+              <ul class="list-disc pl-5">
+                <li>mysqldump脚本，crontab定时自动备份</li>
+                <li>备份恢复演练</li>
+                <li>服务器上使用docker-compose部署你的后端项目，公网可访问</li>
+              </ul>
+              <p><strong>第8周：前端开发，对接REST接口</strong></p>
+              <ul class="list-disc pl-5">
+                <li>选定一套前端（Vue3 / React / Next）</li>
+                <li>封装Axios请求、统一错误处理</li>
+                <li>开发登录页面、列表页、新增编辑页，联调后端</li>
+              </ul>
+              <p class="mt-2 text-green-700 bg-white p-2 rounded">
+                ✅ 月度产出：公网可访问完整项目：后端REST服务 + 前端页面 + HTTPS
+                + 自动数据库备份
+              </p>
+            </div>
+          </div>
+
+          <!-- 第3个月：进阶运维、工程化、查漏补缺 -->
+          <div class="plan-card border-ops2 bg-amber-50">
+            <h3 class="font-bold text-ops2 text-lg">
+              📅 第 3 个月：进阶可观测、CI/CD、优化、综合项目打磨
+            </h3>
+            <div class="mt-3 space-y-2 text-sm">
+              <p><strong>第9周：Prometheus + Grafana 监控</strong></p>
+              <ul class="list-disc pl-5">
+                <li>Nest暴露指标，接入Prometheus</li>
+                <li>Grafana面板搭建：QPS、耗时、错误率、服务器资源</li>
+                <li>配置告警通知</li>
+              </ul>
+              <p><strong>第10周：Loki日志收集 + 排障能力</strong></p>
+              <ul class="list-disc pl-5">
+                <li>Loki+Promtail收集容器日志</li>
+                <li>学习慢接口排查、数据库慢SQL分析、Explain</li>
+              </ul>
+              <p><strong>第11周：CI/CD自动化部署 Github Actions</strong></p>
+              <ul class="list-disc pl-5">
+                <li>
+                  编写workflow：提交代码 → 构建镜像 → 推送镜像仓库 →
+                  服务器更新服务
+                </li>
+                <li>学习单元测试Jest，给Service层写测试用例</li>
+              </ul>
+              <p><strong>第12周：整体重构优化、查漏补缺、项目收尾</strong></p>
+              <ul class="list-disc pl-5">
+                <li>完善接口文档Swagger</li>
+                <li>整理规范、异常处理、优化缓存策略</li>
+                <li>复盘整个链路，标记薄弱点后续学习（K8s、MQ等）</li>
+              </ul>
+              <p class="mt-2 text-amber-700 bg-white p-2 rounded">
+                ✅
+                月度产出：带监控、日志、自动部署的生产级Demo项目，整套链路闭环
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="mb-10">
+        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+          <i class="fa fa-check-square-o text-slate-700"></i> 打卡清单
+        </h2>
+        <div class="tree-card">
+          <div class="grid md:grid-cols-2 gap-2 text-sm">
+            <div class="check-item">
+              <input type="checkbox" id="c1" /><label for="c1"
+                >RESTful API规范</label
+              >
+            </div>
+            <div class="check-item">
+              <input type="checkbox" id="c2" /><label for="c2"
+                >NestJS 校验、权限、异常拦截</label
+              >
+            </div>
+            <div class="check-item">
+              <input type="checkbox" id="c3" /><label for="c3"
+                >TypeORM 实体、关联、迁移、事务</label
+              >
+            </div>
+            <div class="check-item">
+              <input type="checkbox" id="c4" /><label for="c4"
+                >Redis 缓存、分布式锁、限流</label
+              >
+            </div>
+            <div class="check-item">
+              <input type="checkbox" id="c5" /><label for="c5"
+                >Dockerfile + docker-compose</label
+              >
+            </div>
+            <div class="check-item">
+              <input type="checkbox" id="c6" /><label for="c6"
+                >Linux 常用运维命令</label
+              >
+            </div>
+            <div class="check-item">
+              <input type="checkbox" id="c7" /><label for="c7"
+                >Nginx反向代理 + HTTPS</label
+              >
+            </div>
+            <div class="check-item">
+              <input type="checkbox" id="c8" /><label for="c8"
+                >MySQL 定时备份脚本 & 恢复</label
+              >
+            </div>
+            <div class="check-item">
+              <input type="checkbox" id="c9" /><label for="c9"
+                >服务器安全加固</label
+              >
+            </div>
+            <div class="check-item">
+              <input type="checkbox" id="c10" /><label for="c10"
+                >Prometheus + Grafana 监控告警</label
+              >
+            </div>
+            <div class="check-item">
+              <input type="checkbox" id="c11" /><label for="c11"
+                >Loki 日志收集</label
+              >
+            </div>
+            <div class="check-item">
+              <input type="checkbox" id="c12" /><label for="c12"
+                >CI/CD Github Actions</label
+              >
+            </div>
+            <div class="check-item">
+              <input type="checkbox" id="c13" /><label for="c13"
+                >前端框架一套（Vue/React/Next）对接接口</label
+              >
+            </div>
+            <div class="check-item">
+              <input type="checkbox" id="c14" /><label for="c14"
+                >K8s / MQ / 链路追踪（备选）</label
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="text-center text-slate-400 text-sm">
+        <p>
+          提示：K8s、消息队列等高可用内容不纳入3个月强制目标，学完主线后按需拓展
+        </p>
+      </footer>
+    </div>
+    <script>
+      // 本地存储勾选状态，刷新页面不丢失
+      document.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+        const key = "roadmap_" + cb.id;
+        const saved = localStorage.getItem(key);
+        if (saved === "true") cb.checked = true;
+        cb.onchange = () => {
+          localStorage.setItem(key, cb.checked);
+        };
+      });
+    </script>
+  </body>
+</html>

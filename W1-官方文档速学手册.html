@@ -1,0 +1,978 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>W1 · 官方文档速学手册 | 3 个月全栈转型</title>
+    <style>
+      :root {
+        --paper: #faf7f2;
+        --card: #fffdfa;
+        --ink: #2b2620;
+        --ink2: #5f574d;
+        --muted: #8a8075;
+        --line: #e6dfd4;
+        --accent: #b4702c;
+        --accent-soft: #fbf1e4;
+        --green: #4c7a5d;
+        --green-soft: #edf5ef;
+        --red: #a4441a;
+        --red-soft: #fbe9e0;
+        --code-bg: #f4efe7;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        font-size: 15px;
+        line-height: 1.75;
+      }
+      a {
+        color: inherit;
+      }
+      .wrap {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 48px 28px 80px;
+      }
+      .tag {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        color: var(--accent);
+        background: var(--accent-soft);
+        border: 1px solid #eddcc4;
+        border-radius: 999px;
+        padding: 3px 12px;
+        margin-bottom: 14px;
+      }
+      h1 {
+        font-size: 32px;
+        line-height: 1.3;
+        margin: 0 0 12px;
+        letter-spacing: -0.01em;
+      }
+      .lead {
+        color: var(--ink2);
+        font-size: 15.5px;
+        margin: 0 0 18px;
+      }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 22px;
+      }
+      .meta span {
+        font-size: 12.5px;
+        color: var(--ink2);
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 4px 10px;
+      }
+      .callout {
+        background: var(--green-soft);
+        border: 1px solid #cfe2de;
+        border-left: 4px solid var(--green);
+        border-radius: 10px;
+        padding: 14px 18px;
+        font-size: 14px;
+        color: var(--ink2);
+        margin: 18px 0 26px;
+      }
+      .callout strong {
+        color: var(--ink);
+      }
+      .callout.warn {
+        background: var(--red-soft);
+        border-color: #edd3c4;
+        border-left-color: var(--red);
+      }
+      nav {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 10px 0;
+        margin-bottom: 8px;
+        background: var(--paper);
+        border-bottom: 1px solid var(--line);
+      }
+      nav a {
+        font-size: 12.5px;
+        color: var(--ink2);
+        text-decoration: none;
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: var(--card);
+      }
+      nav a:hover {
+        color: var(--accent);
+        border-color: #d9b98c;
+        background: var(--accent-soft);
+      }
+      section {
+        margin-top: 46px;
+        scroll-margin-top: 62px;
+      }
+      .sec-head {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        border-bottom: 2px solid var(--ink);
+        padding-bottom: 8px;
+        margin-bottom: 12px;
+      }
+      .num {
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: var(--accent);
+      }
+      h2 {
+        font-size: 21px;
+        margin: 0;
+      }
+      .goal {
+        font-size: 14px;
+        color: var(--ink2);
+        background: var(--accent-soft);
+        border-radius: 8px;
+        padding: 9px 14px;
+        margin: 0 0 18px;
+      }
+      h3 {
+        font-size: 15.5px;
+        margin: 26px 0 10px;
+      }
+      p {
+        margin: 10px 0;
+      }
+      ul,
+      ol {
+        padding-left: 22px;
+        margin: 10px 0;
+      }
+      li {
+        margin: 5px 0;
+      }
+      .table-wrap {
+        overflow-x: auto;
+        margin: 14px 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--card);
+        font-size: 13.5px;
+      }
+      th,
+      td {
+        border: 1px solid var(--line);
+        padding: 9px 11px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: #f4efe7;
+        font-size: 12.5px;
+        letter-spacing: 0.02em;
+      }
+      tbody tr:nth-child(even) {
+        background: #fdfbf8;
+      }
+      code {
+        background: var(--code-bg);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 1px 5px;
+        font-size: 0.9em;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        color: #8a4b0c;
+        overflow-wrap: anywhere;
+      }
+      pre {
+        background: #2f2a24;
+        color: #f0e9df;
+        border-radius: 10px;
+        padding: 16px 18px;
+        overflow-x: auto;
+        font-size: 12.5px;
+        line-height: 1.65;
+        margin: 12px 0;
+      }
+      pre code {
+        background: none;
+        border: 0;
+        padding: 0;
+        color: inherit;
+        font-size: inherit;
+      }
+      .fname {
+        display: block;
+        font-size: 11.5px;
+        letter-spacing: 0.04em;
+        color: #b9ac9a;
+        margin-bottom: 8px;
+      }
+      .links {
+        display: block;
+        border-top: 1px dashed var(--line);
+        margin-top: 18px;
+        padding-top: 10px;
+        font-size: 12.5px;
+      }
+      .links b {
+        color: var(--muted);
+        margin-right: 6px;
+      }
+      .links a {
+        display: inline-block;
+        color: var(--accent);
+        text-decoration: none;
+        border-bottom: 1px dotted #d9b98c;
+        margin-right: 12px;
+      }
+      .links a:hover {
+        background: var(--accent-soft);
+      }
+      .links a::after {
+        content: " ↗";
+        font-size: 10px;
+      }
+      .quiz {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-left: 3px solid var(--accent);
+        border-radius: 8px;
+        padding: 12px 16px;
+        font-size: 14px;
+      }
+      .quiz ol {
+        margin: 6px 0;
+      }
+      .quiz .ans {
+        color: var(--muted);
+        font-size: 12.5px;
+      }
+      .checklist {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 8px 18px;
+      }
+      .checklist label {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 8px 0;
+        border-bottom: 1px dashed var(--line);
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .checklist label:last-child {
+        border-bottom: 0;
+      }
+      .checklist input {
+        margin-top: 5px;
+        accent-color: var(--green);
+      }
+      .checklist label.done {
+        color: var(--muted);
+        text-decoration: line-through;
+      }
+      .progress {
+        font-size: 13px;
+        color: var(--ink2);
+        margin: 10px 0;
+      }
+      footer {
+        margin-top: 56px;
+        padding-top: 16px;
+        border-top: 1px solid var(--line);
+        font-size: 12.5px;
+        color: var(--muted);
+      }
+      @media print {
+        body {
+          background: #fff;
+          font-size: 12px;
+        }
+        .wrap {
+          padding: 0;
+          max-width: none;
+        }
+        nav,
+        .no-print {
+          display: none;
+        }
+        section {
+          margin-top: 26px;
+          break-inside: auto;
+        }
+        pre,
+        .quiz,
+        .callout,
+        .checklist,
+        table {
+          break-inside: avoid;
+        }
+        tr {
+          break-inside: avoid;
+        }
+        pre {
+          background: #f4efe7;
+          color: #2b2620;
+          border: 1px solid var(--line);
+        }
+        .fname {
+          color: #5f574d;
+        }
+        .links a::after {
+          content: "";
+        }
+        .links a {
+          border-bottom: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <span class="tag">W1 · 官方文档速学</span>
+        <h1>第 1 周 · 官方文档速学手册</h1>
+        <p class="lead">
+          把 W1 要补的技能点，按官方文档的框架整理成一份能在 2–3
+          小时内读完的速查材料。读完直接进入实战，不再回头翻教程。
+        </p>
+        <div class="meta">
+          <span>周期：2026-11-16 – 11-22</span>
+          <span>预算：18h（阅读 4h · 动手 10h · 复盘 2h · 排错 2h）</span>
+          <span>主项目：内容 / 博客平台 + 长任务导出</span>
+          <span>统一栈：NestJS + MySQL 8 + Redis 7 + Docker + Actions</span>
+          <span>配套：全栈转型-3个月职业规划.html 第 04 / 05 / 06 节</span>
+        </div>
+        <div class="callout">
+          <strong>怎么用：</strong>每个模块都由「读完要能做到 →
+          要点 → 最小可运行代码 → 常见坑 → 自测 → 官方原文」组成。内容为官方文档的<strong>提炼与转述</strong>，不是全文翻译；代码片段是配合本项目的自写最小示例。遇到冲突一律以官方原文为准（链接已核验可访问）。<strong>阅读只占周一的
+          2 小时</strong>，剩下时间全部写代码；不要顺着链接展开到 W2 之后的内容。
+        </div>
+      </header>
+
+      <nav class="no-print">
+        <a href="#map">00 本周地图</a>
+        <a href="#http">01 HTTP / REST</a>
+        <a href="#nest">02 分层与 DI</a>
+        <a href="#lifecycle">03 生命周期 / 返回体</a>
+        <a href="#base">04 工程底座</a>
+        <a href="#compose">05 Docker Compose</a>
+        <a href="#ci">06 CI 骨架</a>
+        <a href="#do">07 动手与验收</a>
+      </nav>
+
+      <section id="map">
+        <div class="sec-head"><span class="num">00</span><h2>本周地图：要补什么、补到什么程度</h2></div>
+        <p class="goal">读完你要能做到：说清 W1 的边界，知道哪些内容本期不碰，避免一开跑就掉进教程陷阱。</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th style="width: 17%">板块</th><th style="width: 43%">W1 必须掌握</th><th>本期不碰（后置）</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>HTTP / REST</td><td>方法幂等性、状态码分工、<code>Content-Type</code> / <code>Authorization</code>、复数资源名与嵌套 ≤ 2 层</td><td>缓存协商、条件请求、HTTP/2</td></tr>
+              <tr><td>NestJS</td><td>Module / Controller / Provider / Service 分层与 DI；<code>@Get</code> / <code>@Post</code> / <code>@Body</code> / <code>@Param</code>；Pipe / Interceptor / ExceptionFilter 各自职责</td><td>Guard 与鉴权（W4）、自定义装饰器、微服务</td></tr>
+              <tr><td>工程底座</td><td>TypeScript <code>strict</code>、ESLint / Prettier、<code>ConfigModule</code> 读 <code>.env</code>、统一返回体</td><td>Swagger 契约（W3）、测试门禁（W4 / W8）</td></tr>
+              <tr><td>环境</td><td><code>docker compose up -d</code> 起 MySQL 8 + Redis 7、volume 持久化、端口只绑本机</td><td>多阶段 Dockerfile、Nginx、HTTPS（W10）</td></tr>
+              <tr><td>CI</td><td><code>on: push</code> 跑 lint / typecheck / build</td><td>test / migrate / deploy 门禁（W8 / W11）</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p><strong>本周产出：</strong>3 个 REST 接口 + <code>/health</code>、统一返回体、compose 起 MySQL + Redis、CI 骨架全绿。</p>
+        <p><strong>本周判据：</strong>不看模板能新建一个 Module；能口述「请求 → 中间件 → Guard → Pipe → Controller → Service → Repository」调用链；CI 全绿；能说清哪一层不该写 SQL。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width: 16%">时段</th><th style="width: 12%">时长</th><th>W1 具体安排</th></tr></thead>
+            <tbody>
+              <tr><td>周一 晚</td><td>2h</td><td>读本手册 01–04 节 + 官方原文对应章节，写一页笔记</td></tr>
+              <tr><td>周二 晚</td><td>2h</td><td>读 05–06 节；初始化仓库、package.json、tsconfig、.env.example</td></tr>
+              <tr><td>周三 晚</td><td>2h</td><td>写 <code>UsersModule</code> 三层 + 3 个接口，本地跑通</td></tr>
+              <tr><td>周四 晚</td><td>2h</td><td>写全局 Interceptor + ExceptionFilter + <code>/health</code>，故意抛异常验证</td></tr>
+              <tr><td>周五 晚</td><td>2h</td><td>跑 lint / typecheck / build，修红、提交 PR</td></tr>
+              <tr><td>周六</td><td>5h</td><td>攻坚块：compose 起 MySQL + Redis 并验证 volume 持久化；CI 首次跑绿</td></tr>
+              <tr><td>周日</td><td>3h</td><td>对照第 07 节判据自测、写复盘、预读 W2 的 MySQL 索引章节</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="http">
+        <div class="sec-head"><span class="num">01</span><h2>HTTP 语义与 REST 设计</h2></div>
+        <p class="goal">读完你要能做到：给「用户 / 文章」设计出方法、路径、状态码都站得住脚的接口，并解释为什么这样选。</p>
+
+        <h3>1.1 方法：安全、幂等、可缓存是三个不同概念</h3>
+        <p>MDN 把请求方法按语义区分，W1 只需要抓住三个词：<strong>安全</strong>（不改变服务器状态）、<strong>幂等</strong>（重复执行一次和多次效果相同）、<strong>可缓存</strong>。「安全」不等于「幂等」，幂等也不等于「响应完全相同」。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width: 13%">方法</th><th style="width: 13%">语义</th><th style="width: 12%">安全</th><th style="width: 12%">幂等</th><th>W1 里的用法</th></tr></thead>
+            <tbody>
+              <tr><td><code>GET</code></td><td>取资源表示</td><td>是</td><td>是</td><td>用户列表、用户详情；<strong>不带请求体</strong></td></tr>
+              <tr><td><code>HEAD</code></td><td>同 GET 但无响应体</td><td>是</td><td>是</td><td>健康检查探活可选用</td></tr>
+              <tr><td><code>POST</code></td><td>提交实体，常引发状态变化</td><td>否</td><td><strong>否</strong></td><td>新建用户；重复提交会产生两条数据，这正是 W5 幂等要解决的问题</td></tr>
+              <tr><td><code>PUT</code></td><td>整体替换目标资源</td><td>否</td><td>是</td><td>全量更新，客户端需提供完整表示</td></tr>
+              <tr><td><code>PATCH</code></td><td>局部修改</td><td>否</td><td>通常否</td><td>只改某几个字段</td></tr>
+              <tr><td><code>DELETE</code></td><td>删除指定资源</td><td>否</td><td>是</td><td>重复删除结果一致（第二次返回 404 也符合语义）</td></tr>
+              <tr><td><code>OPTIONS</code></td><td>查询通信选项</td><td>是</td><td>是</td><td>浏览器 CORS 预检自动发起，W8 配白名单时才会显式接触</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>状态码按 RFC 9110 分五类，W1 先记住「谁的责任」：2xx 成功、4xx 客户端错、5xx 服务端错。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width: 16%">码</th><th style="width: 32%">含义</th><th>本周用在哪</th></tr></thead>
+            <tbody>
+              <tr><td><code>200 OK</code></td><td>请求成功</td><td>查询、更新的默认响应</td></tr>
+              <tr><td><code>201 Created</code></td><td>已创建资源</td><td>POST 新建用户（NestJS 默认 POST 就是 201）</td></tr>
+              <tr><td><code>204 No Content</code></td><td>成功但无响应体</td><td>DELETE 成功可选</td></tr>
+              <tr><td><code>400 Bad Request</code></td><td>参数 / 格式错</td><td>ValidationPipe 拦截后的返回</td></tr>
+              <tr><td><code>401 Unauthorized</code></td><td>未认证</td><td>W4 才用；注意名字容易和 403 混淆</td></tr>
+              <tr><td><code>403 Forbidden</code></td><td>已认证但无权限</td><td>W4 才用</td></tr>
+              <tr><td><code>404 Not Found</code></td><td>资源不存在</td><td>查无此用户</td></tr>
+              <tr><td><code>409 Conflict</code></td><td>资源状态冲突</td><td>W5 幂等 / 唯一键冲突</td></tr>
+              <tr><td><code>500 Internal Server Error</code></td><td>服务端未处理异常</td><td>全局 ExceptionFilter 兜底</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>1.2 请求头：本周只需要四个</h3>
+        <ul>
+          <li><code>Content-Type: application/json</code> —— 告诉服务端请求体格式；POST / PUT 必带。</li>
+          <li><code>Authorization: Bearer &lt;token&gt;</code> —— 承载凭证；W4 接 JWT，本周只需知道位置。</li>
+          <li><code>Accept</code> —— 客户端期望的响应类型。</li>
+          <li><code>Idempotency-Key</code> —— 约定性请求头（非 HTTP 标准），W5 做幂等时会用到，先留个印象。</li>
+        </ul>
+
+        <h3>1.3 REST 命名约定（团队共识，不是协议强制）</h3>
+        <ul>
+          <li>用<strong>复数名词</strong>表示集合：<code>/users</code>、<code>/users/:id</code>，不要在路径里塞动词（<code>/getUser</code> 是反例）。</li>
+          <li>嵌套<strong>不超过两层</strong>：超过就改用查询参数或独立资源。</li>
+          <li>筛选、排序、分页走查询参数：<code>/articles?page=2&amp;pageSize=20&amp;sort=-createdAt</code>。</li>
+          <li>动作型需求（如导出）无法套 CRUD 时，用子资源表达：<code>POST /exports</code>，W6 的长任务会这么设计。</li>
+        </ul>
+        <p><strong>本周三条接口 + 健康检查：</strong></p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width: 14%">方法</th><th style="width: 26%">路径</th><th style="width: 16%">成功码</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>GET</td><td><code>/users</code></td><td>200</td><td>列表（W3 才加分页）</td></tr>
+              <tr><td>GET</td><td><code>/users/:id</code></td><td>200 / 404</td><td>详情；<code>:id</code> 用 <code>ParseIntPipe</code> 转数字</td></tr>
+              <tr><td>POST</td><td><code>/users</code></td><td>201</td><td>新建；请求体走 DTO 校验</td></tr>
+              <tr><td>GET</td><td><code>/health</code></td><td>200</td><td>返回服务状态，W10 会被 Docker healthcheck 使用</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout warn">
+          <strong>常见坑：</strong>把 <code>GET</code> 用来改数据；用 <code>POST</code> 承载所有操作；404 和 403 混用（后者会泄露资源存在性）；返回 200 却在响应体里塞 <code>{ success: false }</code>——HTTP 状态码和业务码要各司其职，W1 的统一返回体只包装<strong>数据</strong>，不取代状态码。
+        </div>
+        <div class="quiz">
+          <strong>自测</strong>
+          <ol>
+            <li>为什么说 POST 非幂等？<span class="ans">→ 重复提交会产生多条资源，W5 需要用唯一键 / 幂等键兜住。</span></li>
+            <li>DELETE 一个不存在的资源，第二次返回 404 算不算违反幂等？<span class="ans">→ 不算，幂等看服务器最终状态，不是每次响应完全相同。</span></li>
+            <li><code>/users/3/articles?status=draft</code> 体现了哪两条约定？<span class="ans">→ 复数名词 + 两层嵌套 + 筛选走查询参数。</span></li>
+          </ol>
+        </div>
+        <span class="links"><b>官方原文</b>
+          <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods" target="_blank" rel="noopener noreferrer">MDN · 请求方法</a>
+          <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status" target="_blank" rel="noopener noreferrer">MDN · 状态码</a>
+          <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP" target="_blank" rel="noopener noreferrer">MDN · HTTP</a>
+        </span>
+      </section>
+
+      <section id="nest">
+        <div class="sec-head"><span class="num">02</span><h2>NestJS 分层与依赖注入</h2></div>
+        <p class="goal">读完你要能做到：不看模板新建一个 Module，并说清「哪一层不该写 SQL」。</p>
+
+        <h3>2.1 四个角色，各司其职</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width: 18%">角色</th><th style="width: 40%">职责</th><th>不该做的事</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Module</strong></td><td>用 <code>@Module()</code> 声明一组内聚能力；Nest 从根模块出发构建应用图，解析模块与 provider 之间的依赖</td><td>不写业务逻辑</td></tr>
+              <tr><td><strong>Controller</strong></td><td>处理入站请求、返回响应；装饰器把类和方法挂到路由表上，路径前缀写在 <code>@Controller('users')</code> 上避免重复</td><td>不写业务规则、<strong>不写 SQL</strong></td></tr>
+              <tr><td><strong>Provider / Service</strong></td><td>加 <code>@Injectable()</code> 的类，可被注入为依赖；服务、仓库、工厂、helper 都是 provider。复杂任务由 Controller 委托给它</td><td>不直接拼 HTTP 响应</td></tr>
+              <tr><td><strong>Repository</strong></td><td>数据访问层，W2 之后由 TypeORM Repository 承担</td><td>只有这一层碰 SQL / ORM</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p><code>@Module()</code> 的四个属性必须能背出来：<code>imports</code>（导入别的模块导出的 provider）、<code>controllers</code>（本模块要实例化的控制器）、<code>providers</code>（由注入器实例化、至少在本模块内可共享）、<code>exports</code>（把本模块 provider 暴露给别的模块）。Provider 默认<strong>单例</strong>，要跨模块用必须先 <code>exports</code> 再在对方 <code>imports</code>。</p>
+
+        <h3>2.2 最小可运行骨架</h3>
+        <pre><code><span class="fname">src/users/users.service.ts</span>import { Injectable, NotFoundException } from '@nestjs/common';
+
+@Injectable()
+export class UsersService {
+  private readonly users = [{ id: 1, name: 'Ada' }];
+
+  findAll() {
+    return this.users;
+  }
+
+  findOne(id: number) {
+    const user = this.users.find(function (u) { return u.id === id; });
+    if (!user) throw new NotFoundException('User not found');
+    return user;
+  }
+
+  create(dto: { name: string }) {
+    const user = { id: Date.now(), name: dto.name };
+    this.users.push(user);
+    return user;
+  }
+}</code></pre>
+        <pre><code><span class="fname">src/users/users.controller.ts</span>import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
+import { UsersService } from './users.service';
+
+@Controller('users')
+export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+
+  @Get()
+  findAll() {
+    return this.usersService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.findOne(id);
+  }
+
+  @Post()
+  create(@Body() dto: { name: string }) {
+    return this.usersService.create(dto);
+  }
+}</code></pre>
+        <pre><code><span class="fname">src/users/users.module.ts</span>import { Module } from '@nestjs/common';
+import { UsersController } from './users.controller';
+import { UsersService } from './users.service';
+
+@Module({
+  controllers: [UsersController],
+  providers: [UsersService],
+  exports: [UsersService],
+})
+export class UsersModule {}</code></pre>
+        <pre><code><span class="fname">src/app.module.ts</span>import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { UsersModule } from './users/users.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
+    UsersModule,
+  ],
+})
+export class AppModule {}</code></pre>
+        <p>依赖注入的关键就是那行构造函数：<code>constructor(private readonly usersService: UsersService)</code>。Nest 运行时按类型 token 到容器里找实例并「接线」，你只声明「我要什么」，不自己 <code>new</code>。这也是判据里「Provider(DI)」的含义。</p>
+
+        <h3>2.3 装饰器速查（本周只需这些）</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width: 30%">装饰器</th><th>作用</th></tr></thead>
+            <tbody>
+              <tr><td><code>@Controller('users')</code></td><td>类级路由前缀</td></tr>
+              <tr><td><code>@Get()</code> / <code>@Post()</code></td><td>方法级 HTTP 方法与子路径</td></tr>
+              <tr><td><code>@Param('id', ParseIntPipe)</code></td><td>取路径参数并转换为数字</td></tr>
+              <tr><td><code>@Body()</code> / <code>@Query()</code></td><td>取请求体 / 查询参数</td></tr>
+              <tr><td><code>@HttpCode(200)</code></td><td>覆盖默认状态码（POST 默认是 201）</td></tr>
+              <tr><td><code>@Injectable()</code></td><td>把类标记为可注入的 provider</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout warn">
+          <strong>常见坑：</strong>把 Service 写进 <code>controllers</code> 数组，或忘记在 <code>providers</code> 注册就注入（会报 <code>Nest can't resolve dependencies</code>）；跨模块用 provider 忘了 <code>exports</code>；在 Controller 里直接连数据库——W2 接 TypeORM 后这类代码会立刻失控。
+        </div>
+        <div class="quiz">
+          <strong>自测</strong>
+          <ol>
+            <li><code>@Module()</code> 四个属性分别是什么？<span class="ans">→ imports / controllers / providers / exports。</span></li>
+            <li>为什么 Service 要加 <code>@Injectable()</code>？<span class="ans">→ 让 Nest 把它登记为可注入 provider，才能被构造函数注入解析。</span></li>
+            <li>哪一层可以写 SQL？<span class="ans">→ 只有 Repository / 数据访问层（W2 起由 TypeORM 承担）。</span></li>
+          </ol>
+        </div>
+        <span class="links"><b>官方原文</b>
+          <a href="https://docs.nestjs.com/controllers" target="_blank" rel="noopener noreferrer">NestJS · Controllers</a>
+          <a href="https://docs.nestjs.com/providers" target="_blank" rel="noopener noreferrer">NestJS · Providers</a>
+          <a href="https://docs.nestjs.com/modules" target="_blank" rel="noopener noreferrer">NestJS · Modules</a>
+        </span>
+      </section>
+
+      <section id="lifecycle">
+        <div class="sec-head"><span class="num">03</span><h2>请求生命周期与统一返回体</h2></div>
+        <p class="goal">读完你要能做到：口述完整调用链，并用一个 Interceptor + 一个 ExceptionFilter 把所有响应包成同一种形状。</p>
+
+        <h3>3.1 官方给出的请求顺序</h3>
+        <p>Nest 官方把一次请求描述为：请求先经过 <strong>middleware → guards → interceptors（进入方向） → pipes → controller 路由处理 → service</strong>，返回时再<strong>沿 interceptors 的返回路径</strong>生成响应；任何环节抛出的未处理异常，由 <strong>exception filters</strong> 层兜底。中间件按「全局 → 模块绑定」的顺序执行。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width: 20%">环节</th><th style="width: 44%">职责</th><th>W1 是否实现</th></tr></thead>
+            <tbody>
+              <tr><td>Middleware</td><td>最早执行，适合放 <code>request-id</code>、原始日志</td><td>本期跳过（W5 补）</td></tr>
+              <tr><td>Guards</td><td>决定请求能否进入（鉴权 / 角色）</td><td>本期跳过（W4 补）</td></tr>
+              <tr><td>Interceptors</td><td>包裹方法执行前后，可转换响应、加缓存、记耗时</td><td><strong>做：统一成功返回体</strong></td></tr>
+              <tr><td>Pipes</td><td>紧接在路由方法调用前，做 <strong>transformation</strong>（如字符串转整数）与 <strong>validation</strong>（不合法就抛异常）</td><td><strong>做：ParseIntPipe / ValidationPipe</strong></td></tr>
+              <tr><td>Controller → Service</td><td>委托业务逻辑</td><td><strong>做</strong></td></tr>
+              <tr><td>Exception filters</td><td>内置全局过滤器已处理 <code>HttpException</code> 及其子类；无法识别的异常默认返回 <code>{"statusCode":500,"message":"Internal server error"}</code></td><td><strong>做：自定义换取统一错误体</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>规划文档里要求口述的「请求 → 中间件 → Guard → Pipe → Controller → Service → Repository」是<strong>业务视角的精简链</strong>；完整版要记得前后各有一层 Interceptor 包裹，以及异常时由 Filter 接管。面试时能把两者都讲出来最稳。</p>
+
+        <h3>3.2 统一返回体：成功用 Interceptor，失败用 Filter</h3>
+        <p>约定形状：<code>{ code, data, message }</code>。成功后置包装交给 Interceptor，异常包装交给 Filter，<strong>Controller 里绝不手写 try/catch 拼装</strong>。</p>
+        <pre><code><span class="fname">src/common/transform.interceptor.ts</span>import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
+import { Observable, map } from 'rxjs';
+
+export type ApiResponse&lt;T&gt; = { code: number; data: T; message: string };
+
+@Injectable()
+export class TransformInterceptor&lt;T&gt; implements NestInterceptor&lt;T, ApiResponse&lt;T&gt;&gt; {
+  intercept(ctx: ExecutionContext, next: CallHandler&lt;T&gt;): Observable&lt;ApiResponse&lt;T&gt;&gt; {
+    return next.handle().pipe(map(function (data) {
+      return { code: 0, data: data, message: 'ok' };
+    }));
+  }
+}</code></pre>
+        <pre><code><span class="fname">src/common/all-exceptions.filter.ts</span>import {
+  ArgumentsHost, Catch, ExceptionFilter, HttpException,
+  HttpStatus, Logger,
+} from '@nestjs/common';
+
+@Catch()
+export class AllExceptionsFilter implements ExceptionFilter {
+  private readonly logger = new Logger(AllExceptionsFilter.name);
+
+  catch(exception: unknown, host: ArgumentsHost) {
+    const res = host.switchToHttp().getResponse();
+    const isHttp = exception instanceof HttpException;
+    const status = isHttp
+      ? exception.getStatus()
+      : HttpStatus.INTERNAL_SERVER_ERROR;
+    const detail = isHttp ? exception.getResponse() : 'Internal server error';
+
+    // 未知异常必须留痕，不能被过滤器悄悄吞掉
+    if (!isHttp) this.logger.error(exception);
+
+    res.status(status).json({ code: status, data: null, message: detail });
+  }
+}</code></pre>
+        <pre><code><span class="fname">src/main.ts</span>import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
+import { AppModule } from './app.module';
+import { TransformInterceptor } from './common/transform.interceptor';
+import { AllExceptionsFilter } from './common/all-exceptions.filter';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  app.useGlobalInterceptors(new TransformInterceptor());
+  app.useGlobalFilters(new AllExceptionsFilter());
+  await app.listen(process.env.PORT ?? 3000);
+}
+bootstrap();</code></pre>
+        <p><strong>本周验证动作：</strong>在 <code>findOne</code> 里抛一个 <code>NotFoundException</code>，用 <code>curl -i</code> 确认状态码是 404 且响应体符合约定；再抛一个普通 <code>Error</code>，确认返回 500、日志里有堆栈。这两步就是规划文档 W1 练习里的「故意抛业务异常，确认全局 ExceptionFilter 转成统一返回体」。</p>
+        <div class="callout warn">
+          <strong>常见坑：</strong><code>ValidationPipe</code> 不设 <code>transform: true</code> 时 <code>@Param('id')</code> 拿到的是字符串；<code>whitelist: true</code> 会静默剥掉 DTO 未声明字段，W3 会补 <code>forbidNonWhitelisted</code>；Pipe 运行在异常区内，Pipe 抛出的异常会被 Filter 接到，所以别在 Pipe 里自己吞异常；自定义 <code>@Catch()</code> 不指定类型会接管全部异常，务必保留日志。
+        </div>
+        <div class="quiz">
+          <strong>自测</strong>
+          <ol>
+            <li>Pipe 和 Interceptor 都在方法前后运行，区别是什么？<span class="ans">→ Pipe 只处理方法参数（转换 / 校验），Interceptor 包裹整个执行流并可改写响应。</span></li>
+            <li>内置全局异常过滤器对不认识的异常返回什么？<span class="ans">→ statusCode 500 + "Internal server error" 的 JSON。</span></li>
+            <li>为什么未知异常必须记日志？<span class="ans">→ 自定义 Filter 接管全部异常后，不记日志会把线上故障变成无声失败。</span></li>
+          </ol>
+        </div>
+        <span class="links"><b>官方原文</b>
+          <a href="https://docs.nestjs.com/faq/request-lifecycle" target="_blank" rel="noopener noreferrer">NestJS · Request lifecycle</a>
+          <a href="https://docs.nestjs.com/pipes" target="_blank" rel="noopener noreferrer">NestJS · Pipes</a>
+          <a href="https://docs.nestjs.com/exception-filters" target="_blank" rel="noopener noreferrer">NestJS · Exception filters</a>
+          <a href="https://docs.nestjs.com/interceptors" target="_blank" rel="noopener noreferrer">NestJS · Interceptors</a>
+        </span>
+      </section>
+
+      <section id="base">
+        <div class="sec-head"><span class="num">04</span><h2>工程底座：TS strict / 配置 / 规范</h2></div>
+        <p class="goal">读完你要能做到：仓库初始化一次到位，密钥不进 Git，三条脚本在本地和 CI 里都能跑。</p>
+
+        <h3>4.1 TypeScript strict 与三条脚本</h3>
+        <p>W1 的目标不是学 TS 类型体操，而是把 <code>noImplicitAny</code>、<code>strictNullChecks</code> 等检查打开，让 W3 的 DTO / 契约生成不返工。<code>strict: true</code> 会一并启用这一组检查；<code>noEmit</code> 用于纯类型检查。</p>
+        <pre><code><span class="fname">tsconfig.json（关键项）</span>{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2022",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "dist",
+    "sourceMap": true
+  },
+  "include": ["src/**/*.ts"]
+}</code></pre>
+        <pre><code><span class="fname">package.json（scripts 节选）</span>{
+  "scripts": {
+    "start:dev": "nest start --watch",
+    "build": "nest build",
+    "lint": "eslint \"src/**/*.ts\"",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write \"src/**/*.ts\""
+  }
+}</code></pre>
+        <p>ESLint 管代码规范、Prettier 管格式、<code>tsc --noEmit</code> 管类型，三者互不替代。CI 里按 <code>lint → typecheck → build</code> 顺序跑，越靠前越便宜，失败更早暴露。</p>
+
+        <h3>4.2 配置：ConfigModule 读 .env</h3>
+        <p>官方 Configuration 章节的做法是安装 <code>@nestjs/config</code>，在根模块用 <code>ConfigModule.forRoot()</code> 加载 <code>.env</code>，再用 <code>ConfigService</code> 按 key 读取。<code>isGlobal: true</code> 可免去每个模块重复 imports；生产环境更推荐由编排层注入环境变量，而不是把配置文件打进镜像。</p>
+        <pre><code><span class="fname">.env.example（提交进仓库，不含真实值）</span>PORT=3000
+MYSQL_ROOT_PASSWORD=change-me
+MYSQL_DATABASE=fullstack_lab
+REDIS_HOST=redis
+REDIS_PORT=6379</code></pre>
+        <pre><code><span class="fname">.gitignore（关键项）</span>.env
+node_modules/
+dist/
+*.log</code></pre>
+        <div class="callout warn">
+          <strong>安全底线：</strong><code>.env</code> 永不入库，只提交 <code>.env.example</code>；示例密码只用于本机；服务器上密码走 GitHub Secrets / 环境变量，不写进 compose 文件提交。这几条在 W10/W11 会再验一次。
+        </div>
+        <div class="quiz">
+          <strong>自测</strong>
+          <ol>
+            <li>为什么 <code>lint</code> 要排在 <code>build</code> 前面？<span class="ans">→ 快速失败、省 CI 时间。</span></li>
+            <li>本机和 compose 容器里，Redis 地址分别写什么？<span class="ans">→ 本机 <code>127.0.0.1</code>；容器内用服务名 <code>redis</code>（compose 内置 DNS）。</span></li>
+          </ol>
+        </div>
+        <span class="links"><b>官方原文</b>
+          <a href="https://docs.nestjs.com/techniques/configuration" target="_blank" rel="noopener noreferrer">NestJS · Configuration</a>
+          <a href="https://www.typescriptlang.org/tsconfig/" target="_blank" rel="noopener noreferrer">TypeScript · tsconfig 参考</a>
+        </span>
+      </section>
+
+      <section id="compose">
+        <div class="sec-head"><span class="num">05</span><h2>Docker Compose 起 MySQL + Redis</h2></div>
+        <p class="goal">读完你要能做到：一条命令起全套，删容器重建后数据仍在，并且 3306 / 6379 没有暴露到公网。</p>
+
+        <h3>5.1 四个概念</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width: 20%">概念</th><th>要点</th></tr></thead>
+            <tbody>
+              <tr><td><code>services</code></td><td>一个服务 = 一类容器及其配置；compose 会为所有服务建一张默认网络，服务名即可当主机名互访</td></tr>
+              <tr><td><code>volumes</code></td><td>命名卷由 Docker 管理，独立于容器生命周期。<strong>数据在卷里，容器销毁不丢数据</strong>；危险操作是 <code>down -v</code> 和 <code>volume prune</code></td></tr>
+              <tr><td><code>healthcheck</code></td><td>让 Docker 判断服务是否真正就绪；<code>depends_on</code> 只保证启动顺序，<strong>不保证就绪</strong>，要配 <code>condition: service_healthy</code></td></tr>
+              <tr><td><code>ports</code></td><td>写 <code>127.0.0.1:3306:3306</code> 只对本机开放；直接写 <code>3306:3306</code> 会绑到所有网卡，服务器上等于把数据库暴露公网</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>5.2 可直接用的 compose 文件</h3>
+        <pre><code><span class="fname">docker-compose.yml</span>services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      TZ: Asia/Shanghai
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql-data:
+  redis-data:</code></pre>
+        <p>镜像版本锁到 <code>8.0</code> / <code>7</code>，不用 <code>latest</code>；Redis 开 <code>--appendonly yes</code>（AOF）为 W6 的长任务留持久化；<code>${...}</code> 从同目录 <code>.env</code> 取值。</p>
+
+        <h3>5.3 命令与验收</h3>
+        <pre><code>docker compose config          # 校验语法与变量替换
+docker compose up -d           # 后台启动
+docker compose ps              # 看 STATUS 是否 healthy
+docker compose logs -f mysql   # 排错
+docker compose exec redis redis-cli PING
+docker compose down            # 停止并删容器（不含卷，数据保留）
+docker compose up -d           # 重建后验证数据仍在</code></pre>
+        <p><strong>本周验收：</strong>往 Redis 写 <code>SET w1 ok</code>，<code>down</code> 后再 <code>up -d</code>，<code>GET w1</code> 仍返回 <code>ok</code>。这正是规划文档 W10 判据「能说清 volume 与镜像的销毁边界」的前置练习。</p>
+        <div class="callout warn">
+          <strong>常见坑：</strong>用 <code>depends_on</code> 当「就绪」用导致应用启动时连不上库；本机已装 MySQL/Redis 造成端口占用；把 <code>.env</code> 提交进仓库；误执行 <code>down -v</code> 把卷一起删掉。<strong>容器销毁不等于数据丢失</strong>，真正的风险是配置没做对。
+        </div>
+        <div class="quiz">
+          <strong>自测</strong>
+          <ol>
+            <li>为什么 compose 里 Redis 主机写 <code>redis</code> 而不是 <code>localhost</code>？<span class="ans">→ 容器内 localhost 指向容器自身；compose 网络用服务名做 DNS。</span></li>
+            <li><code>down</code> 和 <code>down -v</code> 差在哪？<span class="ans">→ 后者连命名卷一起删除，数据不可恢复。</span></li>
+          </ol>
+        </div>
+        <span class="links"><b>官方原文</b>
+          <a href="https://docs.docker.com/reference/compose-file/" target="_blank" rel="noopener noreferrer">Docker · Compose 文件参考</a>
+          <a href="https://docs.docker.com/reference/cli/docker/compose/up/" target="_blank" rel="noopener noreferrer">Docker · compose up</a>
+          <a href="https://docs.docker.com/get-started/" target="_blank" rel="noopener noreferrer">Docker · 入门</a>
+        </span>
+      </section>
+
+      <section id="ci">
+        <div class="sec-head"><span class="num">06</span><h2>GitHub Actions CI 骨架</h2></div>
+        <p class="goal">读完你要能做到：push 后自动跑 lint / typecheck / build，本地与 CI 各跑一次并都修绿。</p>
+        <p>GitHub Actions 是 CI/CD 平台：在仓库里放一个 workflow（YAML），由事件触发，包含一个或多个 job，job 里按顺序执行 step。W1 只需要六个词：<code>on</code>（触发事件）、<code>jobs</code>、<code>runs-on</code>（运行器）、<code>steps</code>、<code>uses</code>（复用现成 action）、<code>run</code>（执行命令）。</p>
+        <pre><code><span class="fname">.github/workflows/ci.yml</span>name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm build</code></pre>
+        <p><code>corepack enable</code> 必须写在 <code>setup-node</code> 之前，否则 <code>cache: pnpm</code> 找不到 pnpm 会报错；<code>--frozen-lockfile</code> 保证 CI 与本地依赖完全一致。W8 会在这条链里插入 test 与 migration 门禁，W11 再加 deploy。</p>
+        <div class="callout warn">
+          <strong>常见坑：</strong>YAML 缩进用空格不用 Tab；<code>node-version</code> 加引号避免被解析成数字；把 <code>.env</code> 当 CI 变量用——密钥要走仓库 Secrets；本地能跑但 CI 红，多数是 lockfile 未提交或 Node 版本不一致。
+        </div>
+        <div class="quiz">
+          <strong>自测</strong>
+          <ol>
+            <li><code>uses</code> 和 <code>run</code> 的区别？<span class="ans">→ uses 复用现成 action，run 在运行器上执行 shell 命令。</span></li>
+            <li>为什么本期 CI 不加 <code>test</code>？<span class="ans">→ W4 才引入集成测试，W8 才把它变成合并门禁；W1 先把 lint/typecheck/build 跑通即可。</span></li>
+          </ol>
+        </div>
+        <span class="links"><b>官方原文</b>
+          <a href="https://docs.github.com/en/actions/get-started/quickstart" target="_blank" rel="noopener noreferrer">GitHub Actions · 快速入门</a>
+          <a href="https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax" target="_blank" rel="noopener noreferrer">GitHub Actions · workflow 语法</a>
+        </span>
+      </section>
+
+      <section id="do">
+        <div class="sec-head"><span class="num">07</span><h2>读完就动手：W1 实战任务与验收</h2></div>
+        <p class="goal">目标：周日之前，主项目仓库里有一个能跑、能被 CI 验证、能一键起依赖的 users 模块。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width: 8%">#</th><th style="width: 44%">任务</th><th>完成标志</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>初始化 NestJS 仓库，开 <code>strict</code>，配 ESLint / Prettier 与三条脚本</td><td><code>pnpm lint</code> / <code>pnpm typecheck</code> / <code>pnpm build</code> 本地全绿</td></tr>
+              <tr><td>2</td><td>建 <code>UsersModule</code> 三层，实现 GET 列表 / GET 详情 / POST 新建</td><td><code>curl -i</code> 三条路径状态码正确，POST 返回 201</td></tr>
+              <tr><td>3</td><td>加 <code>/health</code>，接全局 <code>TransformInterceptor</code> + <code>AllExceptionsFilter</code></td><td>成功与失败响应都是 <code>{ code, data, message }</code>；未知异常有日志</td></tr>
+              <tr><td>4</td><td>接 <code>ConfigModule</code> 读 <code>.env</code>，提交 <code>.env.example</code> 与 <code>.gitignore</code></td><td>仓库里搜不到任何真实密码</td></tr>
+              <tr><td>5</td><td>写 <code>docker-compose.yml</code> 起 MySQL 8 + Redis 7</td><td><code>docker compose ps</code> 两个服务 healthy；端口只绑 127.0.0.1</td></tr>
+              <tr><td>6</td><td>写 <code>ci.yml</code>，push 触发</td><td>Actions 页面徽标变绿；本地与 CI 各跑一次</td></tr>
+              <tr><td>7</td><td>周日复盘：口述调用链、写一条复盘记录、预读 W2 索引章节</td><td>能不看模板讲清 7 个环节与「哪层不写 SQL」</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>可勾选执行清单</h3>
+        <p class="progress no-print" id="progress">进度：0 / 10</p>
+        <div class="checklist" id="checklist">
+          <label data-key="w1-1"><input type="checkbox" /><span>读完 01–06 节，并至少点开 3 个官方原文页面核对</span></label>
+          <label data-key="w1-2"><input type="checkbox" /><span>能画出 HTTP 方法的「安全 / 幂等」对照表</span></label>
+          <label data-key="w1-3"><input type="checkbox" /><span>不看模板写出 <code>@Module()</code> 四个属性并新建一个 Module</span></label>
+          <label data-key="w1-4"><input type="checkbox" /><span>口述完整请求生命周期（含 Interceptor 返回路径与 Filter 兜底）</span></label>
+          <label data-key="w1-5"><input type="checkbox" /><span>3 个接口 + <code>/health</code> 本地跑通，状态码正确</span></label>
+          <label data-key="w1-6"><input type="checkbox" /><span>故意抛业务异常与普通 Error，验证统一返回体与日志</span></label>
+          <label data-key="w1-7"><input type="checkbox" /><span><code>docker compose up -d</code> 起 MySQL + Redis，两服务 healthy</span></label>
+          <label data-key="w1-8"><input type="checkbox" /><span>验证 <code>down</code> 后重建数据仍在，且明白 <code>down -v</code> 的风险</span></label>
+          <label data-key="w1-9"><input type="checkbox" /><span>GitHub Actions 首次跑绿，本地三条脚本也全绿</span></label>
+          <label data-key="w1-10"><input type="checkbox" /><span>周日复盘写完，W2 的 MySQL 索引 / EXPLAIN 章节已预读</span></label>
+        </div>
+
+        <div class="callout">
+          <strong>卡住时：</strong>先做最小复现 → 查本节末尾的官方原文 → 搜官方 issue → 再提问，30 分钟为限，不在教程之间来回跳。忙周最低保留周三 2h + 周日 2h。判据连续两周不过，启用规划文档「每周时间预算与降级方案」的 8–10 小时版本。
+        </div>
+      </section>
+
+      <footer>
+        <p>
+          本手册为《全栈转型-3个月职业规划》第 1 周的配套速学材料。各模块要点依据链接所指向的官方文档提炼与转述，代码片段为配合主项目改写的最小示例；规范细节请以官方原文为准。链接均已核验可访问，其中 <code>dev.mysql.com</code> 类站点对脚本请求有反爬限制，浏览器打开正常。
+        </p>
+        <p>生成：2026-11-12 · W1 开跑：2026-11-16 · 单文件离线，可直接打印为 PDF</p>
+      </footer>
+    </div>
+
+    <script>
+      (function () {
+        var box = document.getElementById("checklist");
+        var hint = document.getElementById("progress");
+        if (!box || !hint) return;
+        var labels = Array.prototype.slice.call(box.querySelectorAll("label"));
+        var KEY = "w1-study-checklist-v1";
+        var saved = {};
+        try {
+          saved = JSON.parse(localStorage.getItem(KEY) || "{}");
+        } catch (e) {
+          saved = {};
+        }
+        function render() {
+          var done = 0;
+          labels.forEach(function (label) {
+            var input = label.querySelector("input");
+            var key = label.getAttribute("data-key");
+            input.checked = !!saved[key];
+            label.classList.toggle("done", input.checked);
+            if (input.checked) done++;
+          });
+          hint.textContent = "进度：" + done + " / " + labels.length;
+        }
+        labels.forEach(function (label) {
+          label.querySelector("input").addEventListener("change", function (e) {
+            saved[label.getAttribute("data-key")] = e.target.checked;
+            try {
+              localStorage.setItem(KEY, JSON.stringify(saved));
+            } catch (err) {
+              /* 隐私模式下忽略存储失败 */
+            }
+            render();
+          });
+        });
+        render();
+      })();
+    </script>
+  </body>
+</html>
