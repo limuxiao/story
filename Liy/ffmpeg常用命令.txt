@@ -1,0 +1,6 @@
+# 利用ffmpeg 推流
+ffmpeg  -re -i 222.mp4 -vcodec h264 -acodec aac -strict -2 -f rtsp -rtsp_transport tcp  rtsp://192.168.0.139/live/test1
+
+ffmpeg -re -i 222.mp4 -vcodec copy -acodec copy -f rtsp -rtsp_transport tcp  rtsp://192.168.0.139/live/test1
+
+ffmpeg -re -i ttt.mp4 -vcodec copy -acodec copy -f rtsp -rtsp_transport tcp  rtsp://106.38.40.98:10000/1
