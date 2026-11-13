@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>W10 · 官方文档速学手册 | 3 个月全栈转型</title>
+    <link rel="stylesheet" href="manual-style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <span class="tag">W10 · 官方文档速学 · 上线窗口</span>
+        <h1>第 10 周 · 容器与上线</h1>
+        <p class="lead">把本机跑得通的东西搬到一台干净 VPS 上，10 分钟内起站。按执行日历，上线必须本周完成，不能推到 W12（春节）。</p>
+        <div class="meta">
+          <span>周期：2027-01-18 – 01-24</span><span>预算：18h（阅读 4h · 动手 10h · 复盘 2h · 排错 2h）</span>
+          <span>主项目：内容 / 博客平台 + 长任务导出</span><span>栈：Docker + Compose + Nginx + HTTPS</span>
+          <span>配套：职业规划文档第 04 / 05 / 06 节</span>
+        </div>
+        <div class="callout"><strong>怎么用：</strong>本周的验收是「在一台没装过任何东西的机器上重来一遍」，所以请把每一步命令记成 <code>bootstrap.sh</code>。内容为官方文档的提炼与转述，链接已核验。</div>
+      </header>
+      <nav class="no-print">
+        <a href="#map">00 本周地图</a><a href="#image">01 镜像与多阶段构建</a><a href="#compose">02 生产编排</a>
+        <a href="#nginx">03 Nginx 与 HTTPS</a><a href="#do">04 动手与验收</a>
+      </nav>
+
+      <section id="map">
+        <div class="sec-head"><span class="num">00</span><h2>本周地图</h2></div>
+        <p class="goal">读完你要能做到：干净 VPS 上 10 分钟内起站，且能说清 volume 与镜像的销毁边界。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:18%">板块</th><th style="width:44%">W10 必须掌握</th><th>本期不碰</th></tr></thead>
+          <tbody>
+            <tr><td>镜像</td><td>Dockerfile 多阶段（builder → runtime）、.dockerignore、层缓存、非 root 用户、HEALTHCHECK、镜像版本锁定</td><td>镜像仓库、多架构构建（W11）</td></tr>
+            <tr><td>编排</td><td>api / web / mysql / redis 四个服务、depends_on + healthcheck condition、volume 持久化、环境变量与密钥、日志轮转</td><td>Swarm / K8s、跨主机网络</td></tr>
+            <tr><td>网关</td><td>proxy_pass、try_files SPA fallback、gzip、client_max_body_size、SSE 关闭 proxy_buffering、certbot 签发与自动续期、HSTS</td><td>CDN、WAF、负载均衡</td></tr>
+          </tbody>
+        </table></div>
+        <p><strong>本周产出：</strong>多阶段 Dockerfile、compose 编排全套、Nginx 反代 + SPA fallback、域名 + HTTPS。<strong>判据：</strong>干净机器 10 分钟内 <code>docker compose up -d</code> 可访问；HTTPS 生效且证书可续期；删容器重建后数据仍在。</p>
+        <p><strong>时段：</strong>周一读 01 · 周二读 02–03 + 买 / 配 VPS · 周三写 Dockerfile 并本地构建 · 周四写 compose.prod.yml · 周五配 Nginx + HTTPS · 周六攻坚「干净机器从零部署并计时」· 周日验收 + 预读 W11。</p>
+      </section>
+
+      <section id="image">
+        <div class="sec-head"><span class="num">01</span><h2>多阶段 Dockerfile</h2></div>
+        <p class="goal">读完你要能做到：构建出的镜像不含 devDependencies、不含源码与 .env，且以非 root 运行。</p>
+        <ul>
+          <li><strong>多阶段</strong>：builder 阶段装全部依赖并编译，runtime 阶段只复制 <code>dist</code> + <code>node_modules</code> 生产依赖 + <code>package.json</code>，镜像体积与攻击面都大幅下降。</li>
+          <li><strong>层缓存</strong>：先复制 <code>package.json</code> / lockfile 装依赖，再复制源码；源码改动不会让依赖层失效。</li>
+          <li><code>.dockerignore</code> 必须排除 <code>node_modules</code>、<code>dist</code>、<code>.git</code>、<code>.env</code>、日志，否则既拖慢构建又可能把密钥打进镜像。</li>
+          <li><strong>非 root 运行</strong>：用官方镜像自带的 <code>node</code> 用户；<code>HEALTHCHECK</code> 让编排层判断应用是否真的就绪。</li>
+          <li>镜像 tag 锁到具体版本，别用 <code>latest</code>；数据库同理（<code>mysql:8.0</code> / <code>redis:7</code>）。</li>
+        </ul>
+        <pre><code><span class="fname">Dockerfile</span>FROM node:22-alpine AS builder
+WORKDIR /app
+COPY package.json pnpm-lock.yaml ./
+RUN corepack enable &amp;&amp; pnpm install --frozen-lockfile
+COPY . .
+RUN pnpm build
+
+FROM node:22-alpine AS runtime
+WORKDIR /app
+ENV NODE_ENV=production
+COPY package.json pnpm-lock.yaml ./
+RUN corepack enable &amp;&amp; pnpm install --frozen-lockfile --prod
+COPY --from=builder /app/dist ./dist
+USER node
+EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:3000/health || exit 1
+CMD ["node", "dist/main.js"]</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>把 <code>.env</code> COPY 进镜像；builder 的 devDependencies 被带到 runtime；<code>USER node</code> 之后仍要写需要 root 权限的目录；healthcheck 探活路径本身也要鉴权（应放行 <code>/health</code>）。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>为什么先复制 package.json 再复制源码？<span class="ans">→ 利用层缓存，改代码时不必重装依赖。</span></li>
+          <li>为什么运行时要用非 root？<span class="ans">→ 容器逃逸 / 应用漏洞时缩小宿主机被影响的权限范围。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://docs.docker.com/reference/dockerfile/" target="_blank" rel="noopener noreferrer">Docker · Dockerfile 参考</a><a href="https://docs.docker.com/build/building/multi-stage/" target="_blank" rel="noopener noreferrer">Docker · 多阶段构建</a></span>
+      </section>
+
+      <section id="compose">
+        <div class="sec-head"><span class="num">02</span><h2>生产编排与数据边界</h2></div>
+        <p class="goal">读完你要能做到：四个服务一次起齐，数据库端口不暴露公网，删容器重建数据还在。</p>
+        <ul>
+          <li><code>depends_on</code> 只管启动顺序；要等数据库真正可用，必须配 <code>healthcheck</code> + <code>condition: service_healthy</code>，否则应用常在初始化时连不上库。</li>
+          <li><strong>3306 / 6379 不出现在公网</strong>：要么完全不写 <code>ports</code>（只在 compose 内网互访），要么只绑 <code>127.0.0.1</code>；云控制台安全组与系统防火墙两层都要只放行 22 / 80 / 443。</li>
+          <li><strong>数据在命名卷里</strong>：<code>docker compose down</code> 保留数据，<code>down -v</code> 会连卷一起删。<strong>容器销毁不等于数据丢失</strong>，风险来自配置没做对。</li>
+          <li>密钥走环境变量 / <code>.env</code>（不入库），生产由 Secrets 注入；<code>restart: unless-stopped</code> 配 <code>log-opts</code> 轮转，避免日志撑爆磁盘。</li>
+          <li>机器规格 2 核 4G 起步，1G 内存跑 MySQL + Redis + NestJS + Nginx 容易被 OOM killer 杀掉；数据放独立数据盘，并开云主机自动快照兜底。</li>
+        </ul>
+        <pre><code><span class="fname">compose.prod.yml（节选）</span>services:
+  api:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      mysql: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/health"]
+      interval: 30s
+      retries: 3
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    env_file: .env
+    volumes: ["mysql-data:/var/lib/mysql"]
+    # 不写 ports：仅 compose 内网可达
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 5
+
+  redis:
+    image: redis:7
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: ["redis-data:/data"]
+
+  web:
+    image: nginx:alpine
+    ports: ["80:80", "443:443"]
+    volumes: ["./nginx.conf:/etc/nginx/conf.d/default.conf:ro", "./certbot:/etc/letsencrypt:ro"]
+    depends_on: [api]
+
+volumes:
+  mysql-data:
+  redis-data:</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>把 <code>ports: "3306:3306"</code> 带到生产（等于数据库裸奔）；<code>depends_on</code> 当就绪用；改 <code>data-root</code> / 挂载点前没备份；把 <code>.env</code> 提交进仓库；误执行 <code>down -v</code>。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li><code>down</code> 与 <code>down -v</code> 的区别？<span class="ans">→ 后者连命名卷一起删，数据不可恢复。</span></li>
+          <li>为什么安全组和系统防火墙都要配？<span class="ans">→ 两层独立，只配一层仍可能从另一层暴露端口。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://docs.docker.com/reference/compose-file/" target="_blank" rel="noopener noreferrer">Docker · Compose 文件参考</a><a href="https://docs.docker.com/reference/cli/docker/compose/up/" target="_blank" rel="noopener noreferrer">Docker · compose up</a></span>
+      </section>
+
+      <section id="nginx">
+        <div class="sec-head"><span class="num">03</span><h2>Nginx 反代与 HTTPS</h2></div>
+        <p class="goal">读完你要能做到：SPA 刷新不 404、上传体积不被默认限制挡住、SSE 实时推送、证书能自动续期。</p>
+        <ul>
+          <li><code>proxy_pass</code> 把 <code>/api</code> 转给 api 服务；<code>try_files ... /index.html</code> 是 SPA 前端路由刷新不 404 的关键。</li>
+          <li><code>client_max_body_size</code> 默认 1MB，不调大会让 W7 的分片 / 附件上传直接 413；<code>gzip</code> 压缩文本资源。</li>
+          <li><strong>SSE 要关 <code>proxy_buffering off</code></strong>，否则 W6 的进度会被 Nginx 缓冲，前端看起来像卡住；同时把 <code>proxy_read_timeout</code> 调大。</li>
+          <li>HTTPS 用 certbot 签发（HTTP-01 或 DNS-01 挑战），配置自动续期并定期验证；HTTP 全量 301 到 HTTPS，可加 HSTS。</li>
+          <li>安全响应头（W8 的 Helmet / CSP）可以在 Nginx 层统一补；不要重复设置造成冲突。</li>
+        </ul>
+        <pre><code><span class="fname">nginx.conf（节选）</span>server {
+  listen 80;
+  server_name example.com;
+  location / { return 301 https://$host$request_uri; }
+}
+
+server {
+  listen 443 ssl;
+  server_name example.com;
+  ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+  client_max_body_size 20m;
+  gzip on;
+
+  location /api/ {
+    proxy_pass http://api:3000/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Request-Id $request_id;
+    proxy_buffering off;              # SSE 必须
+    proxy_read_timeout 300s;
+  }
+  location / {
+    root /usr/share/nginx/html;
+    try_files $uri $uri/ /index.html; # SPA fallback
+  }
+}</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>证书续期没做定时任务或没验证；<code>proxy_pass</code> 末尾斜杠导致路径多一段 / 少一段；SPA fallback 漏配；SSE 被缓冲；上传 413 才想起 <code>client_max_body_size</code>。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>SPA 刷新 404 怎么修？<span class="ans">→ try_files 兜底到 /index.html，由前端路由接管。</span></li>
+          <li>SSE 进度不实时，最可能哪里没配？<span class="ans">→ Nginx proxy_buffering 未关闭。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://nginx.org/en/docs/beginners_guide.html" target="_blank" rel="noopener noreferrer">Nginx · 入门指南</a><a href="https://nginx.org/en/docs/http/ngx_http_proxy_module.html" target="_blank" rel="noopener noreferrer">Nginx · proxy 模块</a><a href="https://certbot.eff.org/instructions" target="_blank" rel="noopener noreferrer">Certbot · HTTPS</a></span>
+      </section>
+
+      <section id="do">
+        <div class="sec-head"><span class="num">04</span><h2>动手与验收</h2></div>
+        <p class="goal">目标：01/24 之前，公网能访问且有 HTTPS，重来一遍不超过 10 分钟。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:8%">#</th><th style="width:46%">任务</th><th>完成标志</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>多阶段 Dockerfile + .dockerignore 本地构建通过</td><td>runtime 镜像不含 .env / devDependencies</td></tr>
+            <tr><td>2</td><td>compose.prod.yml 四服务一次起齐</td><td>healthcheck 全 healthy，DB 端口不对外</td></tr>
+            <tr><td>3</td><td>Nginx 反代 + SPA fallback + SSE 关闭缓冲</td><td>刷新不 404，进度实时</td></tr>
+            <tr><td>4</td><td>域名解析 + certbot HTTPS + 自动续期</td><td>HTTPS 生效，续期演练通过</td></tr>
+            <tr><td>5</td><td>干净 VPS 从零部署计时 + 删容器重建验证数据</td><td>≤10 分钟，数据仍在</td></tr>
+            <tr><td>6</td><td>把全部命令固化成 bootstrap.sh，周日复盘</td><td>脚本可复用，复盘已写</td></tr>
+          </tbody>
+        </table></div>
+        <h3>可勾选执行清单</h3>
+        <p class="progress no-print" id="progress">进度：0 / 8</p>
+        <div class="checklist" id="checklist">
+          <label data-key="w10-1"><input type="checkbox" /><span>能说清多阶段构建与层缓存的作用</span></label>
+          <label data-key="w10-2"><input type="checkbox" /><span>runtime 镜像不含 .env / 源码 / devDependencies</span></label>
+          <label data-key="w10-3"><input type="checkbox" /><span>depends_on 配了 service_healthy 条件</span></label>
+          <label data-key="w10-4"><input type="checkbox" /><span>3306 / 6379 未暴露公网，安全组已配</span></label>
+          <label data-key="w10-5"><input type="checkbox" /><span>SPA fallback / 上传体积 / SSE 缓冲均已配置</span></label>
+          <label data-key="w10-6"><input type="checkbox" /><span>HTTPS 生效且证书可自动续期</span></label>
+          <label data-key="w10-7"><input type="checkbox" /><span>干净机器 ≤10 分钟起站，down 后重建数据仍在</span></label>
+          <label data-key="w10-8"><input type="checkbox" /><span>bootstrap.sh 已固化，复盘已写</span></label>
+        </div>
+        <div class="callout"><strong>为什么必须本周上线：</strong>W11 的 1/31 是调休上班日、W12 的 2/5–2/13 是春节假期。按执行日历，压测 / 发布 / 回滚演练全部前置到 W11 末，W12 只留文档与复盘。上线窗口不能后移。</div>
+      </section>
+      <footer><p>本手册为《全栈转型-3个月职业规划》第 10 周配套速学材料。要点依据链接所指向的官方文档提炼与转述，代码片段为配合主项目改写的最小示例，规范细节以官方原文为准。样式文件：<code>manual-style.css</code>（同目录，完全离线）。</p><p>生成：2026-11-13 · W10 开跑：2027-01-18 · 可打印为 PDF</p></footer>
+    </div>
+    <script>
+      (function () {
+        var box = document.getElementById("checklist"), hint = document.getElementById("progress");
+        if (!box || !hint) return;
+        var labels = Array.prototype.slice.call(box.querySelectorAll("label")), KEY = "w10-study-checklist-v1", saved = {};
+        try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { saved = {}; }
+        function render() {
+          var done = 0;
+          labels.forEach(function (label) {
+            var input = label.querySelector("input"), key = label.getAttribute("data-key");
+            input.checked = !!saved[key]; label.classList.toggle("done", input.checked);
+            if (input.checked) done++;
+          });
+          hint.textContent = "进度：" + done + " / " + labels.length;
+        }
+        labels.forEach(function (label) {
+          label.querySelector("input").addEventListener("change", function (e) {
+            saved[label.getAttribute("data-key")] = e.target.checked;
+            try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (err) {}
+            render();
+          });
+        });
+        render();
+      })();
+    </script>
+  </body>
+</html>

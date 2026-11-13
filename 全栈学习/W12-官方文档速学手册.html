@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>W12 · 官方文档速学手册 | 3 个月全栈转型</title>
+    <link rel="stylesheet" href="manual-style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <span class="tag">W12 · 官方文档速学 · G3 收口</span>
+        <h1>第 12 周 · 文档、复盘与转型</h1>
+        <p class="lead">把 11 周的代码变成别人看得懂、自己讲得清、能拿去面试或内部转岗的证据。本周跨春节假期，按低配周执行，重活已在 W11 前置。</p>
+        <div class="meta">
+          <span>周期：2027-02-01 – 02-07</span><span>预算：8–10h（春节 2/5–2/13 连休）</span>
+          <span>主项目：内容 / 博客平台 + 长任务导出</span><span>栈：Mermaid + C4 + ADR + README</span>
+          <span>检查点：G3 = 02/07（M3 收口）</span><span>配套：职业规划文档第 09 / 12 节</span>
+        </div>
+        <div class="callout"><strong>怎么用：</strong>本周几乎不写新功能，只做「整理与表达」。判据很硬：别人照 README 能独立启动、你能回答三个「为什么不用」、材料已实际发出。上线 / 压测 / 三演练已在 W11 完成，不要留到本周。</div>
+      </header>
+      <nav class="no-print">
+        <a href="#map">00 本周地图</a><a href="#docs">01 架构文档与 ADR</a><a href="#review">02 复盘方法</a>
+        <a href="#career">03 简历与讲稿</a><a href="#do">04 动手与 G3</a>
+      </nav>
+
+      <section id="map">
+        <div class="sec-head"><span class="num">00</span><h2>本周地图</h2></div>
+        <p class="goal">读完你要能做到：把项目讲成一个「有取舍、有故障、有数字」的故事，而不只是功能列表。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:18%">板块</th><th style="width:44%">W12 必须掌握</th><th>本期不碰</th></tr></thead>
+          <tbody>
+            <tr><td>文档</td><td>架构图（C4 Container 简化）、ER 图、长任务时序图、README 一条命令启动、ADR 四段式（背景 / 选项 / 决定 / 后果）</td><td>完整 C4 四层、自动文档站</td></tr>
+            <tr><td>复盘</td><td>故障时间线、5 Why 根因、改进项与验证方式、两个真实踩坑故事（一次数据不一致、一次线上故障）</td><td>形式化事故报告流程</td></tr>
+            <tr><td>转型材料</td><td>STAR + 量化数字的简历条目、30 分钟讲稿（架构 → 取舍 → 故障 → 数据）、高频问答</td><td>海投、刷题冲刺</td></tr>
+          </tbody>
+        </table></div>
+        <p><strong>本周产出：</strong>架构图 / ER 图 / 时序图、README、2 份 ADR、故障复盘、简历与讲稿。<strong>G3 判据：</strong>别人能独立启动；能回答「为什么不用队列 / 为什么单体够 / 为什么选 MySQL」；材料已实际发出。</p>
+        <p><strong>时段（低配版）：</strong>工作日 3 晚 × 1.5h 写文档与 ADR · 周六 3h 写复盘与讲稿 · 2/7 前完成验收与投递。允许低配，不允许把作品留在「只有自己能跑」的状态。</p>
+      </section>
+
+      <section id="docs">
+        <div class="sec-head"><span class="num">01</span><h2>架构文档与 ADR</h2></div>
+        <p class="goal">读完你要能做到：别人只读 README 和两张图，就明白系统怎么跑起来、为什么这样设计。</p>
+        <ul>
+          <li><strong>README 一条命令启动</strong>：前置条件（Docker / Node 版本）→ <code>cp .env.example .env</code> → <code>docker compose up -d</code> → 访问地址 → 如何跑测试。把 W10 的 <code>bootstrap.sh</code> 结果复用进来。</li>
+          <li><strong>架构图用 C4 Container 简化版</strong>：只画「浏览器 / Nginx / API / MySQL / Redis / 对象存储」及它们之间的调用，标注协议（HTTP / SQL / Redis / SSE）。不要一上来画类图。</li>
+          <li><strong>ER 图</strong>复用 W2 的六张表，<strong>时序图</strong>专画 W6 的长任务链路（提交 → 入队 → Worker → 进度 SSE → 下载），这两张图是讲稿的主线。</li>
+          <li>Mermaid 可把图写进 Markdown 随仓库版本化，比贴图更易维护。</li>
+          <li><strong>ADR 四段式</strong>：背景（当时要解决的问题）、选项（考虑过哪几种 + 各自代价）、决定（选了什么）、后果（带来什么限制 / 什么时候该重估）。本周至少写 2 份，例如「为什么用 compose 跑数据库而不是装本机 / 托管」和「为什么用 SSE 而不是 WebSocket」。</li>
+        </ul>
+        <pre><code><span class="fname">docs/adr/0001-db-deployment.md（模板）</span># ADR 0001：Q1 阶段数据库与缓存的部署方式
+
+## 背景
+单机 VPS、2C4G、单人开发，需要本机与线上环境一致，
+且 Q1 目标是跑通端到端交付链路。
+
+## 选项
+1. 本机裸装 MySQL / Redis：版本易漂移，线上不一致。
+2. 云托管 RDS + 托管 Redis：可靠性最好，但增加成本与运维范围。
+3. Docker Compose 起容器：环境一致、一键重建、成本最低，
+   但备份 / 高可用需自己承担。
+
+## 决定
+选 3，并强制命名卷持久化、端口不暴露公网、定时备份 + 恢复演练。
+
+## 后果
+单点风险由 Q1 接受；当出现多实例 / 跨可用区需求时，
+重估并迁移到托管数据库。触发条件写进 Q2 检查点。</code></pre>
+        <pre><code><span class="fname">docs/architecture.md（Mermaid 时序图节选）</span>```mermaid
+sequenceDiagram
+  participant U as 浏览器
+  participant A as API
+  participant Q as BullMQ / Redis
+  participant W as Worker
+  participant S as SSE
+  U-&gt;&gt;A: POST /exports (202 + jobId)
+  A-&gt;&gt;Q: add('render')
+  Q-&gt;&gt;W: process(job)
+  W-&gt;&gt;A: 更新任务表 progress
+  A-&gt;&gt;S: 推送进度
+  S-&gt;&gt;U: event: progress
+  W-&gt;&gt;U: 完成后下载
+```</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>README 只写「运行 npm start」，没写环境变量与数据库；架构图与代码实际不一致；ADR 只写结论不写「为什么不选另两个」；文档写完没人验证（判据就是找个人照着跑一遍）。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>ADR 为什么必须写「选项与代价」？<span class="ans">→ 决策的价值在取舍过程，面试与后续重估都依赖这部分。</span></li>
+          <li>README 的最低验收是什么？<span class="ans">→ 一个没接触过项目的人能照着独立启动并跑通主流程。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://adr.github.io/" target="_blank" rel="noopener noreferrer">ADR · 架构决策记录</a><a href="https://mermaid.js.org/intro/" target="_blank" rel="noopener noreferrer">Mermaid · 图表语法</a><a href="https://c4model.com/" target="_blank" rel="noopener noreferrer">C4 model · 架构图</a><a href="https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes" target="_blank" rel="noopener noreferrer">GitHub · README</a><a href="https://www.markdownguide.org/basic-syntax/" target="_blank" rel="noopener noreferrer">Markdown · 基础语法</a></span>
+      </section>
+
+      <section id="review">
+        <div class="sec-head"><span class="num">02</span><h2>复盘：时间线、5 Why 与踩坑故事</h2></div>
+        <p class="goal">读完你要能做到：讲出两个真实故障，且每个都落到「根因 + 改进 + 验证方式」。</p>
+        <ul>
+          <li><strong>时间线</strong>：按时间顺序记录「发生了什么 / 谁发现 / 怎么定位 / 怎么恢复」，只写事实不写猜测。</li>
+          <li><strong>5 Why</strong>：连续追问到可行动的根因。例：接口超时 → 慢查询 → 缺索引 → 迁移没评审 → 缺 CI 门禁 → 已在 W8 补上。停在「开发不小心」等于没复盘。</li>
+          <li><strong>改进项必须带验证方式</strong>：「加索引」要写「EXPLAIN 前后对比」；「加告警」要写「故意触发一次」。W8 / W11 的演练记录就是现成素材。</li>
+          <li>准备两个故事：一次<strong>数据不一致</strong>（如 W5 缓存删除失败、W6 任务重复执行）、一次<strong>线上 / 部署故障</strong>（如 W10 Nginx 缓冲导致 SSE 不实时、证书续期失败）。</li>
+          <li>复盘里也要写「哪些事做对了」：契约单一真源、先写失败用例、volume 与备份演练——这些是能体现工程判断的部分。</li>
+        </ul>
+        <pre><code><span class="fname">docs/postmortem/2027-01-sse-stall.md（结构）</span>## 时间线
+01-20 21:04 用户反馈导出进度条卡在 30%
+01-20 21:12 查日志：任务表 progress 已到 100%，SSE 无推送
+01-20 21:25 定位：Nginx 默认 proxy_buffering 缓冲了事件流
+01-20 21:31 关闭缓冲并 reload，恢复
+
+## 5 Why
+为什么进度卡住 → 事件被缓冲 → 反代未针对 SSE 配置 → 本地无 Nginx 层
+→ 本地与生产拓扑不一致 → 缺少「生产形态」的联调环境
+
+## 改进与验证
+1. nginx.conf 关 proxy_buffering（验证：进度 1s 内可见）
+2. compose.prod.yml 加 web 服务（验证：本地走同一入口）</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>复盘写成检讨书、追究个人；只列改进不写验证；把「以后更小心」当措施；没有量化影响时长 / 受影响请求数，讲稿里就缺可信度。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>5 Why 应该停在哪里？<span class="ans">→ 停在能落地为「改进项 + 验证方式」的可行动根因。</span></li>
+          <li>为什么复盘要写「做对了什么」？<span class="ans">→ 体现工程判断与可复用经验，避免只剩事故描述。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://adr.github.io/" target="_blank" rel="noopener noreferrer">ADR · 决策记录</a><a href="https://mermaid.js.org/intro/" target="_blank" rel="noopener noreferrer">Mermaid · 时序图</a></span>
+      </section>
+
+      <section id="career">
+        <div class="sec-head"><span class="num">03</span><h2>简历、讲稿与高频问答</h2></div>
+        <p class="goal">读完你要能做到：30 分钟讲清项目，并答得上「为什么不用某个方案」。</p>
+        <ul>
+          <li><strong>STAR + 数字</strong>：情境 / 任务 / 动作 / 结果，结果必须带可核对的数字——QPS 或 P95（W11）、表数量与数据量（W2）、CI 步骤数（W8）、恢复演练耗时（W11）。</li>
+          <li><strong>30 分钟讲稿</strong>：架构与请求链（5min）→ 三个关键取舍（10min：compose 跑 DB、契约单一真源、SSE 而非 WebSocket）→ 一次真实故障与复盘（10min）→ 数据基线与后续演进（5min）。</li>
+          <li><strong>高频问答提前写逐字稿</strong>：索引最左前缀与 EXPLAIN；事务隔离级别与锁；幂等的四种手段；JWT 轮换与越权防护；线上 500 / 慢查询 / 容器起不来的排错顺序。</li>
+          <li><strong>三个「为什么不用」必须能答</strong>：为什么不用微服务 / K8s（Q1 单人不制造运维复杂度）、为什么单体够（Q1 目标是端到端交付而非高并发）、为什么选 MySQL 与 compose（生态成熟、本机与线上一致，代价是单点，触发什么条件时换托管）。</li>
+          <li><strong>材料要实际发出</strong>：投出第一份申请，或在内部发起一次跨端职责沟通。没发出就不算 G3 通过。</li>
+        </ul>
+        <pre><code><span class="fname">简历条目示例（改写自真实数字）</span>独立设计并上线内容平台（NestJS + MySQL + Redis + Docker）
+- 设计 6 张表与复合索引，10 万行数据下列表查询 P95 从 X ms 降至 Y ms（EXPLAIN 验证）
+- 以 OpenAPI 为单一真源生成前端类型，字段变更在 CI 编译期暴露，联调返工降为 0
+- 实现幂等发布与 BullMQ 长任务，kill worker 可恢复，进度刷新不丢
+- 搭建 6 步 CI 门禁与发布/回滚流水线，完成备份恢复演练，RPO 与耗时已量化</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>简历只写「使用了xx技术」没有结果与数字；讲稿按时间流水账讲功能；被问「为什么不用 X」时只会说「没学过」；作品没有公网可访问链接或 README 跑不起来。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>「为什么不用 K8s」怎么答才加分？<span class="ans">→ 说清当前约束与代价，并给出触发迁移的条件，而不是简单否定。</span></li>
+          <li>G3 为什么要求材料「已发出」？<span class="ans">→ 转型的终点是身份落地，不只是作品完成。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes" target="_blank" rel="noopener noreferrer">GitHub · README</a><a href="https://c4model.com/" target="_blank" rel="noopener noreferrer">C4 model</a></span>
+      </section>
+
+      <section id="do">
+        <div class="sec-head"><span class="num">04</span><h2>动手与 G3 验收</h2></div>
+        <p class="goal">目标：2/7 之前，作品可访问、文档可复现、材料已发出。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:8%">#</th><th style="width:46%">任务</th><th>完成标志</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>README 一条命令启动 + 架构图 / ER 图 / 时序图</td><td>他人照文档独立启动成功</td></tr>
+            <tr><td>2</td><td>写 2 份 ADR（DB 部署方式、SSE 选型）</td><td>四段式齐全，含不选方案与代价</td></tr>
+            <tr><td>3</td><td>写 1 份故障复盘（5 Why + 改进 + 验证）</td><td>两个踩坑故事可用于讲稿</td></tr>
+            <tr><td>4</td><td>简历条目 + 30 分钟讲稿 + 高频问答逐字稿</td><td>三个「为什么不用」答得上</td></tr>
+            <tr><td>5</td><td>投出第一份申请 / 发起内部职责沟通</td><td>材料已实际发出</td></tr>
+            <tr><td>6</td><td>2/7 G3 验收：作品可访问 + 自测 + 勾选清单收尾</td><td>判据逐条通过</td></tr>
+          </tbody>
+        </table></div>
+        <h3>可勾选执行清单</h3>
+        <p class="progress no-print" id="progress">进度：0 / 8</p>
+        <div class="checklist" id="checklist">
+          <label data-key="w12-1"><input type="checkbox" /><span>README 一条命令启动，他人验证通过</span></label>
+          <label data-key="w12-2"><input type="checkbox" /><span>架构图 / ER 图 / 长任务时序图齐备</span></label>
+          <label data-key="w12-3"><input type="checkbox" /><span>2 份 ADR 四段式完整，含取舍代价</span></label>
+          <label data-key="w12-4"><input type="checkbox" /><span>故障复盘含时间线 / 5 Why / 验证方式</span></label>
+          <label data-key="w12-5"><input type="checkbox" /><span>简历条目带可核对的量化数字</span></label>
+          <label data-key="w12-6"><input type="checkbox" /><span>30 分钟讲稿与高频问答逐字稿完成</span></label>
+          <label data-key="w12-7"><input type="checkbox" /><span>三个「为什么不用」能清晰回答</span></label>
+          <label data-key="w12-8"><input type="checkbox" /><span>材料已实际发出，G3 判据逐条通过</span></label>
+        </div>
+        <div class="callout"><strong>G3 之后：</strong>按职业规划文档第 10 节「第 4–6 个月续接清单」接 Q2：压测与性能瓶颈、一次不中断服务的 schema 变更、并发与一致性缺陷、可观测体系深化、系统设计与职级能力补齐。Q1 的作品仓库继续作为主线，不另起新项目。</div>
+      </section>
+      <footer><p>本手册为《全栈转型-3个月职业规划》第 12 周配套速学材料。要点依据链接所指向的官方文档提炼与转述，代码片段为配合主项目改写的最小示例，规范细节以官方原文为准。样式文件：<code>manual-style.css</code>（同目录，完全离线）。</p><p>生成：2026-11-13 · W12 开跑：2027-02-01 · G3：2027-02-07 · 可打印为 PDF</p></footer>
+    </div>
+    <script>
+      (function () {
+        var box = document.getElementById("checklist"), hint = document.getElementById("progress");
+        if (!box || !hint) return;
+        var labels = Array.prototype.slice.call(box.querySelectorAll("label")), KEY = "w12-study-checklist-v1", saved = {};
+        try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { saved = {}; }
+        function render() {
+          var done = 0;
+          labels.forEach(function (label) {
+            var input = label.querySelector("input"), key = label.getAttribute("data-key");
+            input.checked = !!saved[key]; label.classList.toggle("done", input.checked);
+            if (input.checked) done++;
+          });
+          hint.textContent = "进度：" + done + " / " + labels.length;
+        }
+        labels.forEach(function (label) {
+          label.querySelector("input").addEventListener("change", function (e) {
+            saved[label.getAttribute("data-key")] = e.target.checked;
+            try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (err) {}
+            render();
+          });
+        });
+        render();
+      })();
+    </script>
+  </body>
+</html>

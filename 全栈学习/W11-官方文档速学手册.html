@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>W11 · 官方文档速学手册 | 3 个月全栈转型</title>
+    <link rel="stylesheet" href="manual-style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <span class="tag">W11 · 官方文档速学 · 重活前置</span>
+        <h1>第 11 周 · 交付流水线与观测</h1>
+        <p class="lead">把 W10 的手工上线变成可重复、可回滚的流水线，并拿到第一组性能数字。按执行日历，发布 / 回滚 / 恢复三演练必须在 1/30 前做完。</p>
+        <div class="meta">
+          <span>周期：2027-01-25 – 01-31</span><span>预算：18h（阅读 4h · 动手 10h · 复盘 2h · 排错 2h）</span>
+          <span>主项目：内容 / 博客平台 + 长任务导出</span><span>栈：Actions + mysqldump + k6 + Sentry</span>
+          <span>日历备注：1/31 调休上班，周日复盘挪到 1/29 晚</span><span>配套：职业规划文档第 06 节</span>
+        </div>
+        <div class="callout"><strong>为什么前置：</strong>W12 的 2/5–2/13 是春节连休，且 1/31 是调休工作日。本周必须完成上线、压测、发布 / 回滚 / 恢复三条演练；W12 只留文档、ADR、复盘与简历。G3 验收日仍为 2/7，标准不降。</div>
+      </header>
+      <nav class="no-print">
+        <a href="#map">00 本周地图</a><a href="#pipeline">01 发布与回滚流水线</a><a href="#migrate">02 迁移安全与备份</a>
+        <a href="#observe">03 观测与压测基线</a><a href="#do">04 动手与验收</a>
+      </nav>
+
+      <section id="map">
+        <div class="sec-head"><span class="num">00</span><h2>本周地图</h2></div>
+        <p class="goal">读完你要能做到：一次完整发布 + 一次回滚 + 一次从备份恢复，并给出 P95 数字与瓶颈判断。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:18%">板块</th><th style="width:44%">W11 必须掌握</th><th>本期不碰</th></tr></thead>
+          <tbody>
+            <tr><td>流水线</td><td>build → test → migrate → deploy（SSH / compose pull）、环境区分、Secrets、tag 与 release、手动回滚 workflow</td><td>蓝绿 / 灰度、多区域部署</td></tr>
+            <tr><td>迁移与备份</td><td>expand / contract 两阶段、先加列再改代码、每次迁移配回滚脚本；mysqldump 定时 + 实测恢复</td><td>PITR / binlog 增量恢复（Q3）</td></tr>
+            <tr><td>观测与压测</td><td>Sentry 错误上报、/health、基础监控告警；k6 / autocannon 记录 RPS、P95 / P99、错误率、慢 SQL 数</td><td>链路追踪、日志平台（Q3）</td></tr>
+          </tbody>
+        </table></div>
+        <p><strong>本周产出：</strong>Actions 发布流水线、回滚 workflow、错误上报与告警、备份恢复、压测基线。<strong>判据：</strong>三条演练都有记录；能给出 P95 数字并指出瓶颈在 DB / 应用 / 网络哪一层；告警能真实触发。</p>
+        <p><strong>时段：</strong>周一读 01 · 周二读 02–03 + 定发布流程 · 周三写 deploy / rollback workflow · 周四写备份脚本 + 恢复演练 · 周五接错误上报与告警 · 周六攻坚「压测基线 + 三次演练」· 1/29 晚提前复盘 + 预读 W12。</p>
+      </section>
+
+      <section id="pipeline">
+        <div class="sec-head"><span class="num">01</span><h2>发布与回滚流水线</h2></div>
+        <p class="goal">读完你要能做到：一次 push 触发完整发布，一键可回滚到上一个镜像 tag。</p>
+        <ul>
+          <li>顺序固定：<code>lint / typecheck / test</code>（W8 门禁）→ <strong>build 并推镜像，tag 用 commit SHA</strong> → <code>migrate</code> → <code>deploy</code>。用 SHA 而非 latest 才能精确回滚。</li>
+          <li>环境区分：staging / production 用不同 job 或 environment，<code>production</code> 可加人工审批；所有凭据走 <strong>GitHub Secrets</strong>，绝不写进 yml 或 .env 入库。</li>
+          <li>部署动作推荐「SSH 到服务器执行 <code>docker compose pull &amp;&amp; docker compose up -d</code>」，服务器只拉镜像、不在上面构建；<code>IMAGE_TAG</code> 由 workflow 注入。</li>
+          <li><strong>回滚 workflow</strong> 用 <code>workflow_dispatch</code> 接收目标 tag，执行同一套部署脚本把 IMAGE_TAG 换回旧值；配好迁移的回滚脚本再回滚，否则新旧代码与 schema 不兼容。</li>
+          <li>每次发布写一条 release 记录（版本、SHA、变更、迁移、回滚方式），W12 复盘直接引用。</li>
+        </ul>
+        <pre><code><span class="fname">.github/workflows/deploy.yml（骨架）</span>on:
+  push:
+    tags: ['v*']
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t registry.example.com/app:${{ github.sha }} .
+      - run: echo "${{ secrets.REGISTRY_TOKEN }}" | docker login registry.example.com -u ci --password-stdin
+      - run: docker push registry.example.com/app:${{ github.sha }}
+      - name: migrate
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: cd /srv/app &amp;&amp; docker compose run --rm api pnpm migration:run
+      - name: deploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: cd /srv/app &amp;&amp; IMAGE_TAG=${{ github.sha }} docker compose up -d --no-build</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>用 <code>latest</code> 部署导致无法回滚；把 SSH 私钥 / 数据库密码写进仓库；在服务器上构建镜像（资源紧张且不可复现）；只回滚应用不回滚迁移；发布后没有健康检查与失败自动中止。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>为什么镜像 tag 用 commit SHA？<span class="ans">→ 可精确定位与回滚到任意一次构建，latest 无法区分版本。</span></li>
+          <li>回滚前为什么先处理迁移？<span class="ans">→ 旧代码可能不兼容新 schema，需要先执行迁移的 down 脚本。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://docs.github.com/en/actions/how-tos/deploy/deploy-to-third-party-platforms" target="_blank" rel="noopener noreferrer">Actions · 部署</a><a href="https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets" target="_blank" rel="noopener noreferrer">Actions · Secrets</a></span>
+      </section>
+
+      <section id="migrate">
+        <div class="sec-head"><span class="num">02</span><h2>迁移安全与备份恢复</h2></div>
+        <p class="goal">读完你要能做到：不中断服务地加一列，并从备份把库完整恢复出来。</p>
+        <ul>
+          <li><strong>expand / contract</strong>：加列分两阶段——先发布「兼容新旧 schema」的代码 + 加可空列的迁移（expand），确认稳定后再收紧约束、删除旧列（contract）。删列、改类型这类破坏性操作绝不和代码同一次发布。</li>
+          <li>每次迁移都要有可执行的 <code>down()</code>；发布记录里写明「本次迁移如何回滚」。</li>
+          <li><strong>备份</strong>：<code>mysqldump --single-transaction --routines --triggers</code> 对 InnoDB 可在不停写的情况下拿一致性快照；用 crontab / systemd timer 定时执行，压缩后异地存放（对象存储 / 另一台机器），保留策略明确。</li>
+          <li><strong>恢复演练是判据</strong>：把备份恢复到临时实例，跑一遍迁移与几条关键查询，记录耗时。<strong>备份任务本身也要告警</strong>——最常见的故障是「备份天天跑，其实早失败了没人知道」。</li>
+          <li>密钥、备份文件、生产数据都不进仓库；下载到本地分析要脱敏。</li>
+        </ul>
+        <pre><code><span class="fname">scripts/backup.sh</span>#!/usr/bin/env bash
+set -euo pipefail
+STAMP=$(date +%Y%m%d-%H%M%S)
+OUT="/srv/backups/db-$STAMP.sql.gz"
+docker compose exec -T mysql \
+  mysqldump --single-transaction --routines --triggers \
+  -u root -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE" | gzip &gt; "$OUT"
+# 推到异地 + 清理 14 天前 + 失败时主动告警
+aws s3 cp "$OUT" s3://my-backups/db/ &amp;&amp; find /srv/backups -mtime +14 -delete</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>只备份不恢复；备份和数据库放同一块盘（盘坏了两份都没）；在迁移里同时做结构变更和数据订正；<code>down()</code> 写了但从没执行过；备份脚本用明文密码且被写进仓库。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>为什么删列要拆成两次发布？<span class="ans">→ 滚动更新期间新旧代码并存，直接删列会让旧版本报错。</span></li>
+          <li>备份恢复演练验证的是什么？<span class="ans">→ 备份文件真的可用、恢复步骤可执行、耗时可估算。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://typeorm.io/migrations/" target="_blank" rel="noopener noreferrer">TypeORM · Migrations</a><a href="https://dev.mysql.com/doc/refman/8.0/en/mysqldump.html" target="_blank" rel="noopener noreferrer">MySQL · mysqldump</a></span>
+      </section>
+
+      <section id="observe">
+        <div class="sec-head"><span class="num">03</span><h2>观测与压测基线</h2></div>
+        <p class="goal">读完你要能做到：给出 P95 数字，并判断瓶颈在 DB / 应用 / 网络哪一层。</p>
+        <ul>
+          <li><strong>最小可观测三件</strong>：健康检查 <code>/health</code>（W1 已有，W10 被 Docker healthcheck 用）、错误上报（Sentry 之类，带 request-id 便于串联 W5 日志）、基础资源告警（CPU / 内存 / 磁盘 / 连接数 / 备份任务成败）。</li>
+          <li>错误上报要脱敏：不传密码、token、完整请求体；生产 sourcemap 谨慎上传。</li>
+          <li><strong>压测</strong>：k6 或 autocannon 对 2–3 个关键接口（列表、详情、提交任务）跑一轮，记录 <strong>RPS、P95 / P99 延迟、错误率、慢 SQL 数量</strong>；把数字写进 README。</li>
+          <li>瓶颈定位：P95 高 + DB CPU 高 + 慢查询多 → 查索引 / N+1（W2 / W3）；P95 高但 DB 空闲、应用 CPU 高 → 看序列化 / 同步计算 / GC；错误率随时长陡增 → 看连接池、队列积压、超时设置。</li>
+          <li>别追求漂亮数字：目标是建立<strong>可比较的基线</strong>，日后每次优化都能对照。</li>
+        </ul>
+        <pre><code><span class="fname">k6/baseline.js（节选）</span>import http from 'k6/http';
+import { check } from 'k6';
+
+export const options = {
+  vus: 20,
+  duration: '60s',
+  thresholds: { http_req_failed: ['rate&lt;0.01'] },
+};
+
+export default function () {
+  const res = http.get('https://example.com/api/articles?page=1');
+  check(res, { 'status 200': (r) =&gt; r.status === 200 });
+}</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>压测打到生产库写脏数据（应使用独立环境 / 只读接口）；只看平均响应时间不看 P95 / P99；并发数直接拉满没有梯度；没记录机器规格与数据规模，数字无法复现；告警规则从没触发验证过。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>为什么看 P95 而不是平均值？<span class="ans">→ 平均值会掩盖长尾慢请求，P95 更接近真实用户体验。</span></li>
+          <li>压测发现 P95 高但 DB 空闲，先看什么？<span class="ans">→ 应用侧 CPU、序列化、同步计算、连接池与 GC。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://grafana.com/docs/k6/latest/" target="_blank" rel="noopener noreferrer">k6 · 文档</a><a href="https://docs.sentry.io/platforms/javascript/guides/node/" target="_blank" rel="noopener noreferrer">Sentry · Node</a></span>
+      </section>
+
+      <section id="do">
+        <div class="sec-head"><span class="num">04</span><h2>动手与验收</h2></div>
+        <p class="goal">目标：1/30 前完成三次演练，1/29 晚提前复盘，为春节周减负。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:8%">#</th><th style="width:46%">任务</th><th>完成标志</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>deploy.yml + rollback.yml，镜像 tag 用 SHA</td><td>一次完整发布跑通，可一键回滚</td></tr>
+            <tr><td>2</td><td>一次 expand 迁移 + down() 验证</td><td>新旧代码并存期间不报错</td></tr>
+            <tr><td>3</td><td>定时备份 + 异地存放 + 恢复到临时实例</td><td>恢复演练有记录与耗时</td></tr>
+            <tr><td>4</td><td>错误上报 + 健康检查 + 基础告警</td><td>告警能真实触发一次</td></tr>
+            <tr><td>5</td><td>k6 压测并把 RPS / P95 / 错误率写进 README</td><td>能指出瓶颈所在层</td></tr>
+            <tr><td>6</td><td>1/29 晚提前复盘 + 预读 W12</td><td>复盘记录已写</td></tr>
+          </tbody>
+        </table></div>
+        <h3>可勾选执行清单</h3>
+        <p class="progress no-print" id="progress">进度：0 / 8</p>
+        <div class="checklist" id="checklist">
+          <label data-key="w11-1"><input type="checkbox" /><span>能说清发布六步顺序与 Secrets 使用</span></label>
+          <label data-key="w11-2"><input type="checkbox" /><span>镜像 tag 用 SHA，可精确回滚</span></label>
+          <label data-key="w11-3"><input type="checkbox" /><span>完整发布 + 回滚演练各一次并留档</span></label>
+          <label data-key="w11-4"><input type="checkbox" /><span>expand 迁移与 down() 均验证过</span></label>
+          <label data-key="w11-5"><input type="checkbox" /><span>定时备份 + 异地 + 恢复演练完成</span></label>
+          <label data-key="w11-6"><input type="checkbox" /><span>错误上报 / 健康检查 / 告警可触发</span></label>
+          <label data-key="w11-7"><input type="checkbox" /><span>P95 数字已写入 README，瓶颈可解释</span></label>
+          <label data-key="w11-8"><input type="checkbox" /><span>1/29 提前复盘完成，W12 材料清单已列</span></label>
+        </div>
+        <div class="callout"><strong>日历提醒：</strong>1/31（周日）为春节调休上班日，本周的周日复盘与判据自测请挪到 <strong>1/29 晚</strong>。W12 只保留文档 / ADR / 复盘 / 简历这些低配可完成的内容。</div>
+      </section>
+      <footer><p>本手册为《全栈转型-3个月职业规划》第 11 周配套速学材料。要点依据链接所指向的官方文档提炼与转述，代码片段为配合主项目改写的最小示例，规范细节以官方原文为准。样式文件：<code>manual-style.css</code>（同目录，完全离线）。</p><p>生成：2026-11-13 · W11 开跑：2027-01-25 · 可打印为 PDF</p></footer>
+    </div>
+    <script>
+      (function () {
+        var box = document.getElementById("checklist"), hint = document.getElementById("progress");
+        if (!box || !hint) return;
+        var labels = Array.prototype.slice.call(box.querySelectorAll("label")), KEY = "w11-study-checklist-v1", saved = {};
+        try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { saved = {}; }
+        function render() {
+          var done = 0;
+          labels.forEach(function (label) {
+            var input = label.querySelector("input"), key = label.getAttribute("data-key");
+            input.checked = !!saved[key]; label.classList.toggle("done", input.checked);
+            if (input.checked) done++;
+          });
+          hint.textContent = "进度：" + done + " / " + labels.length;
+        }
+        labels.forEach(function (label) {
+          label.querySelector("input").addEventListener("change", function (e) {
+            saved[label.getAttribute("data-key")] = e.target.checked;
+            try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (err) {}
+            render();
+          });
+        });
+        render();
+      })();
+    </script>
+  </body>
+</html>

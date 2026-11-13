@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>W9 · 官方文档速学手册 | 3 个月全栈转型</title>
+    <link rel="stylesheet" href="manual-style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <span class="tag">W9 · 官方文档速学</span>
+        <h1>第 9 周 · 前端整合</h1>
+        <p class="lead">用最熟的前端栈把 W1–W8 的后端能力接成一条可操作主流程。本周不引入任何新框架，重点在契约驱动与异常态。</p>
+        <div class="meta">
+          <span>周期：2027-01-11 – 01-17</span><span>预算：18h（阅读 4h · 动手 10h · 复盘 2h · 排错 2h）</span>
+          <span>主项目：内容 / 博客平台 + 长任务导出</span><span>栈：契约生成的 TS 类型 + 最熟的前端栈</span>
+          <span>配套：职业规划文档第 04 / 05 / 06 节</span>
+        </div>
+        <div class="callout"><strong>怎么用：</strong>本周最容易踩的坑是「换框架重学一遍」。规划文档明确要求不引入新技术，示例用原生 fetch 风格写，你用 Vue / React 都可直接套用。内容为官方文档的提炼与转述，链接已核验。</div>
+      </header>
+      <nav class="no-print">
+        <a href="#map">00 本周地图</a><a href="#client">01 契约驱动请求层</a><a href="#state">02 状态与交互</a>
+        <a href="#dev">03 联调约定</a><a href="#do">04 动手与验收</a>
+      </nav>
+
+      <section id="map">
+        <div class="sec-head"><span class="num">00</span><h2>本周地图</h2></div>
+        <p class="goal">读完你要能做到：断网 / 500 / 401 / 超时四种异常都有可见反馈与恢复动作。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:18%">板块</th><th style="width:44%">W9 必须掌握</th><th>本期不碰</th></tr></thead>
+          <tbody>
+            <tr><td>契约驱动</td><td>由 openapi.json 生成类型与请求层、拦截器统一解错误码、401 自动刷新 token 并排队重试</td><td>换请求库、引入新状态管理库</td></tr>
+            <tr><td>状态与交互</td><td>列表 / 详情 / 表单 / 上传 / 进度页；加载态、空态、错误态、重试、防重复提交</td><td>动效、设计系统、SSR</td></tr>
+            <tr><td>联调</td><td>开发代理、环境变量、CORS、时间格式与分页字段约定统一</td><td>微前端、BFF</td></tr>
+          </tbody>
+        </table></div>
+        <p><strong>本周产出：</strong>前端列表 / 编辑 / 上传 / 进度页，四种状态与重试，接入 W3 生成的类型。<strong>判据：</strong>四种异常都有可见提示与恢复动作；刷新页面任务进度不丢；本期不引入任何新前端库。</p>
+        <p><strong>时段：</strong>周一读 01 · 周二读 02–03 + 定页面清单 · 周三写请求层 + 列表 / 详情 · 周四写表单 / 上传 / 进度页 · 周五逐个模拟四种异常 · 周六攻坚「401 刷新队列 + 进度恢复」· 周日判据自测 + 预读 W10。</p>
+      </section>
+
+      <section id="client">
+        <div class="sec-head"><span class="num">01</span><h2>契约驱动的请求层</h2></div>
+        <p class="goal">读完你要能做到：后端改字段，前端编译期就报错；401 时自动刷新并重试，不丢用户操作。</p>
+        <ul>
+          <li>类型来源只有一个：<code>openapi.json</code> → <code>openapi-typescript</code> 生成 <code>types.ts</code>（W3 已建）。生成文件头注明「请勿手工编辑」，并在 CI 里校验生成结果与仓库一致。</li>
+          <li><strong>统一出口</strong>：所有请求走一个 <code>request()</code> 函数，集中处理 baseURL、<code>Content-Type</code>、token、错误码解包、超时与 AbortSignal。页面里不要散落裸 <code>fetch</code>。</li>
+          <li>错误处理对齐 W1 的 <code>{ code, data, message }</code>：HTTP 非 2xx 与业务 code 非 0 都转成同一个 <code>ApiError</code>，页面只处理一种错误对象。</li>
+          <li><strong>401 刷新队列</strong>：第一个 401 触发 refresh，其余并发请求挂起等待；刷新成功后统一重放，失败后清空会话跳登录。若每个请求各自 refresh，会撞上 W4 的轮换机制把令牌族全吊销。</li>
+          <li>超时用 <code>AbortController</code> 主动取消，别只依赖浏览器默认（可能长达数分钟）。</li>
+        </ul>
+        <pre><code><span class="fname">web/src/api/request.ts（骨架）</span>let refreshing: Promise&lt;string | null&gt; | null = null;
+
+async function refreshOnce(): Promise&lt;string | null&gt; {
+  if (!refreshing) {
+    refreshing = doRefresh().finally(function () { refreshing = null; });
+  }
+  return refreshing;
+}
+
+export async function request&lt;T&gt;(path: string, init: RequestInit = {}): Promise&lt;T&gt; {
+  const res = await fetch(import.meta.env.VITE_API_BASE + path, {
+    ...init,
+    headers: { 'Content-Type': 'application/json', ...authHeaders(), ...init.headers },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (res.status === 401) {
+    const token = await refreshOnce();      // 并发请求共享同一次刷新
+    if (token) return request&lt;T&gt;(path, init);
+    redirectToLogin();
+  }
+  const body = await res.json();
+  if (!res.ok || body.code !== 0) throw new ApiError(body.code, body.message, res.status);
+  return body.data as T;
+}</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>生成的前端类型被手工改；每个 401 各刷一次 refresh；把 token 存 localStorage 被 XSS 读走；只判断 HTTP 状态码不判断业务 code；超时不取消导致请求堆积。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>为什么刷新要排队？<span class="ans">→ 并发 401 各自刷新会触发轮换吊销，且产生多次无效请求。</span></li>
+          <li>为什么类型文件不能手改？<span class="ans">→ 下次生成会被覆盖，且破坏「后端为唯一真源」的联动。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://openapi-ts.dev/" target="_blank" rel="noopener noreferrer">openapi-typescript</a><a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch" target="_blank" rel="noopener noreferrer">MDN · Fetch</a></span>
+      </section>
+
+      <section id="state">
+        <div class="sec-head"><span class="num">02</span><h2>四态、防重复提交与进度恢复</h2></div>
+        <p class="goal">读完你要能做到：任何页面在任何时刻都有明确反馈，用户不会面对空白或重复点击。</p>
+        <ul>
+          <li>每个数据视图都要有<strong>加载态、空态、错误态、正常态</strong>；错误态必须带「重试」动作，重试要保留原参数。</li>
+          <li>表单提交：提交中禁用按钮 + 幂等键（W5）+ 成功后跳转 / 失效缓存；失败时恢复按钮并展示服务端 message，不要吞掉错误。</li>
+          <li>上传页：分片进度按 W7 的服务端状态查询恢复，不依赖浏览器内存；超 5MB 分块，失败块单独重试。</li>
+          <li>进度页：<strong>先查真值再订阅 SSE</strong>（W6），断线后重查一次；终态停止轮询 / 关闭 EventSource，避免后台无限请求。</li>
+          <li>缓存失效：发布 / 删除 / 编辑后，让列表相关查询失效并重新拉取，否则会出现「提交成功但列表还是旧数据」。</li>
+        </ul>
+        <pre><code><span class="fname">页面状态机（伪代码）</span>type ViewState&lt;T&gt; =
+  | { kind: 'loading' }
+  | { kind: 'empty' }
+  | { kind: 'error'; message: string; retry: () =&gt; void }
+  | { kind: 'ready'; data: T };
+
+// 四种异常逐一演示：断网 / 500 / 401 / 超时
+// 断网 → 错误态 + 重试；500 → 错误态 + 保留表单；
+// 401 → 自动刷新后重放；超时 → 明确提示「请求超时」而非空白</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>只有 loading 和 ready 两态；<code>catch</code> 里空实现；重试导致重复提交（缺幂等键）；页面卸载后 SSE 仍在跑；进度条依赖组件内存，刷新归零。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>为什么错误态必须带重试？<span class="ans">→ 让用户可恢复而不必刷新整页，且能保留原参数与表单内容。</span></li>
+          <li>发布成功后列表没更新，问题在哪？<span class="ans">→ 列表查询缓存未失效，需要主动重新拉取。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch" target="_blank" rel="noopener noreferrer">MDN · Fetch</a><a href="https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events" target="_blank" rel="noopener noreferrer">MDN · SSE</a></span>
+      </section>
+
+      <section id="dev">
+        <div class="sec-head"><span class="num">03</span><h2>联调约定</h2></div>
+        <p class="goal">读完你要能做到：本地一次配置好，之后不再为跨域、时间格式、分页字段反复扯皮。</p>
+        <ul>
+          <li><strong>开发代理</strong>：Vite 的 <code>server.proxy</code> 把 <code>/api</code> 转发到 <code>http://localhost:3000</code>，浏览器看到的是同源请求，本地不必放宽后端 CORS。</li>
+          <li><strong>环境变量</strong>：前端只用 <code>VITE_</code> 前缀变量，<code>.env.local</code> 不入库；生产 baseURL 由构建时注入，密钥绝不放前端。</li>
+          <li><strong>CORS</strong>：生产后端只放行自己的域名（W8 白名单），配 <code>credentials</code> 时不能用通配符来源。</li>
+          <li><strong>统一约定</strong>：时间一律 UTC ISO 8601 字符串，由前端格式化本地时区；金额 / 大整数用字符串；分页固定 <code>{ items, total, page, pageSize }</code>（W3 已定）。</li>
+          <li>错误码表（W3）前端也要有一份映射，用于把 <code>40301</code> 之类翻译成用户能懂的提示。</li>
+        </ul>
+        <pre><code><span class="fname">vite.config.ts（节选）</span>export default defineConfig({
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        rewrite: function (p) { return p.replace(/^\/api/, ''); },
+      },
+    },
+  },
+});</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>本地靠 <code>origin: '*'</code> 绕过跨域，上线才发现坏；把后端密钥写进 <code>VITE_</code> 变量（会被打进前端产物）；BigInt 直接 JSON 化丢精度；前后端各维护一份错误码表却不同步。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>为什么本地用代理而不是放宽 CORS？<span class="ans">→ 本地同源更接近生产形态，也避免把宽松配置带上线。</span></li>
+          <li>为什么大整数要用字符串？<span class="ans">→ JS Number 精度有限，BIGINT / 金额序列化会丢精度。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://vite.dev/config/server-options.html" target="_blank" rel="noopener noreferrer">Vite · server.proxy</a><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS" target="_blank" rel="noopener noreferrer">MDN · CORS</a></span>
+      </section>
+
+      <section id="do">
+        <div class="sec-head"><span class="num">04</span><h2>动手与验收</h2></div>
+        <p class="goal">目标：周日之前，一条从登录到下载产物的主流程能在浏览器里完整走通。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:8%">#</th><th style="width:46%">任务</th><th>完成标志</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>请求层 + 契约类型 + 错误码映射</td><td>改后端字段，前端编译报错</td></tr>
+            <tr><td>2</td><td>列表 / 详情 / 表单页（四态齐全）</td><td>四种状态可逐个演示</td></tr>
+            <tr><td>3</td><td>上传页 + 进度页（首查真值 + SSE）</td><td>刷新页面进度不丢</td></tr>
+            <tr><td>4</td><td>401 刷新队列 + 超时 / 断网 / 500 演示</td><td>四种异常均有可见反馈与恢复</td></tr>
+            <tr><td>5</td><td>周日复盘 + 预读 W10 容器与上线</td><td>复盘记录已写</td></tr>
+          </tbody>
+        </table></div>
+        <h3>可勾选执行清单</h3>
+        <p class="progress no-print" id="progress">进度：0 / 8</p>
+        <div class="checklist" id="checklist">
+          <label data-key="w9-1"><input type="checkbox" /><span>前端类型由 openapi.json 生成且未手改</span></label>
+          <label data-key="w9-2"><input type="checkbox" /><span>所有请求走统一 request() 出口</span></label>
+          <label data-key="w9-3"><input type="checkbox" /><span>401 刷新排队且不重复刷新</span></label>
+          <label data-key="w9-4"><input type="checkbox" /><span>列表 / 详情 / 表单四态齐全</span></label>
+          <label data-key="w9-5"><input type="checkbox" /><span>上传 / 进度页刷新后状态可恢复</span></label>
+          <label data-key="w9-6"><input type="checkbox" /><span>断网 / 500 / 401 / 超时四种演示通过</span></label>
+          <label data-key="w9-7"><input type="checkbox" /><span>本地代理配置好，本期未引入新前端库</span></label>
+          <label data-key="w9-8"><input type="checkbox" /><span>周日复盘完成，W10 章节已预读</span></label>
+        </div>
+        <div class="callout"><strong>卡住时：</strong>最小复现 → 官方原文 → 官方 issue → 提问，30 分钟为限。忙周至少保留周三 2h + 周日 2h；连续两周判据不过，启用职业规划文档「每周时间预算与降级方案」。</div>
+      </section>
+      <footer><p>本手册为《全栈转型-3个月职业规划》第 9 周配套速学材料。要点依据链接所指向的官方文档提炼与转述，代码片段为配合主项目改写的最小示例，规范细节以官方原文为准。样式文件：<code>manual-style.css</code>（同目录，完全离线）。</p><p>生成：2026-11-13 · W9 开跑：2027-01-11 · 可打印为 PDF</p></footer>
+    </div>
+    <script>
+      (function () {
+        var box = document.getElementById("checklist"), hint = document.getElementById("progress");
+        if (!box || !hint) return;
+        var labels = Array.prototype.slice.call(box.querySelectorAll("label")), KEY = "w9-study-checklist-v1", saved = {};
+        try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { saved = {}; }
+        function render() {
+          var done = 0;
+          labels.forEach(function (label) {
+            var input = label.querySelector("input"), key = label.getAttribute("data-key");
+            input.checked = !!saved[key]; label.classList.toggle("done", input.checked);
+            if (input.checked) done++;
+          });
+          hint.textContent = "进度：" + done + " / " + labels.length;
+        }
+        labels.forEach(function (label) {
+          label.querySelector("input").addEventListener("change", function (e) {
+            saved[label.getAttribute("data-key")] = e.target.checked;
+            try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (err) {}
+            render();
+          });
+        });
+        render();
+      })();
+    </script>
+  </body>
+</html>
