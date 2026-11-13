@@ -476,7 +476,7 @@
             <tbody>
               <tr><td>GET</td><td><code>/users</code></td><td>200</td><td>列表（W3 才加分页）</td></tr>
               <tr><td>GET</td><td><code>/users/:id</code></td><td>200 / 404</td><td>详情；<code>:id</code> 用 <code>ParseIntPipe</code> 转数字</td></tr>
-              <tr><td>POST</td><td><code>/users</code></td><td>201</td><td>新建；请求体走 DTO 校验</td></tr>
+              <tr><td>POST</td><td><code>/users</code></td><td>201</td><td>新建；本周用内联类型，W3 换成 DTO 校验</td></tr>
               <tr><td>GET</td><td><code>/health</code></td><td>200</td><td>返回服务状态，W10 会被 Docker healthcheck 使用</td></tr>
             </tbody>
           </table>
@@ -665,14 +665,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
   catch(exception: unknown, host: ArgumentsHost) {
     const res = host.switchToHttp().getResponse();
-    const isHttp = exception instanceof HttpException;
-    const status = isHttp
-      ? exception.getStatus()
-      : HttpStatus.INTERNAL_SERVER_ERROR;
-    const detail = isHttp ? exception.getResponse() : 'Internal server error';
+    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let detail: unknown = 'Internal server error';
 
-    // 未知异常必须留痕，不能被过滤器悄悄吞掉
-    if (!isHttp) this.logger.error(exception);
+    // 用 instanceof 直接收窄类型，strict 下才不会报错
+    if (exception instanceof HttpException) {
+      status = exception.getStatus();
+      detail = exception.getResponse();
+    } else {
+      // 未知异常必须留痕，不能被过滤器悄悄吞掉
+      this.logger.error(exception);
+    }
 
     res.status(status).json({ code: status, data: null, message: detail });
   }
@@ -743,6 +746,10 @@ bootstrap();</code></pre>
 
         <h3>4.2 配置：ConfigModule 读 .env</h3>
         <p>官方 Configuration 章节的做法是安装 <code>@nestjs/config</code>，在根模块用 <code>ConfigModule.forRoot()</code> 加载 <code>.env</code>，再用 <code>ConfigService</code> 按 key 读取。<code>isGlobal: true</code> 可免去每个模块重复 imports；生产环境更推荐由编排层注入环境变量，而不是把配置文件打进镜像。</p>
+        <pre><code><span class="fname">初始化与依赖（一次到位）</span>npx @nestjs/cli new fullstack-lab --package-manager pnpm
+cd fullstack-lab
+pnpm add @nestjs/config class-validator class-transformer</code></pre>
+        <p><code>class-validator</code> / <code>class-transformer</code> 是 <code>ValidationPipe</code> 的运行时依赖，不装会在启动时报错；W3 定义 DTO 时会正式用到它们。</p>
         <pre><code><span class="fname">.env.example（提交进仓库，不含真实值）</span>PORT=3000
 MYSQL_ROOT_PASSWORD=change-me
 MYSQL_DATABASE=fullstack_lab

@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>W3 · 官方文档速学手册 | 3 个月全栈转型</title>
+    <link rel="stylesheet" href="manual-style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <span class="tag">W3 · 官方文档速学</span>
+        <h1>第 3 周 · ORM 与接口契约</h1>
+        <p class="lead">把 W2 的表结构变成可维护的数据访问层，并用 OpenAPI 建立前后端唯一真源——本周是「改一个字段名，前后端与 CI 同时报错」的关键一步。</p>
+        <div class="meta">
+          <span>周期：2026-11-30 – 12-06</span><span>预算：18h（阅读 4h · 动手 10h · 复盘 2h · 排错 2h）</span>
+          <span>主项目：内容 / 博客平台 + 长任务导出</span><span>栈：TypeORM + NestJS + OpenAPI</span>
+          <span>配套：职业规划文档第 04 / 05 / 06 节</span>
+        </div>
+        <div class="callout"><strong>怎么用：</strong>本周的判据是「契约能不能真的驱动前后端」，所以代码占比要比 W2 更高。周一 2h 读 01–02，周二读 03；周三起直接写 Entity、DTO 与契约生成脚本。内容为官方文档的提炼与转述，链接已核验。</div>
+      </header>
+      <nav class="no-print">
+        <a href="#map">00 本周地图</a><a href="#orm">01 Entity 与关联</a><a href="#dto">02 校验与错误码</a>
+        <a href="#contract">03 OpenAPI 单一真源</a><a href="#do">04 动手与验收</a>
+      </nav>
+
+      <section id="map">
+        <div class="sec-head"><span class="num">00</span><h2>本周地图</h2></div>
+        <p class="goal">读完你要能做到：用 QueryBuilder 写出无 N+1 的分页列表，并让前端类型由 openapi.json 自动生成。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:18%">板块</th><th style="width:44%">W3 必须掌握</th><th>本期不碰</th></tr></thead>
+          <tbody>
+            <tr><td>TypeORM</td><td>Entity 装饰器、@ManyToOne / @OneToMany、QueryBuilder、take/skip、dataSource.transaction()；N+1 与 leftJoinAndSelect</td><td>订阅 / 事件、多数据源、自定义 Repository 高级封装</td></tr>
+            <tr><td>校验与错误</td><td>DTO 与 Entity 分离、class-validator + ValidationPipe（whitelist / transform / forbidNonWhitelisted）、业务异常类、全局 Filter、错误码表</td><td>自定义装饰器、复杂条件校验组</td></tr>
+            <tr><td>契约</td><td>@ApiProperty、Swagger CLI plugin、导出 openapi.json、openapi-typescript 生成前端类型；分页 / 排序 / 筛选的契约写法</td><td>gRPC / GraphQL、契约测试框架</td></tr>
+            <tr><td>分页</td><td>take / skip 与游标分页的取舍、统一的 { items, total, page, pageSize } 返回形状</td><td>无限滚动优化、搜索引擎分页</td></tr>
+          </tbody>
+        </table></div>
+        <p><strong>本周产出：</strong>文章 CRUD（分页 / 筛选 / 排序）、DTO 校验、错误码表、导出 <code>openapi.json</code> 并生成前端类型、前端接一个列表页。<strong>本周判据：</strong>改一个字段名后，前端类型检查与 CI 同时报错；能说清「参数校验在 Pipe、业务规则在 Service」的边界。</p>
+        <p><strong>时段：</strong>周一读 01–02 · 周二读 03 + 定契约形状 · 周三写 Entity + Repository · 周四写 DTO / 异常 / 契约生成 · 周五跑类型检查与 CI · 周六攻坚「N+1 排查 + 契约联动验证」· 周日判据自测 + 预读 W4 鉴权。</p>
+      </section>
+
+      <section id="orm">
+        <div class="sec-head"><span class="num">01</span><h2>Entity、关联与 N+1</h2></div>
+        <p class="goal">读完你要能做到：用一条 JOIN 查询取回文章与作者，而不是循环查库。</p>
+        <ul>
+          <li><code>@Entity()</code> 把类映射到表，<code>@Column()</code> 声明列，<code>@PrimaryGeneratedColumn()</code> 是自增主键；列名建议显式指定 <code>name</code>，避免 TS 属性名与数据库列名耦合。</li>
+          <li>关联关系：<code>@ManyToOne</code> 是拥有外键的一方，<code>@OneToMany</code> 是反向侧（不产生列）。多对多可用 <code>@ManyToMany</code> 或显式中间表 Entity——主项目的 <code>article_tags</code> 建议显式建 Entity，方便后续加字段。</li>
+          <li><strong>N+1</strong>：先查 N 篇文章，再对每篇查一次作者 = N+1 次 SQL。用 <code>leftJoinAndSelect('a.user', 'u')</code> 一次 JOIN 解决，或显式 <code>relations</code>。</li>
+          <li><code>find({ take, skip })</code> 适合简单分页；涉及条件、联表、聚合时用 QueryBuilder，并坚持<strong>参数化</strong>（<code>setParameters</code>），绝不字符串拼 SQL。</li>
+          <li>事务用 <code>dataSource.transaction(async (manager) =&gt; {...})</code>，Service 层统一开；W2 已定过这条边界。</li>
+        </ul>
+        <pre><code><span class="fname">src/articles/article.entity.ts</span>@Entity('articles')
+export class Article {
+  @PrimaryGeneratedColumn('increment', { type: 'bigint' })
+  id: string;
+
+  @Column({ length: 200 })
+  title: string;
+
+  @Column({ type: 'text' })
+  body: string;
+
+  @Column({ name: 'user_id', type: 'bigint' })
+  userId: string;
+
+  @ManyToOne(() =&gt; User, (user) =&gt; user.articles)
+  @JoinColumn({ name: 'user_id' })
+  user: User;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+}</code></pre>
+        <pre><code><span class="fname">src/articles/articles.service.ts（分页 + 一条 JOIN）</span>async list(query: ListArticlesDto) {
+  const qb = this.repo.createQueryBuilder('a')
+    .leftJoinAndSelect('a.user', 'u')
+    .where('a.deleted_at IS NULL')
+    .orderBy('a.created_at', 'DESC')
+    .take(query.pageSize)
+    .skip((query.page - 1) * query.pageSize);
+
+  if (query.categoryId) {
+    qb.andWhere('a.category_id = :categoryId', { categoryId: query.categoryId });
+  }
+
+  const [items, total] = await qb.getManyAndCount();
+  return { items, total, page: query.page, pageSize: query.pageSize };
+}</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>开启 SQL 日志后才容易发现 N+1；<code>leftJoinAndSelect</code> 联表 + <code>take/skip</code> 在一对多关系上可能截断结果（TypeORM 会分两次查询，注意验证）；<code>bigint</code> 默认映射成字符串，别直接当 number 用；<code>@Column({ nullable: true })</code> 与 DTO 的可选校验要对齐。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>N+1 的「1」指什么？<span class="ans">→ 第一次列表查询，之后每行再查一次关联数据。</span></li>
+          <li>为什么禁止字符串拼 SQL？<span class="ans">→ 注入风险；QueryBuilder 的 setParameters 会做参数化。</span></li>
+          <li>事务应该放在哪一层？<span class="ans">→ Service 层，Controller 只做委托。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://typeorm.io/relations/" target="_blank" rel="noopener noreferrer">TypeORM · Relations</a><a href="https://typeorm.io/select-query-builder/" target="_blank" rel="noopener noreferrer">TypeORM · QueryBuilder</a><a href="https://typeorm.io/entities" target="_blank" rel="noopener noreferrer">TypeORM · Entities</a></span>
+      </section>
+
+      <section id="dto">
+        <div class="sec-head"><span class="num">02</span><h2>DTO 校验与统一错误码</h2></div>
+        <p class="goal">读完你要能做到：非法请求在 Pipe 层被挡住，业务冲突由 Service 抛业务异常，两者不混。</p>
+        <ul>
+          <li><strong>DTO 与 Entity 必须分离</strong>：DTO 描述「外部能传什么」，Entity 描述「库里存什么」。把 Entity 直接当 <code>@Body()</code> 会让客户端能改 <code>id</code> / <code>userId</code>。</li>
+          <li><code>class-validator</code> 装饰器（<code>@IsString()</code> / <code>@IsInt()</code> / <code>@MaxLength()</code> / <code>@IsOptional()</code>）配合 <code>ValidationPipe</code> 生效；三个关键选项：<code>whitelist</code> 剥掉未声明字段、<code>transform</code> 做类型转换、<code>forbidNonWhitelisted</code> 遇到多余字段直接报错。</li>
+          <li>边界：<strong>参数形状在 Pipe 校验，业务规则在 Service 判断</strong>。「邮箱格式」是前者，「作者只能改自己的文章」是后者。</li>
+          <li>统一返回体沿用 W1 的 <code>{ code, data, message }</code>；本周补一张<strong>错误码表</strong>（如 40001 参数错、40301 越权、40401 资源不存在、40901 冲突），业务异常类继承 <code>HttpException</code>，由全局 Filter 统一包装。</li>
+        </ul>
+        <pre><code><span class="fname">src/articles/dto/create-article.dto.ts</span>export class CreateArticleDto {
+  @ApiProperty({ example: '我的第一篇文章' })
+  @IsString()
+  @MaxLength(200)
+  title: string;
+
+  @ApiProperty({ example: '正文内容' })
+  @IsString()
+  body: string;
+
+  @ApiPropertyOptional({ example: 3 })
+  @IsOptional()
+  @Type(() =&gt; Number)
+  @IsInt()
+  categoryId?: number;
+}</code></pre>
+        <pre><code><span class="fname">业务异常类 + 错误码表</span>export const ErrorCode = {
+  ARTICLE_NOT_FOUND: 40401,
+  ARTICLE_FORBIDDEN: 40301,
+} as const;
+
+export class BizException extends HttpException {
+  constructor(code: number, message: string, status = 400) {
+    super({ code, message }, status);
+  }
+}
+
+// Service 内
+if (!article) throw new BizException(ErrorCode.ARTICLE_NOT_FOUND, '文章不存在', 404);</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>只装 <code>class-validator</code> 不装 <code>class-transformer</code>；<code>@Body()</code> 用内联类型或 <code>any</code>，导致 ValidationPipe 完全不生效；把用户 ID 从请求体里取（应从 JWT 取，W4 补）；错误处理里泄露堆栈或 SQL 给客户端。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>为什么不能把 Entity 当 DTO？<span class="ans">→ 外部可篡改 id / userId 等内部字段，造成越权与脏数据。</span></li>
+          <li><code>whitelist</code> 和 <code>forbidNonWhitelisted</code> 的差别？<span class="ans">→ 前者静默剥离多余字段，后者直接抛错，联调期更推荐后者。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://docs.nestjs.com/techniques/validation" target="_blank" rel="noopener noreferrer">NestJS · Validation</a><a href="https://docs.nestjs.com/pipes" target="_blank" rel="noopener noreferrer">NestJS · Pipes</a><a href="https://github.com/typestack/class-validator" target="_blank" rel="noopener noreferrer">class-validator</a></span>
+      </section>
+
+      <section id="contract">
+        <div class="sec-head"><span class="num">03</span><h2>OpenAPI 作为单一真源</h2></div>
+        <p class="goal">读完你要能做到：改 Entity / DTO 后，重新导出契约、生成前端类型，前端立刻编译报错。</p>
+        <ul>
+          <li><code>@nestjs/swagger</code> 的 <code>SwaggerModule.createDocument()</code> 生成 OpenAPI 文档对象；<code>@ApiProperty()</code> 补充 DTO 的字段说明与示例。</li>
+          <li><strong>CLI plugin</strong> 能自动从 TS 类型推导 <code>@ApiProperty</code>，减少手写装饰器；但它依赖类型信息，泛型 / 联合类型仍需手工标注。</li>
+          <li>把文档序列化成 <code>openapi.json</code> 提交进仓库，再用 <code>openapi-typescript</code> 生成前端 <code>types.ts</code>。这样<strong>后端改动 → 契约变化 → 前端类型检查失败</strong>，形成可验证的联动。</li>
+          <li>契约要覆盖：路径、方法、请求 / 响应形状、状态码、错误码结构、分页参数。W8 的失败态清单会基于它补全。</li>
+        </ul>
+        <pre><code><span class="fname">src/swagger.ts（导出契约）</span>import { NestFactory } from '@nestjs/core';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { writeFileSync } from 'node:fs';
+import { AppModule } from './app.module';
+
+async function exportSpec() {
+  const app = await NestFactory.create(AppModule, { logger: false });
+  const config = new DocumentBuilder()
+    .setTitle('Fullstack Lab API')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+  const doc = SwaggerModule.createDocument(app, config);
+  writeFileSync('./openapi.json', JSON.stringify(doc, null, 2));
+  await app.close();
+}
+exportSpec();</code></pre>
+        <pre><code><span class="fname">package.json（契约脚本）</span>{
+  "scripts": {
+    "spec": "ts-node src/swagger.ts",
+    "types": "openapi-typescript ./openapi.json -o ../web/src/api/types.ts",
+    "contract": "pnpm spec &amp;&amp; pnpm types"
+  }
+}</code></pre>
+        <p><strong>本周验证动作：</strong>把 <code>CreateArticleDto.title</code> 改成 <code>headline</code>，跑 <code>pnpm contract</code>，前端列表页必须出现类型错误；改回来后恢复绿色。这个「故意改坏再修好」就是判据的验证方式。</p>
+        <div class="callout warn"><strong>常见坑：</strong>Swagger 文档只在开发期挂 UI、没导出 JSON 入库，前端拿不到真源；把 <code>openapi.json</code> 生成放在 CI 之后才跑，导致前端永远落后一个版本；生成的前端类型被手工修改（应在文件头注明「请勿编辑」）。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>为什么说契约是「单一真源」？<span class="ans">→ 后端定义一次，前端类型与文档都由它生成，不再手工同步。</span></li>
+          <li>CLI plugin 解决什么问题、有什么限制？<span class="ans">→ 自动推导装饰器减少样板代码；复杂类型仍需 @ApiProperty 显式标注。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://docs.nestjs.com/openapi/introduction" target="_blank" rel="noopener noreferrer">NestJS · OpenAPI 介绍</a><a href="https://docs.nestjs.com/openapi/cli-plugin" target="_blank" rel="noopener noreferrer">NestJS · CLI 插件</a><a href="https://docs.nestjs.com/openapi/types-and-parameters" target="_blank" rel="noopener noreferrer">NestJS · Types 与参数</a><a href="https://openapi-ts.dev/" target="_blank" rel="noopener noreferrer">openapi-typescript</a></span>
+      </section>
+
+      <section id="do">
+        <div class="sec-head"><span class="num">04</span><h2>动手与验收</h2></div>
+        <p class="goal">目标：周日之前，文章 CRUD + 契约链路跑通，且「改字段名 → 前端报错」能现场演示。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:8%">#</th><th style="width:46%">任务</th><th>完成标志</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>建 Article / Category / Tag / Comment Entity 与关联</td><td>migration 无报错，关联查询能取到作者</td></tr>
+            <tr><td>2</td><td>写文章 CRUD + 分页 / 筛选 / 排序，用 QueryBuilder</td><td>SQL 日志里没有 N+1</td></tr>
+            <tr><td>3</td><td>补 DTO、ValidationPipe 与错误码表</td><td>非法请求返回 400 且形状统一</td></tr>
+            <tr><td>4</td><td>导出 openapi.json 并生成前端类型，接一个列表页</td><td>列表页能真实渲染后端数据</td></tr>
+            <tr><td>5</td><td>故意改一个字段名，验证前后端 + CI 联动报错，再改回</td><td>演示通过，记录一次</td></tr>
+            <tr><td>6</td><td>周日复盘 + 预读 W4 的 Passport / JWT</td><td>复盘记录已写</td></tr>
+          </tbody>
+        </table></div>
+        <h3>可勾选执行清单</h3>
+        <p class="progress no-print" id="progress">进度：0 / 8</p>
+        <div class="checklist" id="checklist">
+          <label data-key="w3-1"><input type="checkbox" /><span>能说清 DTO 与 Entity 为什么必须分离</span></label>
+          <label data-key="w3-2"><input type="checkbox" /><span>能解释 N+1 并用 leftJoinAndSelect 修掉一条</span></label>
+          <label data-key="w3-3"><input type="checkbox" /><span>文章 CRUD + 分页 / 筛选 / 排序已跑通</span></label>
+          <label data-key="w3-4"><input type="checkbox" /><span>ValidationPipe 三个选项都已配置并验证</span></label>
+          <label data-key="w3-5"><input type="checkbox" /><span>错误码表 + 业务异常类 + 全局 Filter 已接通</span></label>
+          <label data-key="w3-6"><input type="checkbox" /><span>openapi.json 已导出并入库，前端类型已生成</span></label>
+          <label data-key="w3-7"><input type="checkbox" /><span>「改字段名 → 前端类型报错 → 改回」演示通过</span></label>
+          <label data-key="w3-8"><input type="checkbox" /><span>周日复盘完成，W4 章节已预读</span></label>
+        </div>
+        <div class="callout"><strong>卡住时：</strong>最小复现 → 官方原文 → 官方 issue → 提问，30 分钟为限。忙周至少保留周三 2h + 周日 2h；连续两周判据不过，启用职业规划文档「每周时间预算与降级方案」。</div>
+      </section>
+      <footer><p>本手册为《全栈转型-3个月职业规划》第 3 周配套速学材料。要点依据链接所指向的官方文档提炼与转述，代码片段为配合主项目改写的最小示例，规范细节以官方原文为准。样式文件：<code>manual-style.css</code>（同目录，完全离线）。</p><p>生成：2026-11-13 · W3 开跑：2026-11-30 · 可打印为 PDF</p></footer>
+    </div>
+    <script>
+      (function () {
+        var box = document.getElementById("checklist"), hint = document.getElementById("progress");
+        if (!box || !hint) return;
+        var labels = Array.prototype.slice.call(box.querySelectorAll("label")), KEY = "w3-study-checklist-v1", saved = {};
+        try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { saved = {}; }
+        function render() {
+          var done = 0;
+          labels.forEach(function (label) {
+            var input = label.querySelector("input"), key = label.getAttribute("data-key");
+            input.checked = !!saved[key]; label.classList.toggle("done", input.checked);
+            if (input.checked) done++;
+          });
+          hint.textContent = "进度：" + done + " / " + labels.length;
+        }
+        labels.forEach(function (label) {
+          label.querySelector("input").addEventListener("change", function (e) {
+            saved[label.getAttribute("data-key")] = e.target.checked;
+            try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (err) {}
+            render();
+          });
+        });
+        render();
+      })();
+    </script>
+  </body>
+</html>

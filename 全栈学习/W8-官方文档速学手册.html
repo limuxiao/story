@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>W8 · 官方文档速学手册 | 3 个月全栈转型</title>
+    <link rel="stylesheet" href="manual-style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <span class="tag">W8 · 官方文档速学 · G2 收口</span>
+        <h1>第 8 周 · 测试与质量门禁</h1>
+        <p class="lead">把「能跑」变成「不敢随便改坏」：测试分层、安全自查、CI 门禁三件一起收口，周日过 G2。</p>
+        <div class="meta">
+          <span>周期：2027-01-04 – 01-10</span><span>预算：18h（阅读 4h · 动手 10h · 复盘 2h · 排错 2h）</span>
+          <span>主项目：内容 / 博客平台 + 长任务导出</span><span>栈：Jest + Supertest + Playwright + Actions</span>
+          <span>检查点：G2 = 01/10（M2 收口）</span><span>配套：职业规划文档第 04 / 05 / 06 节</span>
+        </div>
+        <div class="callout"><strong>怎么用：</strong>本周的验收方式是「故意提交一个坏改动，看 CI 是否拦住」。只写测试、不验证门禁能挡住，等于没做。内容为官方文档的提炼与转述，链接已核验。</div>
+      </header>
+      <nav class="no-print">
+        <a href="#map">00 本周地图</a><a href="#test">01 测试分层与门禁</a><a href="#security">02 Web 安全自查</a>
+        <a href="#review">03 失败态与 Review</a><a href="#do">04 动手与 G2</a>
+      </nav>
+
+      <section id="map">
+        <div class="sec-head"><span class="num">00</span><h2>本周地图</h2></div>
+        <p class="goal">读完你要能做到：列出一个接口的 ≥7 类失败态，并让 CI 真的挡住其中至少一类坏改动。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:18%">板块</th><th style="width:44%">W8 必须掌握</th><th>本期不碰</th></tr></thead>
+          <tbody>
+            <tr><td>测试分层</td><td>单测（Service 纯逻辑）/ 集成（Supertest + 真实 DB）/ E2E（Playwright 一条主流程）；关注分支覆盖而非数字</td><td>覆盖率硬阈值、变异测试、压测（W11）</td></tr>
+            <tr><td>安全自查</td><td>CORS 白名单、CSRF（Cookie 场景）、XSS 输出转义、CSP、SQL 参数化、限流、npm audit 依赖漏洞、密钥不入库</td><td>渗透测试、WAF 规则、合规审计</td></tr>
+            <tr><td>质量门禁</td><td>CI 顺序 lint → typecheck → unit → migration → integration → build；失败禁止合并、PR 模板与 Review 清单</td><td>多环境部署门禁（W11）</td></tr>
+          </tbody>
+        </table></div>
+        <p><strong>本周产出：</strong>单测 / 集成 / 一条 E2E 补齐、安全自查记录、CI 加迁移与测试门禁。<strong>G2 判据：</strong>长任务 + 文件 + 进度链路跑通；CI 门禁、结构化日志、安全自查齐备；能列出 ≥7 类失败态。</p>
+        <p><strong>时段：</strong>周一读 01 · 周二读 02–03 + 定门禁顺序 · 周三补单测 / 集成 · 周四写 E2E + 安全自查 · 周五配 CI 门禁并故意提交坏改动 · 周六攻坚「门禁拦截验证 + 失败态清单」· 周日 G2 验收 + 预读 W9。</p>
+      </section>
+
+      <section id="test">
+        <div class="sec-head"><span class="num">01</span><h2>测试金字塔与 CI 门禁</h2></div>
+        <p class="goal">读完你要能做到：说清三层各测什么，并把它们排进 CI 的正确位置。</p>
+        <ul>
+          <li><strong>单测</strong>：只测 Service 的纯逻辑与错误分支，Repository 用 mock；跑得最快、数量最多，用于保护重构。</li>
+          <li><strong>集成测试</strong>：Supertest 走完整 HTTP 链路 + 真实测试库（W4 已建）；覆盖鉴权、幂等、契约形状这类「只有连起来才会错」的行为。</li>
+          <li><strong>E2E</strong>：Playwright 跑一条主流程（登录 → 发文 → 导出 → 下载）即可，不追求页面全覆盖；它最慢最脆，放在最后。</li>
+          <li>覆盖率看<strong>分支</strong>是否被触及，不迷信百分比；为凑数字写的断言毫无价值。</li>
+          <li><strong>门禁顺序</strong>：<code>lint → typecheck → unit → migration → integration → build</code>。前置步骤便宜且能快速失败；<code>migration</code> 单独跑一次是为了验证迁移脚本能在干净库上执行。</li>
+          <li>失败禁止合并：在 GitHub 里把该 workflow 设为 required status check，并在 PR 模板里要求「本次改动的失败态是否覆盖」。</li>
+        </ul>
+        <pre><code><span class="fname">.github/workflows/ci.yml（W8 门禁版节选）</span>      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test:unit
+      - run: pnpm migration:run        # 干净库上验证迁移
+      - run: pnpm test:e2e-api         # Supertest 集成
+      - run: pnpm build
+      - run: pnpm test:e2e-web         # Playwright 一条主流程</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>测试连了开发库；用例共享数据导致顺序依赖；用 <code>.only</code> / <code>.skip</code> 提交进 CI；E2E 用固定 <code>waitForTimeout</code> 造成不稳定（应等具体元素 / 网络响应）；CI 里没跑 migration，迁移坏了要等部署才发现。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>为什么 migration 要在 CI 里单独跑？<span class="ans">→ 验证迁移脚本能在干净库执行，把 schema 变更错误挡在部署前。</span></li>
+          <li>为什么 E2E 只跑一条主流程？<span class="ans">→ 成本与脆弱性最高，覆盖关键路径收益最大。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://docs.nestjs.com/fundamentals/testing" target="_blank" rel="noopener noreferrer">NestJS · Testing</a><a href="https://playwright.dev/docs/intro" target="_blank" rel="noopener noreferrer">Playwright · 入门</a><a href="https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax" target="_blank" rel="noopener noreferrer">Actions · workflow 语法</a></span>
+      </section>
+
+      <section id="security">
+        <div class="sec-head"><span class="num">02</span><h2>Web 安全自查清单</h2></div>
+        <p class="goal">读完你要能做到：对照 OWASP，逐项说出本项目当前的处理方式与残留风险。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:20%">项</th><th style="width:42%">本项目做法</th><th>自查动作</th></tr></thead>
+          <tbody>
+            <tr><td>CORS</td><td>白名单域名 + 明确 methods / headers，不用 <code>origin: '*'</code> 配 credentials</td><td>用非白名单 Origin 发预检，确认被拒</td></tr>
+            <tr><td>CSRF</td><td>若 refresh 放 Cookie，需 SameSite + CSRF token；纯 Bearer 头方案天然免疫</td><td>确认方案与 ADR 一致</td></tr>
+            <tr><td>XSS</td><td>输出转义、富文本白名单过滤、SVG/HTML 附件强制下载</td><td>提交一段脚本内容看是否被当文本渲染</td></tr>
+            <tr><td>CSP</td><td>限制脚本 / 样式来源，禁止 inline script</td><td>响应头里有 Content-Security-Policy</td></tr>
+            <tr><td>SQL 注入</td><td>QueryBuilder 参数化（W3）、禁止字符串拼 SQL</td><td>用 <code>' OR 1=1</code> 类输入测试</td></tr>
+            <tr><td>限流 / 枚举</td><td>ThrottlerGuard（W5）、登录失败统一措辞（W4）</td><td>短时间高频请求返回 429</td></tr>
+            <tr><td>依赖漏洞</td><td><code>npm audit</code> / <code>pnpm audit</code> 纳入门禁，定期更新</td><td>CI 有依赖检查步骤</td></tr>
+            <tr><td>密钥</td><td>.env 不入库、生产用 Secrets、日志脱敏（W5）</td><td>仓库与日志全量搜索无凭据</td></tr>
+          </tbody>
+        </table></div>
+        <p>建议把这张表变成仓库里的 <code>SECURITY_CHECKLIST.md</code>，每次发版前逐项打勾；W12 的复盘材料会用到它。</p>
+        <div class="callout warn"><strong>常见坑：</strong>开发期图省事开 <code>origin: '*'</code> 后忘记关；把 CSP 设成 <code>unsafe-inline</code> 等于没设；只查依赖漏洞不改；把 token 打进前端日志或错误上报。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>为什么 Bearer 头方案不易受 CSRF？<span class="ans">→ 浏览器不会自动附带 Authorization 头，跨站请求无法借用凭证。</span></li>
+          <li><code>origin: '*'</code> 与 credentials 为什么冲突？<span class="ans">→ 带凭证的跨域请求不允许通配符来源，且 wildcard 等于任意站点可读响应。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://cheatsheetseries.owasp.org/" target="_blank" rel="noopener noreferrer">OWASP · Cheat Sheets</a><a href="https://owasp.org/projects/top-ten" target="_blank" rel="noopener noreferrer">OWASP · Top 10</a><a href="https://docs.nestjs.com/security/cors" target="_blank" rel="noopener noreferrer">NestJS · CORS</a><a href="https://docs.nestjs.com/security/helmet" target="_blank" rel="noopener noreferrer">NestJS · Helmet</a></span>
+      </section>
+
+      <section id="review">
+        <div class="sec-head"><span class="num">03</span><h2>完整失败态与 Review 清单</h2></div>
+        <p class="goal">读完你要能做到：为「发布文章」列出 ≥7 类失败态，并写进 PR 模板。</p>
+        <p>接口设计最容易被忽略的不是成功路径，而是失败路径。以「发布文章」为例，至少要覆盖：</p>
+        <ol>
+          <li>参数错（缺 title / 超长 / 类型错）→ 400 + 40001</li>
+          <li>未登录 / token 过期 → 401</li>
+          <li>越权（改他人文章）→ 404（W4 归属查询）</li>
+          <li>业务冲突（重复发布 / 状态机不允许）→ 409</li>
+          <li>限流 → 429</li>
+          <li>依赖超时（DB / Redis / 队列不可用）→ 503 或降级，且日志可追踪</li>
+          <li>重复提交 / 并发重复请求 → 幂等返回首次结果（W5）</li>
+          <li>未知异常 → 500 + 统一错误体 + 日志留堆栈（W1 Filter）</li>
+        </ol>
+        <p>PR 模板建议固定四问：改了什么 / 影响哪些接口与契约 / 新增或覆盖了哪些失败态 / 如何验证（命令与结果）。Review 时先问「这个改动最可能怎么坏」，再看代码。</p>
+        <div class="callout"><strong>本周验证：</strong>故意删掉一条归属条件、或提交一个类型错误、或写一个迁移却不写 <code>down()</code>，确认 CI 在对应步骤变红；修回后变绿。把截图 / 链接贴进复盘记录，这就是 G2 的证据。</div>
+      </section>
+
+      <section id="do">
+        <div class="sec-head"><span class="num">04</span><h2>动手与 G2 验收</h2></div>
+        <p class="goal">目标：01/10 之前，主项目具备「改坏了会被自动拦住」的能力。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:8%">#</th><th style="width:46%">任务</th><th>完成标志</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>补齐单测 / 集成 / 一条 Playwright 主流程</td><td>三层测试本地全绿</td></tr>
+            <tr><td>2</td><td>按 OWASP 清单逐项自查并写成 SECURITY_CHECKLIST.md</td><td>八项均有结论</td></tr>
+            <tr><td>3</td><td>CI 加 migration / integration 门禁并设为 required</td><td>坏改动能被拦住</td></tr>
+            <tr><td>4</td><td>写「发布文章」≥7 类失败态清单 + PR 模板</td><td>清单可逐条演示</td></tr>
+            <tr><td>5</td><td>周日 G2 验收 + 预读 W9 前端整合</td><td>判据逐条通过并记录</td></tr>
+          </tbody>
+        </table></div>
+        <h3>可勾选执行清单</h3>
+        <p class="progress no-print" id="progress">进度：0 / 8</p>
+        <div class="checklist" id="checklist">
+          <label data-key="w8-1"><input type="checkbox" /><span>能说清单测 / 集成 / E2E 的分工</span></label>
+          <label data-key="w8-2"><input type="checkbox" /><span>三层测试补齐且本地全绿</span></label>
+          <label data-key="w8-3"><input type="checkbox" /><span>CI 按六步顺序执行，失败禁止合并</span></label>
+          <label data-key="w8-4"><input type="checkbox" /><span>故意提交的坏改动被 CI 拦住</span></label>
+          <label data-key="w8-5"><input type="checkbox" /><span>SECURITY_CHECKLIST.md 八项自查完成</span></label>
+          <label data-key="w8-6"><input type="checkbox" /><span>「发布文章」≥7 类失败态清单写完</span></label>
+          <label data-key="w8-7"><input type="checkbox" /><span>PR 模板与 Review 清单已入库</span></label>
+          <label data-key="w8-8"><input type="checkbox" /><span>G2 判据逐条通过，复盘已写</span></label>
+        </div>
+        <div class="callout"><strong>G2 未过怎么办：</strong>按职业规划文档的降级动作，对象存储改本地实现（W7 已是本地），但<strong>至少保留一条异步链路</strong>；E2E 可延后，CI 门禁不能砍。</div>
+      </section>
+      <footer><p>本手册为《全栈转型-3个月职业规划》第 8 周配套速学材料。要点依据链接所指向的官方文档提炼与转述，代码片段为配合主项目改写的最小示例，规范细节以官方原文为准。样式文件：<code>manual-style.css</code>（同目录，完全离线）。</p><p>生成：2026-11-13 · W8 开跑：2027-01-04 · G2：2027-01-10 · 可打印为 PDF</p></footer>
+    </div>
+    <script>
+      (function () {
+        var box = document.getElementById("checklist"), hint = document.getElementById("progress");
+        if (!box || !hint) return;
+        var labels = Array.prototype.slice.call(box.querySelectorAll("label")), KEY = "w8-study-checklist-v1", saved = {};
+        try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { saved = {}; }
+        function render() {
+          var done = 0;
+          labels.forEach(function (label) {
+            var input = label.querySelector("input"), key = label.getAttribute("data-key");
+            input.checked = !!saved[key]; label.classList.toggle("done", input.checked);
+            if (input.checked) done++;
+          });
+          hint.textContent = "进度：" + done + " / " + labels.length;
+        }
+        labels.forEach(function (label) {
+          label.querySelector("input").addEventListener("change", function (e) {
+            saved[label.getAttribute("data-key")] = e.target.checked;
+            try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (err) {}
+            render();
+          });
+        });
+        render();
+      })();
+    </script>
+  </body>
+</html>

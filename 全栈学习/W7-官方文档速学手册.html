@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>W7 · 官方文档速学手册 | 3 个月全栈转型</title>
+    <link rel="stylesheet" href="manual-style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <span class="tag">W7 · 官方文档速学 · 低配周</span>
+        <h1>第 7 周 · 文件与大对象</h1>
+        <p class="lead">分片上传、流式读写、三重校验与下载鉴权。本周跨元旦假期，按 8–10 小时版本执行，只保主线。</p>
+        <div class="meta">
+          <span>周期：2026-12-28 – 2027-01-03</span><span>预算：8–10h（工作日 3 晚 × 1.5h + 周六 3h + 周日 1.5–2h）</span>
+          <span>主项目：内容 / 博客平台 + 长任务导出</span><span>栈：NestJS + 流 + 本地 / S3</span>
+          <span>假期：元旦 1/1–1/3 放假</span><span>配套：职业规划文档第 06 节降级方案</span>
+        </div>
+        <div class="callout"><strong>低配周怎么学：</strong>W6 周末已前置消化分片续传攻坚，本周只做「跑通 + 三种恶意输入被拦截」。砍掉对象存储的深化（用本地实现即可），E2E 与压测移到第 4 个月。允许低配，不允许整周断档。内容为官方文档的提炼与转述，链接已核验。</div>
+      </header>
+      <nav class="no-print">
+        <a href="#map">00 本周地图</a><a href="#upload">01 multipart 与流式</a><a href="#chunk">02 分片与续传</a>
+        <a href="#secure">03 存储与安全</a><a href="#do">04 动手与验收</a>
+      </nav>
+
+      <section id="map">
+        <div class="sec-head"><span class="num">00</span><h2>本周地图</h2></div>
+        <p class="goal">读完你要能做到：上传链路拦得住伪装脚本、超限文件与路径穿越，且中断后能续传。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:18%">板块</th><th style="width:44%">W7 必须掌握</th><th>低配周砍掉</th></tr></thead>
+          <tbody>
+            <tr><td>上传</td><td>multipart/form-data、FileInterceptor + multer、流式读写 createReadStream / pipeline、分片（chunk index + hash + merge）、断点续传、秒传</td><td>并发分片调优、客户端切片库</td></tr>
+            <tr><td>存储</td><td>本地磁盘与 S3 协议对象存储、预签名 URL 直传、文件名随机化、路径穿越防护、静态资源独立域名</td><td>对象存储 SDK 深化、CDN 回源</td></tr>
+            <tr><td>安全</td><td>后缀白名单 + MIME + magic number 三重校验、大小限制、禁止执行权限、下载二次鉴权</td><td>病毒扫描、内容审核</td></tr>
+          </tbody>
+        </table></div>
+        <p><strong>本周产出：</strong>封面图 / 附件上传 + 分片中断续传 + 白名单校验 + 下载鉴权。<strong>判据：</strong>伪装文件被拦截、超限被拒、续传不产生重复块；未登录拿不到他人文件；能说清为什么不能只信 Content-Type。</p>
+      </section>
+
+      <section id="upload">
+        <div class="sec-head"><span class="num">01</span><h2>multipart、FileInterceptor 与流</h2></div>
+        <p class="goal">读完你要能做到：把文件以流的方式落盘，而不是整块读进内存。</p>
+        <ul>
+          <li>浏览器上传用 <code>multipart/form-data</code>；NestJS 的 <code>FileInterceptor</code> 基于 multer，路由里用 <code>@UploadedFile()</code> 拿文件对象。</li>
+          <li><code>multer</code> 的 <code>limits.fileSize</code> 是第一道大小闸门；<code>fileFilter</code> 做初筛，但真正的类型判定要读内容（见 03）。</li>
+          <li><strong>大文件必须用流</strong>：<code>createReadStream</code> / <code>pipeline</code>，避免 <code>readFile</code> 把整个文件读进内存导致 OOM。pipeline 还能正确传播错误并销毁流。</li>
+          <li>本机开发用 <code>diskStorage</code> 落临时目录；生产建议对象存储。无论哪种，落盘文件名都要<strong>服务端重新生成</strong>（UUID / 哈希），不信任客户端文件名。</li>
+        </ul>
+        <pre><code><span class="fname">src/uploads/uploads.controller.ts（骨架）</span>@Post('chunk')
+@UseInterceptors(FileInterceptor('chunk', {
+  limits: { fileSize: 5 * 1024 * 1024 },
+}))
+async uploadChunk(
+  @UploadedFile() file: Express.Multer.File,
+  @Body() dto: ChunkDto,
+) {
+  // 流式落盘，不把整块读进内存
+  const dest = this.storage.chunkPath(dto.uploadId, dto.index);
+  await pipeline(createReadStream(file.path), createWriteStream(dest));
+  await this.uploads.markChunkReceived(dto.uploadId, dto.index, dto.hash);
+  return { received: true };
+}</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>用 <code>file.originalname</code> 直接拼路径（路径穿越）；<code>limits</code> 不设导致单个请求打爆内存；流异常时没销毁句柄；临时文件不清理把磁盘写满。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>为什么大文件要用 pipeline？<span class="ans">→ 背压控制 + 错误传播 + 自动销毁流，避免内存峰值与句柄泄漏。</span></li>
+          <li>为什么不能信 originalname？<span class="ans">→ 客户端可控，可包含 ../ 或脚本后缀，必须服务端重新命名。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://docs.nestjs.com/techniques/file-upload" target="_blank" rel="noopener noreferrer">NestJS · File upload</a><a href="https://nodejs.org/api/stream.html" target="_blank" rel="noopener noreferrer">Node.js · Stream</a><a href="https://github.com/expressjs/multer" target="_blank" rel="noopener noreferrer">multer</a></span>
+      </section>
+
+      <section id="chunk">
+        <div class="sec-head"><span class="num">02</span><h2>分片、断点续传与秒传</h2></div>
+        <p class="goal">读完你要能做到：中断后重传不产生重复块，合并结果与一次性上传一致。</p>
+        <ul>
+          <li>客户端把文件切成固定大小块（如 5MB），每块带 <code>uploadId</code>、<code>index</code>、<code>hash</code>；服务端按 <code>uploadId</code> 建目录存块，并记录已接收的索引集合。</li>
+          <li><strong>续传</strong>：客户端先调 <code>GET /uploads/:id/status</code> 拿已接收索引，只补缺失块；服务端对重复块做幂等覆盖（W5 幂等思想）。</li>
+          <li><strong>合并</strong>：所有块齐全后按 index 顺序 <code>pipeline</code> 追加写入目标文件，校验整体 hash；合并任务应放进 W6 的队列异步做，避免请求超时。</li>
+          <li><strong>秒传</strong>：上传前先提交全文件 hash，若库中已有相同 hash 的文件记录且归属校验通过，直接复用，跳过传输。</li>
+          <li>未完成的分片要有过期清理（TTL + 定时扫描），否则临时目录会无限增长。</li>
+        </ul>
+        <pre><code><span class="fname">合并（按序流式追加）</span>async merge(uploadId: string, total: number) {
+  const output = createWriteStream(this.storage.finalPath(uploadId));
+  for (let i = 0; i &lt; total; i++) {
+    const part = this.storage.chunkPath(uploadId, i);
+    await pipeline(createReadStream(part), output, { end: false });
+  }
+  output.end();
+  await this.uploads.verifyHash(uploadId);   // 整体 hash 校验
+  await this.uploads.cleanupChunks(uploadId);
+}</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>合并时不按 index 排序导致文件损坏；并发合并同一个 uploadId（需加锁 / 状态机）；块 hash 与整体 hash 都算但没校验；<code>pipeline(..., { end: false })</code> 用错导致第一次就关闭输出流。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>续传为什么需要服务端状态？<span class="ans">→ 客户端不知道哪些块已落盘且校验通过，必须由服务端给出已接收索引。</span></li>
+          <li>秒传的前提是什么？<span class="ans">→ 全文件 hash 已存在且归属 / 权限校验通过，避免跨用户复用私有文件。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://nodejs.org/api/stream.html" target="_blank" rel="noopener noreferrer">Node.js · Stream</a><a href="https://docs.nestjs.com/techniques/file-upload" target="_blank" rel="noopener noreferrer">NestJS · File upload</a></span>
+      </section>
+
+      <section id="secure">
+        <div class="sec-head"><span class="num">03</span><h2>三重校验、存储与下载鉴权</h2></div>
+        <p class="goal">读完你要能做到：解释为什么 Content-Type 不可信，并挡住三类攻击输入。</p>
+        <ul>
+          <li><strong>三重校验</strong>：后缀白名单（最弱，可伪造）→ 声明的 MIME（同样可伪造）→ <strong>magic number</strong>（读文件头判断真实类型，如 <code>file-type</code> 库，最强）。三者取交集才放行。</li>
+          <li>其他硬约束：大小限制、文件名随机化、存储目录<strong>不可执行</strong>、静态资源用独立域名 / 无 Cookie 域名、SVG / HTML 一律按附件下载而非内联渲染（防存储型 XSS）。</li>
+          <li><strong>预签名 URL 直传</strong>：服务端签发短期、限定 key 与 content-type 的 URL，客户端直传对象存储，避免文件流经应用服务器；本周可用本地实现替代，理解概念即可。</li>
+          <li><strong>下载二次鉴权</strong>：文件 key 不是公开 URL，请求先过 Guard 校验归属，再由服务端签发短期下载 URL 或流式回吐；W4 的资源归属原则在这里同样适用。</li>
+        </ul>
+        <pre><code><span class="fname">内容类型校验（伪代码）</span>const ALLOW = new Set(['image/png', 'image/jpeg', 'application/pdf']);
+const extOk = /\.(png|jpg|jpeg|pdf)$/i.test(originalName);
+const meta = await fileType.fromFile(tempPath);        // 读 magic number
+if (!extOk || !ALLOW.has(declaredMime) || !meta || !ALLOW.has(meta.mime)) {
+  await unlink(tempPath);
+  throw new BizException(40002, '文件类型不被允许', 400);
+}</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>只校验 <code>Content-Type</code>；把上传目录挂在 Web 根下且允许执行脚本；<code>..%2f</code> 编码后的路径穿越；预签名 URL 有效期过长或不限定 key；下载接口只校验登录不校验归属（IDOR）。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>伪装成 PNG 的 .php 怎么被拦？<span class="ans">→ magic number 读出的真实类型不在白名单，且后缀 / MIME 不一致。</span></li>
+          <li>为什么上传目录要禁止执行？<span class="ans">→ 即使脚本文件被传上来，Web 服务器也不会解析执行它。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html" target="_blank" rel="noopener noreferrer">OWASP · 文件上传</a><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/ShareObjectPreSignedURL.html" target="_blank" rel="noopener noreferrer">S3 · 预签名 URL</a></span>
+      </section>
+
+      <section id="do">
+        <div class="sec-head"><span class="num">04</span><h2>动手与验收（低配版）</h2></div>
+        <p class="goal">目标：1/3 之前，主线跑通 + 三种攻击输入全被拦截。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:8%">#</th><th style="width:46%">任务</th><th>完成标志</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>封面图 / 附件上传用流式落盘</td><td>大文件不爆内存</td></tr>
+            <tr><td>2</td><td>分片接收 + 状态查询 + 按序合并</td><td>中断后续传不产生重复块，hash 一致</td></tr>
+            <tr><td>3</td><td>三重校验 + 随机文件名 + 目录禁执行</td><td>伪装 .php / 超限 / ../ 三种输入全被拦</td></tr>
+            <tr><td>4</td><td>下载接口走 Guard + 归属校验</td><td>未登录 / 他人文件均取不到</td></tr>
+            <tr><td>5</td><td>周日复盘 + 预读 W8 测试门禁</td><td>复盘记录已写</td></tr>
+          </tbody>
+        </table></div>
+        <h3>可勾选执行清单</h3>
+        <p class="progress no-print" id="progress">进度：0 / 8</p>
+        <div class="checklist" id="checklist">
+          <label data-key="w7-1"><input type="checkbox" /><span>能说清 multipart 与 FileInterceptor 的职责</span></label>
+          <label data-key="w7-2"><input type="checkbox" /><span>上传走流式 pipeline，未整块读内存</span></label>
+          <label data-key="w7-3"><input type="checkbox" /><span>分片状态可查，续传无重复块</span></label>
+          <label data-key="w7-4"><input type="checkbox" /><span>合并按 index 顺序且整体 hash 校验</span></label>
+          <label data-key="w7-5"><input type="checkbox" /><span>后缀 / MIME / magic number 三重校验已实现</span></label>
+          <label data-key="w7-6"><input type="checkbox" /><span>伪装脚本、超限、路径穿越三种输入被拦截</span></label>
+          <label data-key="w7-7"><input type="checkbox" /><span>下载接口做了归属校验</span></label>
+          <label data-key="w7-8"><input type="checkbox" /><span>低配周未断档，复盘已写</span></label>
+        </div>
+        <div class="callout"><strong>低配周纪律：</strong>周三 1.5h + 周日 1.5h 是最低保持量；不写新功能放在周日、也不把测试和文档留到最后两周补。W8 恢复 18h 节奏并过 G2。</div>
+      </section>
+      <footer><p>本手册为《全栈转型-3个月职业规划》第 7 周配套速学材料。要点依据链接所指向的官方文档提炼与转述，代码片段为配合主项目改写的最小示例，规范细节以官方原文为准。样式文件：<code>manual-style.css</code>（同目录，完全离线）。</p><p>生成：2026-11-13 · W7 开跑：2026-12-28（元旦低配周）· 可打印为 PDF</p></footer>
+    </div>
+    <script>
+      (function () {
+        var box = document.getElementById("checklist"), hint = document.getElementById("progress");
+        if (!box || !hint) return;
+        var labels = Array.prototype.slice.call(box.querySelectorAll("label")), KEY = "w7-study-checklist-v1", saved = {};
+        try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { saved = {}; }
+        function render() {
+          var done = 0;
+          labels.forEach(function (label) {
+            var input = label.querySelector("input"), key = label.getAttribute("data-key");
+            input.checked = !!saved[key]; label.classList.toggle("done", input.checked);
+            if (input.checked) done++;
+          });
+          hint.textContent = "进度：" + done + " / " + labels.length;
+        }
+        labels.forEach(function (label) {
+          label.querySelector("input").addEventListener("change", function (e) {
+            saved[label.getAttribute("data-key")] = e.target.checked;
+            try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (err) {}
+            render();
+          });
+        });
+        render();
+      })();
+    </script>
+  </body>
+</html>

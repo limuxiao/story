@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>W5 · 官方文档速学手册 | 3 个月全栈转型</title>
+    <link rel="stylesheet" href="manual-style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <span class="tag">W5 · 官方文档速学</span>
+        <h1>第 5 周 · 缓存、幂等与日志</h1>
+        <p class="lead">本周解决三件「线上才会暴露」的事：缓存与数据库不一致、重复提交产生脏数据、出问题时日志串不起来。</p>
+        <div class="meta">
+          <span>周期：2026-12-14 – 12-20</span><span>预算：18h（阅读 4h · 动手 10h · 复盘 2h · 排错 2h）</span>
+          <span>主项目：内容 / 博客平台 + 长任务导出</span><span>栈：Redis 7 + NestJS + MySQL</span>
+          <span>配套：职业规划文档第 04 / 05 / 06 节</span>
+        </div>
+        <div class="callout"><strong>怎么用：</strong>本周的概念容易「看懂但写错」，务必用并发脚本重放 10 次来验证幂等，而不是只看代码觉得对。内容为官方文档的提炼与转述，链接已核验。</div>
+      </header>
+      <nav class="no-print">
+        <a href="#map">00 本周地图</a><a href="#cache">01 缓存与三大问题</a><a href="#idem">02 限流与幂等</a>
+        <a href="#log">03 结构化日志</a><a href="#do">04 动手与验收</a>
+      </nav>
+
+      <section id="map">
+        <div class="sec-head"><span class="num">00</span><h2>本周地图</h2></div>
+        <p class="goal">读完你要能做到：同一请求重放 10 次数据不重复，且能用 request-id 串起一次请求的所有日志。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:18%">板块</th><th style="width:44%">W5 必须掌握</th><th>本期不碰</th></tr></thead>
+          <tbody>
+            <tr><td>缓存</td><td>String / Hash / Set / ZSet 常用命令、EXPIRE / SET NX EX；Cache-Aside 读写顺序；穿透（空值缓存 / 布隆）、击穿（互斥）、雪崩（TTL 随机）</td><td>布隆过滤器实现、Redis Cluster、多级缓存</td></tr>
+            <tr><td>限流与幂等</td><td>固定窗口 / 滑动窗口、INCR + EXPIRE、@nestjs/throttler；唯一索引、ON DUPLICATE KEY UPDATE、幂等键 + SET NX EX、状态机；区分重复提交与并发重复请求</td><td>分布式锁的复杂实现（Q2）、TCC / Saga</td></tr>
+            <tr><td>日志</td><td>JSON 结构化日志、request-id 中间件贯穿、分级、脱敏（不记密码 / token）</td><td>Loki 日志收集（W9 之后）、链路追踪（Q3）</td></tr>
+          </tbody>
+        </table></div>
+        <p><strong>本周产出：</strong>首页列表缓存、点赞 / 发布幂等、接口限流、request-id 结构化日志。<strong>判据：</strong>重放 10 次数据不重复；能说清「DB 写成功但缓存删除失败」怎么处理；日志里搜不到任何凭据。</p>
+        <p><strong>时段：</strong>周一读 01 · 周二读 02–03 + 定幂等方案 · 周三写 Cache-Aside · 周四写幂等 + 限流 · 周五跑并发重放脚本 + 提交 · 周六攻坚「缓存不一致 + 并发重复请求」· 周日判据自测 + 预读 W6 队列。</p>
+      </section>
+
+      <section id="cache">
+        <div class="sec-head"><span class="num">01</span><h2>Redis 数据类型与 Cache-Aside</h2></div>
+        <p class="goal">读完你要能做到：给首页列表加上缓存，并说清什么时机删除它。</p>
+        <ul>
+          <li>常用类型：<code>String</code>（缓存单个对象 / 计数）、<code>Hash</code>（对象字段）、<code>Set</code>（去重、共同关注）、<code>ZSet</code>（排行榜 / 延迟队列的基础）。W6 的队列虽基于 Redis，但由 BullMQ 管理，不要自己用 List 造轮子。</li>
+          <li><strong>过期用 <code>EXPIRE</code>；加锁 / 抢占用 <code>SET key value NX EX 60</code></strong>（单条命令原子）。老写法 <code>SETNX</code> 后再 <code>EXPIRE</code> 中间若进程崩溃会产生永不过期的死锁键。</li>
+          <li><strong>Cache-Aside 读</strong>：先读缓存 → 命中返回 → 未命中读 DB → 回填缓存并设 TTL。<strong>写</strong>：先更新 DB，再<strong>删除</strong>缓存（不是更新缓存），避免并发写导致缓存里是旧值。</li>
+          <li>三大问题：<strong>穿透</strong>（查不存在的 key，用空值缓存 + 短 TTL 或布隆挡）、<strong>击穿</strong>（热点 key 过期瞬间大量请求打到 DB，用互斥重建）、<strong>雪崩</strong>（大量 key 同时过期，TTL 加随机抖动）。</li>
+          <li>缓存不是真源：<strong>「DB 写成功但删缓存失败」</strong>时，最实用的兜底是给缓存设较短 TTL 让脏数据自然过期，并给删除操作加重试 / 记录告警；不要在同一事务里同时操作 DB 与 Redis（两套存储没有分布式事务）。</li>
+        </ul>
+        <pre><code><span class="fname">src/articles/articles.service.ts（Cache-Aside）</span>async getHomeList() {
+  const key = 'home:articles:page1';
+  const hit = await this.redis.get(key);
+  if (hit) return JSON.parse(hit);
+
+  const list = await this.list({ page: 1, pageSize: 20 });
+  // TTL 加随机抖动，避免同一时刻大面积过期
+  const ttl = 300 + Math.floor(Math.random() * 60);
+  await this.redis.set(key, JSON.stringify(list), 'EX', ttl);
+  return list;
+}
+
+async publish(articleId: string) {
+  await this.repo.update(articleId, { status: 1 });           // 先写 DB
+  await this.redis.del('home:articles:page1').catch(logWarn); // 再删缓存，失败留告警
+}</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>先删缓存再写 DB（并发读会把旧值回填）；缓存永不过期、无淘汰策略；把用户私有数据放进公共缓存 key；序列化 <code>Date</code> / <code>BigInt</code> 时静默丢精度；热点 key 无互斥导致重建风暴。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>写操作为什么删缓存而不是更新缓存？<span class="ans">→ 并发写时更新顺序可能交错，缓存容易留下旧值；删除让下次读自然回填。</span></li>
+          <li><code>SETNX</code> + <code>EXPIRE</code> 两步有什么风险？<span class="ans">→ 非原子，中间崩溃会产生永不过期的锁，应用 SET NX EX 一条命令。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://docs.nestjs.com/techniques/caching" target="_blank" rel="noopener noreferrer">NestJS · Caching</a><a href="https://redis.io/docs/latest/commands/expire/" target="_blank" rel="noopener noreferrer">Redis · EXPIRE</a><a href="https://redis.io/docs/latest/commands/setnx/" target="_blank" rel="noopener noreferrer">Redis · SETNX</a></span>
+      </section>
+
+      <section id="idem">
+        <div class="sec-head"><span class="num">02</span><h2>限流与幂等设计</h2></div>
+        <p class="goal">读完你要能做到：给「点赞 / 发布」做幂等，并用并发脚本证明它有效。</p>
+        <ul>
+          <li><strong>限流</strong>：固定窗口用 <code>INCR</code> + <code>EXPIRE</code>（窗口边界可能有突刺），滑动窗口用 ZSet 记时间戳；NestJS 可直接挂 <code>@nestjs/throttler</code> 的 <code>ThrottlerGuard</code>，按路由配 limit / ttl。</li>
+          <li><strong>幂等 ≠ 防重复点击</strong>：前者保证「同一业务请求执行多次，结果一致」，后者是前端交互。要同时覆盖「用户连点两次」和「网络重试导致两个并发请求」。</li>
+          <li>四种手段按可靠性排序：<strong>数据库唯一索引</strong>（最硬，W2 已建）→ <code>INSERT ... ON DUPLICATE KEY UPDATE</code>（冲突时改为更新）→ <strong>幂等键 + <code>SET key NX EX</code></strong>（先抢占再执行）→ <strong>状态机</strong>（只允许 draft → published 单向流转）。</li>
+          <li>幂等键来自客户端（如 <code>Idempotency-Key</code> 请求头）或业务唯一标识（<code>user_id + article_id</code>）；结果要缓存一份，重复请求直接返回首次结果，而不是重新执行。</li>
+          <li>并发场景要验证「抢占成功但业务失败」：必须在异常路径释放幂等键，否则用户永远无法重试。</li>
+        </ul>
+        <pre><code><span class="fname">幂等发布（抢占 + 唯一索引双保险）</span>async like(articleId: string, userId: string) {
+  const idemKey = 'idem:like:' + articleId + ':' + userId;
+  const claimed = await this.redis.set(idemKey, '1', 'NX', 'EX', 60);
+  if (!claimed) return { duplicated: true };
+
+  try {
+    // 唯一索引 uk_article_user 兜住并发穿透
+    await this.likeRepo.insert({ articleId, userId });
+    await this.redis.incr('article:like:' + articleId);
+    return { duplicated: false };
+  } catch (e) {
+    if (isDuplicateKeyError(e)) return { duplicated: true };
+    await this.redis.del(idemKey);   // 业务失败要释放，允许重试
+    throw e;
+  }
+}</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>只在前端禁用按钮；幂等键过期时间短于业务执行时间；抢到键后业务失败不释放；用 <code>SELECT ... 再 INSERT</code> 做存在性判断（并发下必然重复，应交给唯一索引）；把限流当幂等用。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>为什么唯一索引比 Redis 抢占更可靠？<span class="ans">→ 数据库约束是最后一道防线，Redis 键可能过期或被误删。</span></li>
+          <li>抢到幂等键后业务抛异常，应该怎么处理？<span class="ans">→ 释放键并保留原始异常，否则用户被永久挡住。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://docs.nestjs.com/security/rate-limiting" target="_blank" rel="noopener noreferrer">NestJS · Rate limiting</a><a href="https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html" target="_blank" rel="noopener noreferrer">MySQL · ON DUPLICATE KEY UPDATE</a><a href="https://redis.io/docs/latest/commands/incr/" target="_blank" rel="noopener noreferrer">Redis · INCR</a></span>
+      </section>
+
+      <section id="log">
+        <div class="sec-head"><span class="num">03</span><h2>结构化日志与 request-id</h2></div>
+        <p class="goal">读完你要能做到：拿一个 request-id，捞出这次请求从进入到返回的全部日志。</p>
+        <ul>
+          <li><strong>结构化</strong>：输出 JSON 而不是拼字符串，字段固定（<code>ts</code> / <code>level</code> / <code>requestId</code> / <code>method</code> / <code>path</code> / <code>userId</code> / <code>durationMs</code> / <code>msg</code>），才能被后续检索工具消费。</li>
+          <li><strong>request-id 贯穿</strong>：中间件在请求进入时读取 <code>X-Request-Id</code> 或生成 UUID，挂到请求上下文（<code>AsyncLocalStorage</code> 或 Nest 的 <code>ClsService</code>），日志组件自动带上；响应头也回写该值，方便用户报障时提供。</li>
+          <li><strong>分级</strong>：error 需人工介入、warn 是可容忍异常（如缓存删除失败）、info 是关键业务节点、debug 只在开发开。</li>
+          <li><strong>脱敏</strong>：密码、token、Authorization、身份证、手机号一律不进日志；请求体只记字段名和长度，不记原文。W11 接错误上报时同样适用。</li>
+          <li>日志要能串起「一次请求」，也要能串起「一次任务」——W6 的长任务把 <code>jobId</code> 作为第二个关联字段。</li>
+        </ul>
+        <pre><code><span class="fname">src/common/request-id.middleware.ts（骨架）</span>@Injectable()
+export class RequestIdMiddleware implements NestMiddleware {
+  use(req: Request, res: Response, next: NextFunction) {
+    const id = String(req.headers['x-request-id'] || randomUUID());
+    req['requestId'] = id;
+    res.setHeader('X-Request-Id', id);
+    logger.info({ requestId: id, method: req.method, path: req.path }, 'request in');
+    res.on('finish', function () {
+      logger.info({ requestId: id, status: res.statusCode }, 'request out');
+    });
+    next();
+  }
+}</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong><code>console.log</code> 到处打印、没有关联字段；异步链路里 request-id 丢失（没用上下文传递）；把整个请求体打进日志导致密钥泄露；错误日志只有 <code>message</code> 没有堆栈和上下文。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>为什么日志要 JSON 化？<span class="ans">→ 字段可被检索、聚合、告警，纯文本无法稳定解析。</span></li>
+          <li>响应头为什么回写 request-id？<span class="ans">→ 用户报障时可直接提供该值，一次检索定位完整链路。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://docs.nestjs.com/middleware" target="_blank" rel="noopener noreferrer">NestJS · Middleware</a><a href="https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html" target="_blank" rel="noopener noreferrer">OWASP · Logging Cheat Sheet</a></span>
+      </section>
+
+      <section id="do">
+        <div class="sec-head"><span class="num">04</span><h2>动手与验收</h2></div>
+        <p class="goal">目标：周日之前，缓存、幂等、日志三条链路都能用脚本证明，而不是靠肉眼判断。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:8%">#</th><th style="width:46%">任务</th><th>完成标志</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>首页列表加 Cache-Aside + TTL 抖动</td><td>未命中回填、写后删除均可验证</td></tr>
+            <tr><td>2</td><td>点赞 / 发布做幂等（唯一索引 + SET NX EX）</td><td>并发脚本重放 10 次数据无重复</td></tr>
+            <tr><td>3</td><td>ThrottlerGuard 按路由配限流</td><td>超限时返回 429 且形状统一</td></tr>
+            <tr><td>4</td><td>request-id 中间件 + JSON 结构化日志 + 脱敏</td><td>一个 id 能串起完整请求日志，搜不到凭据</td></tr>
+            <tr><td>5</td><td>写一份「缓存不一致 / 幂等失败」处置说明</td><td>能口述 DB 成功删缓存失败怎么办</td></tr>
+          </tbody>
+        </table></div>
+        <h3>可勾选执行清单</h3>
+        <p class="progress no-print" id="progress">进度：0 / 8</p>
+        <div class="checklist" id="checklist">
+          <label data-key="w5-1"><input type="checkbox" /><span>能说清 Cache-Aside 的读 / 写顺序</span></label>
+          <label data-key="w5-2"><input type="checkbox" /><span>能区分穿透 / 击穿 / 雪崩及各自对策</span></label>
+          <label data-key="w5-3"><input type="checkbox" /><span>能用 SET NX EX 说明原子抢占</span></label>
+          <label data-key="w5-4"><input type="checkbox" /><span>能区分「重复提交」与「并发重复请求」</span></label>
+          <label data-key="w5-5"><input type="checkbox" /><span>并发重放 10 次，数据无重复</span></label>
+          <label data-key="w5-6"><input type="checkbox" /><span>限流返回 429 且错误体统一</span></label>
+          <label data-key="w5-7"><input type="checkbox" /><span>一个 request-id 能串起完整日志链</span></label>
+          <label data-key="w5-8"><input type="checkbox" /><span>日志脱敏检查通过，复盘已写</span></label>
+        </div>
+        <div class="callout"><strong>卡住时：</strong>最小复现 → 官方原文 → 官方 issue → 提问，30 分钟为限。忙周至少保留周三 2h + 周日 2h；连续两周判据不过，启用职业规划文档「每周时间预算与降级方案」。</div>
+      </section>
+      <footer><p>本手册为《全栈转型-3个月职业规划》第 5 周配套速学材料。要点依据链接所指向的官方文档提炼与转述，代码片段为配合主项目改写的最小示例，规范细节以官方原文为准。样式文件：<code>manual-style.css</code>（同目录，完全离线）。</p><p>生成：2026-11-13 · W5 开跑：2026-12-14 · 可打印为 PDF</p></footer>
+    </div>
+    <script>
+      (function () {
+        var box = document.getElementById("checklist"), hint = document.getElementById("progress");
+        if (!box || !hint) return;
+        var labels = Array.prototype.slice.call(box.querySelectorAll("label")), KEY = "w5-study-checklist-v1", saved = {};
+        try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { saved = {}; }
+        function render() {
+          var done = 0;
+          labels.forEach(function (label) {
+            var input = label.querySelector("input"), key = label.getAttribute("data-key");
+            input.checked = !!saved[key]; label.classList.toggle("done", input.checked);
+            if (input.checked) done++;
+          });
+          hint.textContent = "进度：" + done + " / " + labels.length;
+        }
+        labels.forEach(function (label) {
+          label.querySelector("input").addEventListener("change", function (e) {
+            saved[label.getAttribute("data-key")] = e.target.checked;
+            try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (err) {}
+            render();
+          });
+        });
+        render();
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>W4 · 官方文档速学手册 | 3 个月全栈转型</title>
+    <link rel="stylesheet" href="manual-style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <span class="tag">W4 · 官方文档速学 · G1 收口</span>
+        <h1>第 4 周 · 登录与第一批测试</h1>
+        <p class="lead">本周把「谁能改什么」和「改坏了能不能被自动发现」补齐，并在周日过 G1：带登录、迁移、测试的骨架可独立演进。</p>
+        <div class="meta">
+          <span>周期：2026-12-07 – 12-13</span><span>预算：18h（阅读 4h · 动手 10h · 复盘 2h · 排错 2h）</span>
+          <span>主项目：内容 / 博客平台 + 长任务导出</span><span>栈：NestJS + Passport + Jest + Supertest</span>
+          <span>检查点：G1 = 12/13（M1 收口）</span><span>配套：职业规划文档第 04 / 05 / 06 节</span>
+        </div>
+        <div class="callout"><strong>怎么用：</strong>本周两条线并行——鉴权链路和测试链路，最后在 CI 汇合。周一 2h 读 01–02，周二读 03；周三起先写「会失败的越权用例」，再修到通过。内容为官方文档的提炼与转述，链接已核验。</div>
+      </header>
+      <nav class="no-print">
+        <a href="#map">00 本周地图</a><a href="#token">01 密码与令牌</a><a href="#authz">02 鉴权与越权</a>
+        <a href="#test">03 集成测试</a><a href="#do">04 动手与 G1</a>
+      </nav>
+
+      <section id="map">
+        <div class="sec-head"><span class="num">00</span><h2>本周地图</h2></div>
+        <p class="goal">读完你要能做到：用 A 的 token 改 B 的文章被拒绝，且这件事有一条自动化测试守着。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:18%">板块</th><th style="width:44%">W4 必须掌握</th><th>本期不碰</th></tr></thead>
+          <tbody>
+            <tr><td>密码与令牌</td><td>bcrypt / argon2 加盐哈希；access 15min + refresh 7d 轮换与吊销；HttpOnly / Secure / SameSite Cookie 与 Authorization 头的取舍；密钥不入库</td><td>OAuth 第三方登录、SSO、MFA</td></tr>
+            <tr><td>鉴权</td><td>Passport + JwtStrategy、自定义 @Roles() + RolesGuard、资源归属校验（查询永远带 user_id）防 IDOR</td><td>ABAC / 策略引擎、权限后台</td></tr>
+            <tr><td>测试</td><td>Jest + Supertest 集成测试、独立 test schema、每用例事务回滚、factory 造数据、CI 执行 npm test</td><td>覆盖率门禁（W8）、E2E 浏览器（W8）</td></tr>
+          </tbody>
+        </table></div>
+        <p><strong>本周产出：</strong>注册 / 登录 / 刷新 / 注销四接口、作者角色、文章与评论的资源归属校验、三条集成测试接入 CI。<strong>G1 判据：</strong>越权返回 403/404；旧 refresh 二次使用失效；CI 上 lint / typecheck / test 全绿，覆盖注册、登录、越权三条主流程。</p>
+        <p><strong>时段：</strong>周一读 01–02 · 周二读 03 + 定测试用例 · 周三写认证四接口 · 周四写 Guard 与资源归属 · 周五跑测试门禁 + 提交 · 周六攻坚「越权用例先红后绿 + refresh 轮换」· 周日 G1 验收 + 预读 W5 缓存。</p>
+      </section>
+
+      <section id="token">
+        <div class="sec-head"><span class="num">01</span><h2>密码哈希与令牌轮换</h2></div>
+        <p class="goal">读完你要能做到：说清「密码怎么存、令牌怎么续期、旧令牌怎么作废」。</p>
+        <ul>
+          <li><strong>密码只存哈希</strong>：<code>bcrypt</code> 或 <code>argon2</code> 自带加盐与计算成本，禁止 MD5/SHA 明文摘要、禁止自己实现加盐。登录时用恒定时间比较（库的 <code>compare</code> 已处理），并对「用户不存在」和「密码错」返回同一句话，避免用户枚举。</li>
+          <li><strong>access + refresh 双令牌</strong>：access 短（如 15 分钟）放在 <code>Authorization: Bearer</code>；refresh 长（如 7 天）用于换新的 access。access 泄露窗口小，refresh 可被服务端吊销。</li>
+          <li><strong>轮换与吊销</strong>：每次刷新都作废旧 refresh、签发新 refresh（rotation），服务端存其哈希或版本号；检测到旧 refresh 被重用时，吊销该用户整条令牌族（提示可能被盗）。</li>
+          <li><strong>存放位置</strong>：SPA 用内存保存 access + HttpOnly/Secure/SameSite Cookie 保存 refresh，可缓解 XSS 窃取；纯移动端 / 服务端调用常用 Authorization 头。选一种并写进 ADR，W12 要能回答「为什么这么选」。</li>
+          <li>密钥从 <code>ConfigService</code> 读，开发环境用 <code>.env</code>，生产走 Secrets；JWT 里只放 <code>sub</code> / <code>roles</code> 等必要声明，不放密码、手机号等敏感信息（payload 只是 Base64 编码，不是加密）。</li>
+        </ul>
+        <pre><code><span class="fname">src/auth/auth.service.ts（节选）</span>async register(dto: RegisterDto) {
+  const passwordHash = await argon2.hash(dto.password);
+  return this.users.create({ email: dto.email, passwordHash });
+}
+
+async login(dto: LoginDto) {
+  const user = await this.users.findByEmail(dto.email);
+  // 用户不存在也做一次哈希比较，避免时序差异导致枚举
+  const ok = user
+    ? await argon2.verify(user.passwordHash, dto.password)
+    : await argon2.verify(DUMMY_HASH, dto.password);
+  if (!ok || !user) throw new BizException(40101, '邮箱或密码错误', 401);
+  return this.issueTokens(user);
+}</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>把 JWT 当会话存敏感数据；refresh 不做轮换导致泄露后长期可用；token 存 localStorage 被 XSS 直接读走；<code>JWT_SECRET</code> 写死在代码或提交进仓库；忘记区分 401（未认证）与 403（已认证但无权限）。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>为什么要做 refresh 轮换？<span class="ans">→ 每次刷新作废旧令牌，旧令牌重放可检测并吊销整条令牌族。</span></li>
+          <li>JWT payload 能被加密吗？<span class="ans">→ 默认只是签名 + Base64 编码，任何人可解码；敏感数据不能放。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://docs.nestjs.com/security/authentication" target="_blank" rel="noopener noreferrer">NestJS · Authentication</a><a href="https://docs.nestjs.com/recipes/passport" target="_blank" rel="noopener noreferrer">NestJS · Passport recipe</a><a href="https://github.com/ranisalt/node-argon2" target="_blank" rel="noopener noreferrer">argon2</a></span>
+      </section>
+
+      <section id="authz">
+        <div class="sec-head"><span class="num">02</span><h2>Guards、角色与资源归属</h2></div>
+        <p class="goal">读完你要能做到：让「A 的 token 改 B 的文章」在代码层与测试层都失败。</p>
+        <ul>
+          <li><strong>Guard</strong> 在请求进入 Controller 之前决定放行与否，返回值是布尔 / Promise / Observable；适合认证与粗粒度角色判断。</li>
+          <li>Passport 的 <code>JwtStrategy</code> 负责校验签名并把 <code>payload</code> 挂到 <code>request.user</code>；<code>AuthGuard('jwt')</code> 挂到需要登录的路由。</li>
+          <li><code>@Roles('admin')</code> 是自定义装饰器，用 <code>Reflect.defineMetadata</code> 写元数据，RolesGuard 通过 <code>Reflector</code> 读出并与 <code>request.user.roles</code> 比对。</li>
+          <li><strong>关键：角色 ≠ 归属</strong>。「作者」这个角色不能证明这篇文章是他的。所有按 ID 操作的查询必须带当前用户条件：<code>WHERE id = :id AND user_id = :currentUserId</code>。只靠前端隐藏按钮或只校验登录态，就是典型的 IDOR（越权访问对象）漏洞。</li>
+          <li>越权时对「不存在」和「不属于你」统一返回 404，避免通过状态码探测他人资源是否存在；若产品要求明确区分，用 403 但确认不泄露信息。</li>
+        </ul>
+        <pre><code><span class="fname">src/articles/articles.service.ts（资源归属）</span>async updateOwned(articleId: string, userId: string, dto: UpdateArticleDto) {
+  const article = await this.repo.findOne({
+    where: { id: articleId, userId },   // 归属条件写进查询，不靠事后判断
+  });
+  if (!article) throw new BizException(40401, '文章不存在', 404);
+  Object.assign(article, dto);
+  return this.repo.save(article);
+}</code></pre>
+        <pre><code><span class="fname">roles.guard.ts（骨架）</span>@Injectable()
+export class RolesGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+
+  canActivate(ctx: ExecutionContext): boolean {
+    const required = this.reflector.getAllAndOverride&lt;string[]&gt;(ROLES_KEY, [
+      ctx.getHandler(), ctx.getClass(),
+    ]);
+    if (!required) return true;
+    const user = ctx.switchToHttp().getRequest().user;
+    return required.some(function (role) { return user.roles?.includes(role); });
+  }
+}</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>只在 Controller 里判断 <code>if (article.userId !== user.id)</code> 却先按 ID 全量查出（数据已出库，且容易漏分支）；把 userId 从请求体取（必须来自 JWT）；Guard 抛错没走全局 Filter，返回形状不一致；忘记给 <code>/auth/*</code> 加白名单造成登录也要求 token。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>为什么「角色正确」仍可能越权？<span class="ans">→ 角色只证明身份类别，不证明资源归属；必须带 user_id 查询。</span></li>
+          <li>Guard 与 Pipe 谁先执行？<span class="ans">→ Guard 在 Interceptor / Pipe 之前，Pipe 紧接路由方法调用前。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://docs.nestjs.com/guards" target="_blank" rel="noopener noreferrer">NestJS · Guards</a><a href="https://docs.nestjs.com/security/authorization" target="_blank" rel="noopener noreferrer">NestJS · Authorization</a><a href="https://cheatsheetseries.owasp.org/cheatsheets/Insecure_Direct_Object_Reference_Prevention_Cheat_Sheet.html" target="_blank" rel="noopener noreferrer">OWASP · IDOR 防护</a></span>
+      </section>
+
+      <section id="test">
+        <div class="sec-head"><span class="num">03</span><h2>Jest + Supertest 集成测试</h2></div>
+        <p class="goal">读完你要能做到：写一条真实打接口的集成测试，并让它在 CI 里自动跑。</p>
+        <ul>
+          <li><strong>分层</strong>：单测验证 Service 纯逻辑（mock 掉 Repository）；集成测试用 <code>Supertest</code> 真实发 HTTP 请求，走完整 Middleware → Guard → Pipe → Controller → Service → DB 链路。W4 重点做后者。</li>
+          <li><strong>测试库隔离</strong>：用独立 schema / database，绝不连开发库；<code>beforeAll</code> 建应用 + 跑 migration，<code>afterAll</code> 关闭连接。</li>
+          <li><strong>用例之间不互相污染</strong>：每个用例开事务、结束回滚，或用 <code>factory</code> 造数据并在 <code>afterEach</code> 清理。不要依赖用例执行顺序。</li>
+          <li>用 <code>NestFactory.create(AppModule)</code> 后挂上与 main.ts <strong>相同</strong>的全局 Pipe / Filter / Interceptor，否则测试环境和生产行为不一致。</li>
+          <li>CI 里加 <code>pnpm test</code>，顺序放在 typecheck 之后、build 之前；W8 会再加迁移与集成测试门禁。</li>
+        </ul>
+        <pre><code><span class="fname">test/articles.e2e-spec.ts（节选）</span>describe('Articles (e2e)', () =&gt; {
+  let app: INestApplication, userAToken: string, userBToken: string, articleId: string;
+
+  beforeAll(async () =&gt; {
+    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    app = moduleRef.createNestApplication();
+    // 与 main.ts 保持一致的全局管道 / 过滤器
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalFilters(new AllExceptionsFilter());
+    await app.init();
+  });
+
+  afterAll(async () =&gt; { await app.close(); });
+
+  it('A 不能修改 B 的文章', async () =&gt; {
+    await request(app.getHttpServer())
+      .patch('/articles/' + articleId)
+      .set('Authorization', 'Bearer ' + userAToken)
+      .send({ title: 'hacked' })
+      .expect(404);   // 归属条件写进查询，查不到即 404
+  });
+});</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>测试连了开发库导致数据被清空；测试里 mock 掉 Guard 使越权用例永远通过；用例共享同一个用户 / 文章 ID 造成顺序依赖；只在本地跑测试、CI 没接；<code>beforeAll</code> 里没等 <code>app.init()</code> 完成就发请求。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>为什么集成测试必须挂与 main.ts 相同的全局组件？<span class="ans">→ 否则校验、异常包装行为与生产不一致，测试通过但线上出错。</span></li>
+          <li>越权用例为什么应该先失败再修？<span class="ans">→ 证明用例真的能捕获问题，避免写出「永远绿」的假测试。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://docs.nestjs.com/fundamentals/testing" target="_blank" rel="noopener noreferrer">NestJS · Testing</a><a href="https://jestjs.io/docs/getting-started" target="_blank" rel="noopener noreferrer">Jest · 入门</a><a href="https://github.com/forwardemail/supertest" target="_blank" rel="noopener noreferrer">Supertest</a></span>
+      </section>
+
+      <section id="do">
+        <div class="sec-head"><span class="num">04</span><h2>动手与 G1 验收</h2></div>
+        <p class="goal">目标：12/13 之前，带登录、迁移、测试的骨架可独立演进，这是 M1 的收口。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:8%">#</th><th style="width:46%">任务</th><th>完成标志</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>注册 / 登录 / 刷新 / 注销四接口 + argon2 哈希</td><td>库里明文密码搜不到</td></tr>
+            <tr><td>2</td><td>JwtStrategy + AuthGuard + @Roles / RolesGuard</td><td>未登录访问受保护路由返回 401</td></tr>
+            <tr><td>3</td><td>文章 / 评论的查询全部带 user_id 归属条件</td><td>A 的 token 改 B 的资源返回 404</td></tr>
+            <tr><td>4</td><td>refresh 轮换与旧令牌失效</td><td>旧 refresh 二次使用被拒</td></tr>
+            <tr><td>5</td><td>三条集成测试（注册 / 登录 / 越权）接入 CI</td><td>CI 上 lint / typecheck / test 全绿</td></tr>
+            <tr><td>6</td><td>周日 G1 验收 + 预读 W5 缓存</td><td>判据逐条通过并记录</td></tr>
+          </tbody>
+        </table></div>
+        <h3>可勾选执行清单</h3>
+        <p class="progress no-print" id="progress">进度：0 / 8</p>
+        <div class="checklist" id="checklist">
+          <label data-key="w4-1"><input type="checkbox" /><span>能说清密码哈希、加盐与恒定时间比较</span></label>
+          <label data-key="w4-2"><input type="checkbox" /><span>access / refresh 分工与轮换吊销已实现</span></label>
+          <label data-key="w4-3"><input type="checkbox" /><span>能解释 Cookie 与 Authorization 头的取舍</span></label>
+          <label data-key="w4-4"><input type="checkbox" /><span>JwtStrategy + AuthGuard 接通，401 正常</span></label>
+          <label data-key="w4-5"><input type="checkbox" /><span>资源归属条件写进所有按 ID 的查询</span></label>
+          <label data-key="w4-6"><input type="checkbox" /><span>越权用例先红后绿，旧 refresh 已失效</span></label>
+          <label data-key="w4-7"><input type="checkbox" /><span>三条集成测试接入 CI 且全绿</span></label>
+          <label data-key="w4-8"><input type="checkbox" /><span>G1 判据逐条通过，复盘已写</span></label>
+        </div>
+        <div class="callout"><strong>G1 未过怎么办：</strong>按职业规划文档的降级动作，砍「契约生成改手写类型」这类支线，但 <strong>SQL / 迁移 / 越权校验不能砍</strong>；补进度用每两周预留的半天，不硬赶、不延周期。</div>
+      </section>
+      <footer><p>本手册为《全栈转型-3个月职业规划》第 4 周配套速学材料。要点依据链接所指向的官方文档提炼与转述，代码片段为配合主项目改写的最小示例，规范细节以官方原文为准。样式文件：<code>manual-style.css</code>（同目录，完全离线）。</p><p>生成：2026-11-13 · W4 开跑：2026-12-07 · G1：2026-12-13 · 可打印为 PDF</p></footer>
+    </div>
+    <script>
+      (function () {
+        var box = document.getElementById("checklist"), hint = document.getElementById("progress");
+        if (!box || !hint) return;
+        var labels = Array.prototype.slice.call(box.querySelectorAll("label")), KEY = "w4-study-checklist-v1", saved = {};
+        try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { saved = {}; }
+        function render() {
+          var done = 0;
+          labels.forEach(function (label) {
+            var input = label.querySelector("input"), key = label.getAttribute("data-key");
+            input.checked = !!saved[key]; label.classList.toggle("done", input.checked);
+            if (input.checked) done++;
+          });
+          hint.textContent = "进度：" + done + " / " + labels.length;
+        }
+        labels.forEach(function (label) {
+          label.querySelector("input").addEventListener("change", function (e) {
+            saved[label.getAttribute("data-key")] = e.target.checked;
+            try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (err) {}
+            render();
+          });
+        });
+        render();
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>W6 · 官方文档速学手册 | 3 个月全栈转型</title>
+    <link rel="stylesheet" href="manual-style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <span class="tag">W6 · 官方文档速学</span>
+        <h1>第 6 周 · 异步任务与进度回传</h1>
+        <p class="lead">把「导出全文 PDF / 打包静态站点」变成可排队、可重试、可看进度的长任务——这是 G2 硬指标里最难的一块。</p>
+        <div class="meta">
+          <span>周期：2026-12-21 – 12-27</span><span>预算：18h（阅读 4h · 动手 10h · 复盘 2h · 排错 2h）</span>
+          <span>主项目：内容 / 博客平台 + 长任务导出</span><span>栈：BullMQ + Redis 7 + SSE</span>
+          <span>配套：职业规划文档第 04 / 05 / 06 节</span>
+        </div>
+        <div class="callout"><strong>怎么用：</strong>本周的判据靠「kill worker」验证，不要只跑通正常路径。另外按执行日历，W6 周末攻坚要顺带前置 W7 的分片续传，为元旦低配周留缓冲。内容为官方文档的提炼与转述，链接已核验。</div>
+      </header>
+      <nav class="no-print">
+        <a href="#map">00 本周地图</a><a href="#boundary">01 同步 / 异步边界</a><a href="#bullmq">02 BullMQ 队列</a>
+        <a href="#progress">03 进度回传</a><a href="#do">04 动手与验收</a>
+      </nav>
+
+      <section id="map">
+        <div class="sec-head"><span class="num">00</span><h2>本周地图</h2></div>
+        <p class="goal">读完你要能做到：提交任务 → 排队 → 前端实时看到进度 → 完成后下载，且中途 kill worker 可恢复。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:18%">板块</th><th style="width:44%">W6 必须掌握</th><th>本期不碰</th></tr></thead>
+          <tbody>
+            <tr><td>边界</td><td>什么必须同步返回、什么可以后台做；请求超时、削峰、重试与最终一致；任务本身必须幂等</td><td>事务消息 / Outbox（Q2）、Saga</td></tr>
+            <tr><td>BullMQ</td><td>Queue / Worker / Job、concurrency、attempts + 退避、failed / stalled 事件、手动重试；失败任务可查询</td><td>队列优先级、Flows、集群分片</td></tr>
+            <tr><td>进度</td><td>SSE（text/event-stream、断线重连、Last-Event-ID）与 WebSocket 的取舍、NestJS @Sse()、轮询兜底、进度状态落库</td><td>WebSocket 双向交互、实时协同</td></tr>
+          </tbody>
+        </table></div>
+        <p><strong>本周产出：</strong>任务表 + BullMQ Worker + SSE 进度 + 结果下载。<strong>判据：</strong>任务失败重试 N 次进入 failed 且状态可查；刷新页面进度不丢；能列出这条链路的全部失败态。</p>
+        <p><strong>时段：</strong>周一读 01–02 · 周二读 03 + 定任务状态机 · 周三写 Queue / Worker · 周四写 SSE + 任务表 · 周五跑失败与重试用例 · 周六攻坚「kill worker 恢复 + 前置 W7 分片」· 周日判据自测 + 预读 W7。</p>
+      </section>
+
+      <section id="boundary">
+        <div class="sec-head"><span class="num">01</span><h2>同步 / 异步边界</h2></div>
+        <p class="goal">读完你要能做到：判断一个操作该不该放进队列，并说清代价。</p>
+        <ul>
+          <li><strong>同步</strong>适合：需要立刻拿到结果才能继续、耗时稳定且短（毫秒级）、失败必须当场告知用户的操作（登录、下单校验、参数校验）。</li>
+          <li><strong>异步</strong>适合：耗时超过网关 / 客户端超时、可重试、允许最终一致、需要削峰的操作（导出、生成报表、发邮件、转码、调用不稳定的第三方）。</li>
+          <li>典型设计：接口只做<strong>参数校验 + 落一条任务记录 + 入队</strong>，立刻返回 <code>202 Accepted</code> 与 <code>jobId</code>；结果由用户随后查询或下载。</li>
+          <li>代价要说得出：请求不再是「一次往返」，需要状态查询 / 进度推送、需要处理重复提交（W5 幂等键）、需要处理「任务成功但用户没看到」、队列积压时的可观测性。</li>
+          <li><strong>任务必须幂等</strong>：BullMQ 的「至少一次」语义意味着同一个 job 可能被执行多次（worker 崩溃、stalled 重新入队）。写文件、扣额度、发通知前都要先查状态机。</li>
+        </ul>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:22%">状态</th><th style="width:30%">含义</th><th>允许的流转</th></tr></thead>
+          <tbody>
+            <tr><td><code>pending</code></td><td>已入队，未开始</td><td>→ running / failed</td></tr>
+            <tr><td><code>running</code></td><td>执行中，含 progress 百分比</td><td>→ succeeded / failed</td></tr>
+            <tr><td><code>succeeded</code></td><td>完成，产物可下载</td><td>终态，不再变更</td></tr>
+            <tr><td><code>failed</code></td><td>重试耗尽</td><td>→ pending（人工重试）</td></tr>
+          </tbody>
+        </table></div>
+        <div class="callout warn"><strong>常见坑：</strong>把长任务塞在 HTTP 请求里等结果，网关一超时就前功尽弃；接口同步返回布尔值却没有任务记录，无法查询与重试；任务状态只存在 Redis / 内存里，进程重启进度全丢。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>为什么任务状态必须落库？<span class="ans">→ 队列与 worker 都可重建，用户看到的进度与产物必须持久，刷新页面不能丢。</span></li>
+          <li>为什么任务要幂等？<span class="ans">→ 至少一次投递下，崩溃 / stalled 会让同一 job 被重复执行。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://docs.nestjs.com/techniques/queues" target="_blank" rel="noopener noreferrer">NestJS · Queues</a><a href="https://docs.bullmq.io/guide/queues/" target="_blank" rel="noopener noreferrer">BullMQ · Queues</a></span>
+      </section>
+
+      <section id="bullmq">
+        <div class="sec-head"><span class="num">02</span><h2>Queue、Worker、重试与失败</h2></div>
+        <p class="goal">读完你要能做到：配置重试退避，并让失败任务可查询、可手动重试。</p>
+        <ul>
+          <li><strong>Queue</strong> 负责入队与配置，<strong>Worker</strong> 负责消费，<strong>Job</strong> 是一次任务实例；同一队列名 + 同一 Redis 连接才能互通。</li>
+          <li><code>concurrency</code> 控制单 worker 并行数；CPU 密集型（PDF 生成）别开太大，IO 密集型可适当提高。</li>
+          <li><code>attempts</code> + <code>backoff: { type: 'exponential', delay: 1000 }</code> 做指数退避，避免失败任务立刻反复重试打爆依赖。</li>
+          <li><code>failed</code> / <code>stalled</code> / <code>completed</code> 事件用于更新任务表与告警；<strong>不要只靠事件</strong>——事件丢失时，以任务表 + 定期扫描兜底。</li>
+          <li>Worker 应能安全中断：kill 后 BullMQ 会把 stalled job 重新入队，因此长任务内部要分段、可重入，并在每段落库进度。</li>
+          <li>生产要限制队列长度 / 清理策略（<code>removeOnComplete</code> / <code>removeOnFail</code>），否则 Redis 内存会被历史 job 撑满。</li>
+        </ul>
+        <pre><code><span class="fname">src/exports/export.processor.ts（骨架）</span>@Processor('export')
+export class ExportProcessor extends WorkerHost {
+  async process(job: Job&lt;{ articleIds: string[]; taskId: string }&gt;) {
+    const { articleIds, taskId } = job.data;
+    const total = articleIds.length;
+
+    for (let i = 0; i &lt; total; i++) {
+      // 每段先查状态，保证重入时不重复写
+      await this.tasks.markStepDone(taskId, articleIds[i]);
+      await job.updateProgress(Math.round(((i + 1) / total) * 100));
+      await this.tasks.setProgress(taskId, Math.round(((i + 1) / total) * 100));
+    }
+    const fileKey = await this.renderPdf(articleIds);
+    await this.tasks.markSucceeded(taskId, fileKey);
+  }
+}
+
+// 入队选项
+await this.exportQueue.add('render', { articleIds, taskId }, {
+  attempts: 3,
+  backoff: { type: 'exponential', delay: 1000 },
+  removeOnComplete: 100,
+  removeOnFail: 50,
+});</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>在 job 里做超长不可中断的单体操作（kill 后从头重跑）；只更新 <code>job.progress</code> 不落库；把大对象（整篇文章内容）塞进 job data（应只传 ID）；没配 <code>removeOnComplete</code> 导致 Redis 膨胀；用同一 Redis DB 又做缓存又做队列且没设 maxmemory 策略。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>stalled job 是什么？<span class="ans">→ worker 失联 / 卡住超时后，BullMQ 判定任务未完成并重新入队。</span></li>
+          <li>为什么 job data 只放 ID？<span class="ans">→ 队列数据要小且可序列化，大对象会增加 Redis 内存并让重试携带过期数据。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://docs.bullmq.io/guide/workers" target="_blank" rel="noopener noreferrer">BullMQ · Workers</a><a href="https://docs.bullmq.io/guide/retrying-failing-jobs" target="_blank" rel="noopener noreferrer">BullMQ · 失败重试</a></span>
+      </section>
+
+      <section id="progress">
+        <div class="sec-head"><span class="num">03</span><h2>SSE 进度回传</h2></div>
+        <p class="goal">读完你要能做到：前端进度条与实际状态一致，刷新页面后继续接着走。</p>
+        <ul>
+          <li><strong>SSE</strong> 是服务端 → 客户端的单向流，基于普通 HTTP，响应类型 <code>text/event-stream</code>；浏览器 <code>EventSource</code> 自带断线重连，并可通过 <code>Last-Event-ID</code> 续传。进度推送是单向场景，比 WebSocket 更轻。</li>
+          <li>NestJS 用 <code>@Sse()</code> 返回一个 RxJS <code>Observable&lt;MessageEvent&gt;</code>；长连接要处理心跳、客户端断开时取消订阅，避免泄漏。</li>
+          <li><strong>状态落库是判据</strong>：SSE 只是「通知」，真值在任务表。页面加载时先查一次 <code>GET /tasks/:id</code> 拿当前进度，再订阅 SSE 增量；断线后同样先重查再续订。</li>
+          <li>兜底：SSE 被代理 / 浏览器环境阻断时，退化为每 2 秒轮询接口；轮询要有退避与终止条件（终态后停止）。</li>
+          <li>鉴权：<code>EventSource</code> 不能自定义请求头，通常用 Cookie 或一次性 ticket 查询参数；不要把长期有效的 access token 放 URL（会进日志）。</li>
+        </ul>
+        <pre><code><span class="fname">src/exports/export.controller.ts（骨架）</span>@Sse('tasks/:id/progress')
+progress(@Param('id') taskId: string): Observable&lt;MessageEvent&gt; {
+  return interval(1000).pipe(
+    switchMap(() =&gt; from(this.tasks.findById(taskId))),
+    map((task) =&gt; ({ data: { status: task.status, progress: task.progress } } as MessageEvent)),
+    takeWhile((msg) =&gt; !['succeeded', 'failed'].includes(msg.data.status), true),
+  );
+}</code></pre>
+        <pre><code><span class="fname">web/src/pages/ExportProgress.ts（骨架）</span>const current = await api.getTask(taskId);   // 先查真值，再订阅增量
+setProgress(current.progress);
+const es = new EventSource('/api/tasks/' + taskId + '/progress');
+es.onmessage = function (e) {
+  const data = JSON.parse(e.data);
+  setProgress(data.progress);
+  if (data.status === 'succeeded' || data.status === 'failed') es.close();
+};</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>把进度只放内存 / Redis，刷新即归零；Nginx 默认缓冲导致 SSE 不实时（需关 <code>proxy_buffering</code>）；连接不设心跳被代理超时断开；忘记在终态关闭 EventSource；进度百分比倒退。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>为什么选 SSE 而不是 WebSocket？<span class="ans">→ 进度是单向推送，SSE 基于 HTTP、自带重连，实现与运维成本更低。</span></li>
+          <li>断线重连后如何保证进度不丢？<span class="ans">→ 真值在任务表，重连先查一次当前状态再增量订阅。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://docs.nestjs.com/techniques/server-sent-events" target="_blank" rel="noopener noreferrer">NestJS · SSE</a><a href="https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events" target="_blank" rel="noopener noreferrer">MDN · SSE</a><a href="https://docs.nestjs.com/websockets/gateways" target="_blank" rel="noopener noreferrer">NestJS · WebSocket</a></span>
+      </section>
+
+      <section id="do">
+        <div class="sec-head"><span class="num">04</span><h2>动手与验收</h2></div>
+        <p class="goal">目标：周日之前，长任务链路跑通，并且失败路径比成功路径验证得更充分。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:8%">#</th><th style="width:46%">任务</th><th>完成标志</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>建 export_tasks 表与状态机，接口返回 202 + jobId</td><td>提交后立刻返回，不阻塞</td></tr>
+            <tr><td>2</td><td>Queue / Worker + 指数退避，进度分段落库</td><td>kill worker 后任务可恢复且不重复写</td></tr>
+            <tr><td>3</td><td>SSE 推送 + 首查真值 + 轮询兜底</td><td>刷新页面进度不丢，终态自动关闭</td></tr>
+            <tr><td>4</td><td>失败任务重试 N 次进 failed，可查询 / 手动重试</td><td>失败态可查，重试入口可用</td></tr>
+            <tr><td>5</td><td>列出链路全部失败态；顺带前置 W7 分片续传攻坚</td><td>清单已写，W7 减压完成</td></tr>
+          </tbody>
+        </table></div>
+        <h3>可勾选执行清单</h3>
+        <p class="progress no-print" id="progress">进度：0 / 8</p>
+        <div class="checklist" id="checklist">
+          <label data-key="w6-1"><input type="checkbox" /><span>能说清同步 / 异步边界的判断标准</span></label>
+          <label data-key="w6-2"><input type="checkbox" /><span>任务表 + 状态机已落库，非内存态</span></label>
+          <label data-key="w6-3"><input type="checkbox" /><span>Queue / Worker / 指数退避配置完成</span></label>
+          <label data-key="w6-4"><input type="checkbox" /><span>kill worker 后可恢复且任务幂等</span></label>
+          <label data-key="w6-5"><input type="checkbox" /><span>SSE 进度条与实际状态一致</span></label>
+          <label data-key="w6-6"><input type="checkbox" /><span>刷新页面进度不丢，终态关闭连接</span></label>
+          <label data-key="w6-7"><input type="checkbox" /><span>失败任务可查询、可手动重试</span></label>
+          <label data-key="w6-8"><input type="checkbox" /><span>失败态清单完成，W7 前置攻坚已做</span></label>
+        </div>
+        <div class="callout"><strong>卡住时：</strong>最小复现 → 官方原文 → 官方 issue → 提问，30 分钟为限。W7 是元旦低配周（1/1–1/3 放假），本周六攻坚块务必把分片续传提前消化一部分。</div>
+      </section>
+      <footer><p>本手册为《全栈转型-3个月职业规划》第 6 周配套速学材料。要点依据链接所指向的官方文档提炼与转述，代码片段为配合主项目改写的最小示例，规范细节以官方原文为准。样式文件：<code>manual-style.css</code>（同目录，完全离线）。</p><p>生成：2026-11-13 · W6 开跑：2026-12-21 · 可打印为 PDF</p></footer>
+    </div>
+    <script>
+      (function () {
+        var box = document.getElementById("checklist"), hint = document.getElementById("progress");
+        if (!box || !hint) return;
+        var labels = Array.prototype.slice.call(box.querySelectorAll("label")), KEY = "w6-study-checklist-v1", saved = {};
+        try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { saved = {}; }
+        function render() {
+          var done = 0;
+          labels.forEach(function (label) {
+            var input = label.querySelector("input"), key = label.getAttribute("data-key");
+            input.checked = !!saved[key]; label.classList.toggle("done", input.checked);
+            if (input.checked) done++;
+          });
+          hint.textContent = "进度：" + done + " / " + labels.length;
+        }
+        labels.forEach(function (label) {
+          label.querySelector("input").addEventListener("change", function (e) {
+            saved[label.getAttribute("data-key")] = e.target.checked;
+            try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (err) {}
+            render();
+          });
+        });
+        render();
+      })();
+    </script>
+  </body>
+</html>
