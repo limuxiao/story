@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>W13 · 官方文档速学手册 | 3 个月全栈转型 · Q2 扩展周</title>
+    <link rel="stylesheet" href="manual-style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <span class="tag">W13 · 官方文档速学 · Q2 扩展周（选修）</span>
+        <h1>第 13 周 · Git / Jenkins / K8s 与自动化发布</h1>
+        <p class="lead">把 W11 的「GitHub Actions 一键部署」换成一套自己搭得起来的传统流水线：自建 Git 仓库基线、Jenkins 打包服务、Webhook 按分支触发、K8s 承载无状态应用，并补齐配置、密钥、证书、观测与回滚的运维闭环。</p>
+        <div class="meta">
+          <span>周期：Q2 第 1–2 周（12 周主线之后）</span><span>预算：12–16h</span>
+          <span>主项目：内容 / 博客平台 + 长任务导出（沿用 W1–W12 仓库）</span>
+          <span>栈：Git + Webhooks + Jenkins Pipeline + GHCR + kind + kubectl + Helm</span>
+          <span>检查点：无 Gate，按本手册自选验收</span><span>配套：职业规划文档第 10 节 Q2 续接清单</span>
+        </div>
+        <div class="callout"><strong>定位先说清：</strong>W12 里「为什么不用 K8s」的答案是「Q1 单人、2C4G、不制造运维复杂度」，这个答案<strong>没有被推翻</strong>。W13 是 Q1 收口后的<strong>扩展周</strong>，目标是看懂并亲手跑通一条完整的自建交付链路，不是把作品迁上 K8s。本地用 <code>kind</code> 起单节点集群即可，不需要买服务器、不需要自建高可用控制面，也不需要把 MySQL / Redis 搬进集群。<strong>学习价值 ≠ 生产必要性</strong>，第 05 节会给出迁移触发条件。</div>
+      </header>
+      <nav class="no-print">
+        <a href="#map">00 本周地图</a><a href="#git">01 Git 仓库与分支</a><a href="#jenkins">02 Jenkins 打包</a>
+        <a href="#hook">03 Webhook 自动发布</a><a href="#k8s">04 K8s 最小形态</a><a href="#ops">05 运维闭环与取舍</a>
+        <a href="#do">06 动手与验收</a>
+      </nav>
+
+      <section id="map">
+        <div class="sec-head"><span class="num">00</span><h2>本周地图</h2></div>
+        <p class="goal">读完你要能做到：说清「一次 <code>git push</code> 到 Pod 里跑起新镜像」中间经过哪些组件、每层各自负责什么、任何一环断了怎么定位。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:17%">板块</th><th style="width:45%">W13 必须掌握</th><th>本期不碰</th></tr></thead>
+          <tbody>
+            <tr><td>Git 基线</td><td>单仓组织（代码 / Jenkinsfile / deploy 清单同仓）、trunk-based 分支模型、保护分支、Deploy Key 只读拉取、push 事件 payload 与 HMAC 签名</td><td>Git Flow 全套、Gerrit、子模块</td></tr>
+            <tr><td>Jenkins</td><td>官方镜像 + 命名卷持久化、初始解锁、Credentials 四类、Declarative Pipeline 六阶段、Docker 构建推镜像、<code>when { branch }</code> 生效条件</td><td>共享 agent 集群、共享库（Shared Library）、Jenkins 高可用</td></tr>
+            <tr><td>Webhook 发布</td><td>GitHub Webhook 配置、签名校验、特定分支过滤、至少一次投递下的幂等、中继快速 2xx、按 <code>after</code> SHA 部署</td><td>SCM 轮询、复杂的多仓联动</td></tr>
+            <tr><td>K8s</td><td>Deployment / Service / Ingress / ConfigMap / Secret / Namespace、三类探针、requests 与 limits、滚动更新与 <code>rollout undo</code>、常见故障状态排错</td><td>StatefulSet / Operator / 自建控制面 / 服务网格</td></tr>
+            <tr><td>运维闭环</td><td>不可变镜像 tag、配置与镜像分离、cert-manager 自动证书、Prometheus / 日志 / Sentry、expand-contract 迁移、GitOps 拉模式、回滚与备份边界</td><td>蓝绿 / 金丝雀的完整落地、多地域容灾</td></tr>
+          </tbody>
+        </table></div>
+        <p><strong>链路一句话：</strong>developers push <code>main</code> → GitHub 发 <code>push</code> 事件 → 中继校验签名 / 过滤分支 / 去重 → Jenkins Generic Webhook Trigger 排队 → Pipeline 测试 → 构建并推送带 SHA 的镜像 → <code>kubectl set image</code> → Deployment 滚动更新 → readiness 通过后Service 切流量。</p>
+        <p><strong>环境准备：</strong>Docker Desktop（W1 已装）、<code>brew install kind kubectl helm git</code>；Jenkins 容器约需 1G 内存，kind 单节点再需 2G，本机 16G 内存较宽裕。所有清单文件放仓库 <code>deploy/</code> 下，与 W11 的 Actions workflow <strong>并存不冲突</strong>，本周只启用 Jenkins 一侧。</p>
+        <p><strong>时段建议：</strong>第 1 周 4 晚 × 1.5h 打通 Git → Jenkins → Webhook（验收 1–5），第 2 周 4 晚 × 1.5h 起 kind 集群并做滚动 / 回滚演练（验收 6–8）。卡住时优先保住「push main 能自动出镜像」这一段。</p>
+      </section>
+
+      <section id="git">
+        <div class="sec-head"><span class="num">01</span><h2>Git 仓库与分支基线</h2></div>
+        <p class="goal">读完你要能做到：让「哪些提交可以上线」这件事由仓库规则保证，而不是靠人不推错分支。</p>
+        <ul>
+          <li><strong>单仓组织</strong>：单人项目推荐把 <code>src/</code>（前后端）、<code>Jenkinsfile</code>、<code>Dockerfile</code>、<code>deploy/</code>（K8s 清单）放同一个仓库。好处是一次 commit 就锁定「代码 + 构建方式 + 部署形态」，回滚时能精确复现。</li>
+          <li><strong>分支模型用简化 trunk-based</strong>：<code>main</code> 常驻且随时可发布，<code>feat/*</code> 短生命周期，PR 合入后删除；发布用 <code>release/*</code> 或 tag。不要养长期存在的 <code>develop</code> 分支，它会让「哪个分支对应线上」变模糊。</li>
+          <li><strong>保护分支是自动发布的前提</strong>：<code>main</code> 开启 Require a pull request、Require status checks to pass（把 W8 的 <code>ci/lint + ci/test</code> 挂上）、禁止 force push 与删除。只有规则可信，「push 到 main 就发布」才安全。</li>
+          <li><strong>凭证最小权限</strong>：Jenkins 拉代码用 Deploy Key（SSH 公钥，<strong>只读、按仓库粒度</strong>）或 fine-grained PAT；推送镜像用另一个只写 packages 的 PAT。绝不使用个人账号密码，也不要给 Deploy Key 写权限。</li>
+          <li><strong>push 事件必读字段</strong>：header <code>X-GitHub-Event: push</code>、<code>X-GitHub-Delivery</code>（每次投递唯一 ID）、<code>X-Hub-Signature-256</code>（HMAC-SHA256）；body 里 <code>ref</code>（如 <code>refs/heads/main</code>）、<code>after</code>（目标 commit SHA）、<code>deleted</code>、<code>created</code>。<strong>tag push 的 ref 是 <code>refs/tags/v1.0.0</code></strong>，格式不同。</li>
+          <li><strong>签名必须基于原始 body</strong>：GitHub 对原始字节算 HMAC，接收端要先拿到 raw body 再 <code>JSON.parse</code>；一旦 parse 后重新 stringify，键顺序 / 空格变化会让签名对不上。比较用 <code>timingSafeEqual</code>，不要用 <code>===</code>。</li>
+          <li><strong>投递语义</strong>：至少一次、可能重复、<strong>不保证顺序</strong>；GitHub 等待响应约 10 秒，超时即失败，可在仓库 Webhooks → Recent Deliveries 里 <code>Redeliver</code>。因此接收端必须「立刻返回 2xx + 异步处理 + 按 delivery ID 幂等」。</li>
+        </ul>
+        <pre><code><span class="fname">仓库初始化与分支基线（bash）</span>git init -b main
+git remote add origin git@github.com:you/story-platform.git
+mkdir -p deploy/base deploy/overlays/production docs
+git add Jenkinsfile Dockerfile deploy/ src/ &amp;&amp; git commit -m "chore: ci &amp; deploy manifests"
+git push -u origin main
+
+# GitHub → Settings → Branches → Add branch protection rule (main)
+#   [x] Require a pull request before merging
+#   [x] Require status checks to pass: ci/lint, ci/test   （W8 的门禁）
+#   [x] Do not allow force pushes / deletions
+# GitHub → Settings → Deploy keys：添加 Jenkins 公钥，取消 Allow write access
+
+git checkout -b feat/deploy-pipeline
+# ... 改动 ...
+git push -u origin HEAD   # 开 PR 合入 main；此刻不应触发部署</code></pre>
+        <pre><code><span class="fname">HMAC 校验 + 分支过滤（TypeScript，可直接放进 W4 的 NestJS 项目）</span>import { createHmac, timingSafeEqual } from 'node:crypto';
+
+export function verifyGithubSignature(raw: Buffer, sig256: string | undefined, secret: string): boolean {
+  if (!sig256) return false;
+  const mine = Buffer.from('sha256=' + createHmac('sha256', secret).update(raw).digest('hex'));
+  const theirs = Buffer.from(sig256);
+  return mine.length === theirs.length &amp;&amp; timingSafeEqual(mine, theirs);
+}
+
+export function deployBranch(ref: string | undefined, deleted: boolean): string | null {
+  if (deleted || !ref) return null;                       // 删分支不是发布
+  const branch = ref.startsWith('refs/heads/') ? ref.slice(11) : null;
+  return branch &amp;&amp; ['main', 'release'].includes(branch) ? branch : null;
+}</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>用个人 PAT 且开了 repo 全权限；把 <code>.env</code> / kubeconfig 提交进仓库；分支判断只写 <code>ref.endsWith('main')</code>（<code>refs/heads/not-main</code> 也会命中）；忽略 <code>deleted</code> 导致删除分支触发一次部署；签名校验用了 parse 后的对象；把 HMAC secret 写死在 <code>Jenkinsfile</code> 里。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>为什么保护分支要挂在自动发布之前？<span class="ans">→ Webhook 把「push main」等同于「上线」，若 main 可直推且无 CI 校验，等于把发布权限开放给任意一次误提交。</span></li>
+          <li>收到两次内容相同的 push 投递，应该以什么为准？<span class="ans">→ 以 <code>X-GitHub-Delivery</code> 幂等去重，并以 payload 的 <code>after</code> SHA 作为部署目标，不要用「当前 HEAD」（投递可能乱序）。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://git-scm.com/book/en/v2" target="_blank" rel="noopener noreferrer">Pro Git · 全书</a><a href="https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches" target="_blank" rel="noopener noreferrer">GitHub · 保护分支</a><a href="https://docs.github.com/en/authentication/connecting-to-github-with-ssh/managing-deploy-keys" target="_blank" rel="noopener noreferrer">GitHub · Deploy Keys</a><a href="https://docs.github.com/en/webhooks/webhook-events-and-payloads" target="_blank" rel="noopener noreferrer">GitHub · Webhook 事件与 payload</a><a href="https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries" target="_blank" rel="noopener noreferrer">GitHub · 校验 Webhook 投递</a></span>
+      </section>
+
+      <section id="jenkins">
+        <div class="sec-head"><span class="num">02</span><h2>Jenkins 打包服务搭建与 Pipeline</h2></div>
+        <p class="goal">读完你要能做到：用一条命令起一个 Jenkins，写一份随仓库版本化的 Jenkinsfile，产出带 commit SHA 的镜像。</p>
+        <ul>
+          <li><strong>官方镜像 + 命名卷</strong>：<code>jenkins/jenkins:lts-jdk17</code>。全部状态在 <code>/var/jenkins_home</code>（job、构建历史、插件、<strong>Credentials</strong>），必须挂命名卷，否则容器一删全丢——这与 W10 里 MySQL 的 volume 是同一个道理。<code>50000</code> 端口给 inbound agent，本期不用可不映射。</li>
+          <li><strong>初始化</strong>：<code>initialAdminPassword</code> 解锁 → 安装推荐插件 → 再补 Git、Pipeline、Credentials Binding、Generic Webhook Trigger、Docker Pipeline。Jenkins 首次启动约 1–2 分钟。</li>
+          <li><strong>Pipeline as Code</strong>：构建逻辑写进仓库根的 <code>Jenkinsfile</code>（Declarative 语法），job 只负责「指向哪个仓库」。这样流水线变更也走 PR 评审，不会有人偷偷改 UI 配置。Scripted Pipeline 本期不碰。</li>
+          <li><strong>Credentials 四类要对号入座</strong>：Secret text（webhook token / HMAC secret）、Username with password（GHCR 登录）、Secret file（kubeconfig）、SSH Username with private key（Deploy Key）。用 <code>withCredentials([...])</code> 绑定成环境变量，Jenkins 会自动在日志里打码；<strong>不要 <code>echo</code> 出来自查</strong>。</li>
+          <li><strong>镜像 tag 用不可变 SHA</strong>：沿用 W11 的结论，tag = <code>git rev-parse --short=8 HEAD</code>。<code>latest</code> 可以额外打用于人工查看，但<strong>绝不能作为部署依据</strong>（K8s 对 <code>latest</code> 隐式 <code>imagePullPolicy: Always</code>，节点缓存还会让各副本版本不一致）。</li>
+          <li><strong>把 docker.sock 挂进 Jenkins 是重大风险</strong>：等价于把宿主机 root 交给流水线里任何一份 Jenkinsfile。单人学习可接受但要知道代价；正式环境应改用独立 agent、Kaniko / BuildKit 远程构建，或把构建交给外部 CI。</li>
+          <li><strong>不要在 controller 上跑构建</strong>：官方建议 controller 只做调度。本期单机用 <code>agent any</code> 图省事，写进 ADR 的「后果」里，触发多人协作时补 agent 节点。</li>
+          <li><strong>稳定性三件套</strong>：<code>disableConcurrentBuilds()</code> 防止两个 push 并发部署互相覆盖、<code>buildDiscarder</code> 控制磁盘、<code>post { always { cleanWs() } }</code> 清理工作区避免 <code>node_modules</code> 跨构建污染。</li>
+          <li><strong><code>when { branch 'main' }</code> 有生效前提</strong>：它依赖 <code>BRANCH_NAME</code> 环境变量，只在 <strong>Multibranch Pipeline</strong> 里存在；普通 Pipeline 拿到的是 <code>env.GIT_BRANCH</code>，且常带 <code>origin/</code> 前缀。选错 job 类型会导致「main 也不部署」或「所有分支都部署」。</li>
+        </ul>
+        <pre><code><span class="fname">起服务与初始解锁（bash）</span>docker volume create jenkins_home
+docker run -d --name jenkins --restart=on-failure \
+  -p 8080:8080 -p 50000:50000 \
+  -v jenkins_home:/var/jenkins_home \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  jenkins/jenkins:lts-jdk17
+
+docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+# 浏览器打开 http://localhost:8080 → 粘贴密码 → 安装推荐插件
+# Manage Jenkins → Credentials 里新增：
+#   ghcr        (Username with password，PAT 只勾 write:packages)
+#   kubeconfig  (Secret file，kind 生成的 config，见第 04 节)
+#   hook-secret (Secret text，与 GitHub Webhook 的 Secret 一致)
+# 升级 / 迁移前：docker run --rm -v jenkins_home:/src -v "$PWD":/backup \
+#   alpine tar czf /backup/jenkins_home.tgz -C /src .</code></pre>
+        <pre><code><span class="fname">Jenkinsfile（Declarative Pipeline，放仓库根目录）</span>pipeline {
+  agent any
+  options {
+    disableConcurrentBuilds()
+    buildDiscarder(logRotator(numToKeepStr: '20'))
+    timestamps()
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+        script {
+          env.IMAGE_TAG = sh(returnStdout: true,
+            script: 'git rev-parse --short=8 HEAD').trim()
+        }
+      }
+    }
+    stage('Verify') {
+      steps {
+        sh 'corepack enable &amp;&amp; pnpm i --frozen-lockfile &amp;&amp; pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test'
+      }
+    }
+    stage('Build image') {
+      steps { sh 'docker build -t ghcr.io/you/story-api:$IMAGE_TAG .' }
+    }
+    stage('Push image') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'ghcr',
+            usernameVariable: 'REG_USER', passwordVariable: 'REG_TOKEN')]) {
+          sh 'echo "$REG_TOKEN" | docker login ghcr.io -u "$REG_USER" --password-stdin'
+          sh 'docker push ghcr.io/you/story-api:$IMAGE_TAG'
+        }
+      }
+    }
+    stage('Deploy') {
+      when { branch 'main' }              // 仅 Multibranch Pipeline 有 BRANCH_NAME
+      steps {
+        withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+          sh 'kubectl -n story set image deployment/api api=ghcr.io/you/story-api:$IMAGE_TAG'
+          sh 'kubectl -n story annotate deployment/api kubernetes.io/change-cause="build $BUILD_NUMBER $IMAGE_TAG" --overwrite'
+          sh 'kubectl -n story rollout status deployment/api --timeout=180s'
+        }
+      }
+    }
+  }
+  post {
+    always  { cleanWs() }
+    failure { echo '流水线失败：镜像未发布或集群未变更，请查 Console Output' }
+  }
+}</code></pre>
+        <div class="callout"><strong>与 W11 对照：</strong>这里的 <code>Verify → Build → Push → Deploy</code> 和 GitHub Actions 的 job 顺序一一对应，差别只在「谁提供 runner、凭证放哪、如何被触发」。学会一套，另一套只是换个配置文件。<code>kubectl --record</code> 已弃用，改用 <code>change-cause</code> annotation 才能在 <code>rollout history</code> 里看到每次发布对应哪个构建。</div>
+        <div class="callout warn"><strong>常见坑：</strong>忘了挂 <code>jenkins_home</code> 导致重启后 job 全没；把 PAT / kubeconfig 写进 Jenkinsfile；部署用 <code>latest</code>；构建失败却仍执行了 deploy（没把部署放在测试之后的 stage）；并发构建互相覆盖镜像 tag；<code>rollout status</code> 没设超时，流水线永久挂住；挂载 docker.sock 却把 Jenkins 暴露到公网。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>为什么镜像 tag 用 commit SHA 而不是 <code>latest</code>？<span class="ans">→ SHA 不可变且可追溯到具体提交，回滚就是重新指向旧 tag；<code>latest</code> 会被覆盖、隐式触发 Always 拉取、各节点缓存可能不一致。</span></li>
+          <li>某次 push 到 <code>main</code> 后 Deploy 阶段被跳过，最可能的原因？<span class="ans">→ job 不是 Multibranch Pipeline，<code>BRANCH_NAME</code> 不存在，<code>when { branch }</code> 判定为 false；改用 Multibranch 或按 <code>env.GIT_BRANCH</code> 判断（注意 <code>origin/</code> 前缀）。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://www.jenkins.io/doc/book/installing/docker/" target="_blank" rel="noopener noreferrer">Jenkins · Docker 安装</a><a href="https://www.jenkins.io/doc/book/pipeline/jenkinsfile/" target="_blank" rel="noopener noreferrer">Jenkins · Jenkinsfile</a><a href="https://www.jenkins.io/doc/book/pipeline/syntax/" target="_blank" rel="noopener noreferrer">Jenkins · Pipeline 语法</a><a href="https://www.jenkins.io/doc/book/using/using-credentials/" target="_blank" rel="noopener noreferrer">Jenkins · 使用凭证</a><a href="https://www.jenkins.io/doc/book/pipeline/docker/" target="_blank" rel="noopener noreferrer">Jenkins · Pipeline 与 Docker</a></span>
+      </section>
+
+      <section id="hook">
+        <div class="sec-head"><span class="num">03</span><h2>Webhook 监听特定分支提交并发布</h2></div>
+        <p class="goal">读完你要能做到：<code>push main</code> 自动出镜像并更新集群，<code>push feat/*</code> 完全不触发部署，且伪造 / 重放的投递不会造成事故。</p>
+        <ul>
+          <li><strong>三条路线，先选最简单的</strong>：<br />A. GitHub Webhook → <strong>Multibranch Pipeline</strong> 的分支扫描（官方内置，按 Jenkinsfile 自动发现分支，<code>when { branch 'main' }</code> 天然生效）；<br />B. GitHub Webhook → <strong>自建中继</strong>（签名校验 + 分支过滤 + 幂等）→ <strong>Generic Webhook Trigger</strong> 插件 → 普通 Pipeline（更灵活，GitLab / Gitea 也适用，本周以 B 为主练手）；<br />C. Jenkins 轮询 SCM——延迟高、空转消耗，<strong>不要用</strong>。</li>
+          <li><strong>GitHub 侧配置</strong>：Settings → Webhooks → Add webhook。Payload URL 填中继地址（如 <code>https://hooks.example.com/hooks/github</code>），Content type 选 <code>application/json</code>，Secret 填一个高熵随机串并<strong>同时</strong>存到 Jenkins <code>hook-secret</code>，事件选 <em>Just the push event</em>。本地无公网 IP 时用 Cloudflare Tunnel / ngrok 做临时穿透，或让 GitHub 走可访问的反向代理。</li>
+          <li><strong>分支过滤要做三层</strong>：GitHub 端只订 push 事件；中继端白名单 <code>main</code> / <code>release</code>；Jenkins 端再用 <code>regexpFilterExpression</code> 和 <code>when { branch }</code> 兜底。只做一层的话，「新建 release 分支」「删除分支」「tag push」都可能误触发一次部署。</li>
+          <li><strong>幂等靠 <code>X-GitHub-Delivery</code></strong>：用 W5 的 <code>SET key 1 NX EX 600</code> 抢锁，抢不到直接返回 <code>duplicate</code>。GitHub 会重投、用户会点 Redeliver、网络会重试，没有这层就会重复部署甚至重复执行迁移。</li>
+          <li><strong>响应要快，工作要异步</strong>：GitHub 约 10 秒超时。中继只做校验 + 去重 + 调一次 Jenkins 触发接口（该接口本身是<strong>排队后立刻返回</strong>），然后 <code>200</code>；绝不在中继里等构建或等 <code>rollout status</code>。</li>
+          <li><strong>安全边界</strong>：HMAC secret 只存在环境变量 / Jenkins Credentials；Jenkins 触发端点另设独立 token，禁止匿名 <code>Job.Build</code> 权限；反代可加 GitHub 来源 IP 白名单；投递处理失败要记 <code>deliveryId / branch / sha / buildId</code>，便于对照 Recent Deliveries 排查。</li>
+          <li><strong>顺序不保证</strong>：两次连续 push 的投递可能倒序到达，部署目标必须取 payload 里的 <code>after</code> SHA，不能取仓库当前 HEAD，否则可能把旧版本当新版本发上去。更稳的做法是在 Deploy 阶段校验「目标 SHA 不早于当前线上 SHA」。</li>
+        </ul>
+        <pre><code><span class="fname">github-webhook.controller.ts（NestJS 中继，复用 W4 / W5 的 Redis）</span>// main.ts：必须开启原始 body，否则签名永远校验不过
+// const app = await NestFactory.create(AppModule, { rawBody: true });
+
+import { createHmac, timingSafeEqual } from 'node:crypto';
+import { Controller, Post, Req, Headers, ForbiddenException, HttpCode } from '@nestjs/common';
+import { RawBodyRequest } from '@nestjs/core';
+import type { Request } from 'express';
+
+function valid(raw: Buffer, sig: string | undefined, secret: string): boolean {
+  if (!sig) return false;
+  const mine = Buffer.from('sha256=' + createHmac('sha256', secret).update(raw).digest('hex'));
+  const theirs = Buffer.from(sig);
+  return mine.length === theirs.length &amp;&amp; timingSafeEqual(mine, theirs);
+}
+
+@Controller('hooks')
+export class GithubHookController {
+  constructor(private readonly redis: RedisService, private readonly jenkins: JenkinsService) {}
+
+  @Post('github')
+  @HttpCode(200)
+  async onPush(@Req() req: RawBodyRequest&lt;Request&gt;, @Headers() h: Record&lt;string, string&gt;) {
+    const raw = req.rawBody as Buffer;
+    if (!valid(raw, h['x-hub-signature-256'], process.env.HOOK_SECRET!)) {
+      throw new ForbiddenException();                       // 伪造签名：403，且不产生构建
+    }
+    const p = JSON.parse(raw.toString('utf8'));
+    if (h['x-github-event'] !== 'push' || p.deleted) return { skipped: true };
+
+    const branch = String(p.ref || '').replace('refs/heads/', '');
+    if (!['main', 'release'].includes(branch)) return { skipped: branch };
+
+    const id = h['x-github-delivery'];
+    const claimed = await this.redis.set(`hook:${id}`, '1', 'NX', 'EX', 600);
+    if (!claimed) return { duplicate: true };               // 重投 / Redeliver
+
+    // 只排队，不等构建；query 参数随后由 Generic Webhook Trigger 提取
+    await this.jenkins.trigger({
+      token: process.env.JENKINS_HOOK_TOKEN!,
+      branch, sha: p.after, deliveryId: id,
+    });
+    return { queued: true, sha: p.after };                  // 10s 内返回 2xx
+  }
+}</code></pre>
+        <pre><code><span class="fname">Jenkinsfile 片段：Generic Webhook Trigger（字段细节以插件文档为准）</span>triggers {
+  GenericTrigger(
+    genericVariables: [
+      [key: 'ref', value: '$.ref'],
+      [key: 'sha', value: '$.after']
+    ],
+    genericRequestVariables: [
+      [key: 'branch',     regexpFilter: ''],
+      [key: 'deliveryId', regexpFilter: '']
+    ],
+    token: 'story-main-deploy',
+    causeString: 'Push $ref ($sha)',
+    regexpFilterText: '$ref',
+    regexpFilterExpression: '^refs/heads/(main|release/[0-9.]+)$'
+  )
+}
+
+// 若跳过中继、由 GitHub 直连 Jenkins，Payload URL 形如：
+// https://jenkins.example.com/generic-webhook-trigger/invoke?token=story-main-deploy
+// 此时签名校验与幂等需由插件或反代层承担，不要裸奔。</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>NestJS 没开 <code>rawBody: true</code> 导致签名永不通过；把 <code>X-GitHub-Event</code> 拼错大小写（headers 在 Node 里全小写）；忽略 <code>deleted</code> / tag push；中继里同步等待构建导致 GitHub 超时后重投、越重投越重复；同一 delivery 重复部署；把 token 直接写进 Payload URL 又提交进文档；<code>push feat/*</code> 也部署了却没发现，因为过滤只做了一层。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>GitHub 报「We couldn't deliver this payload: timeout」但 Jenkins 其实构建成功了，问题在哪？<span class="ans">→ 中继没有在 10 秒内返回 2xx（多半在同步等构建 / 等 rollout）。应改为只验签 + 去重 + 触发排队，立刻返回。</span></li>
+          <li>用 <code>refs/heads/release</code> 新建分支会不会触发部署？<span class="ans">→ 会收到一次 push 事件（<code>created: true</code>），若白名单含 release 就可能部署。要显式处理 <code>created</code>，并在 Jenkins 端再用正则与 <code>when</code> 兜底。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://plugins.jenkins.io/generic-webhook-trigger/" target="_blank" rel="noopener noreferrer">Jenkins · Generic Webhook Trigger 插件</a><a href="https://www.jenkins.io/doc/book/pipeline/multibranch/" target="_blank" rel="noopener noreferrer">Jenkins · Multibranch Pipeline</a><a href="https://docs.github.com/en/webhooks/using-webhooks/best-practices-for-using-webhooks" target="_blank" rel="noopener noreferrer">GitHub · Webhook 最佳实践</a><a href="https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries" target="_blank" rel="noopener noreferrer">GitHub · 校验签名</a></span>
+      </section>
+
+      <section id="k8s">
+        <div class="sec-head"><span class="num">04</span><h2>K8s 最小生产形态</h2></div>
+        <p class="goal">读完你要能做到：把 W10 的 compose 四服务翻译成 K8s 对象，做一次不中断的滚动更新，并在出问题时按顺序定位、回滚。</p>
+        <ul>
+          <li><strong>本地用 kind</strong>：单节点集群几分钟起，够练全部对象；生产用托管集群（EKS / ACK / TKE），本期<strong>不自建高可用控制面</strong>。kind 若要测 Ingress，创建集群时把 80/443 映射到 hostPort，并给 control-plane 打 <code>ingress-ready=true</code> 标签。</li>
+          <li><strong>对象与 compose 的对应</strong>：<code>Deployment</code> 管无状态副本（API / Web / Worker 各自一个），<code>Service</code> 提供稳定 ClusterIP + 标签选择器做负载均衡，<code>Ingress</code> 做域名 / 路径路由与 TLS 终止，<code>ConfigMap</code> 放非敏感配置，<code>Secret</code> 放敏感配置，<code>Namespace</code> 隔离环境。<strong>不要直接创建裸 Pod</strong>——它没有自愈与滚动更新。</li>
+          <li><strong>三类探针分工</strong>：<code>startupProbe</code> 保护慢启动（NestJS 连库 / 跑迁移）；<code>readinessProbe</code> 失败只从 Service endpoint 摘除，<strong>不重启容器</strong>；<code>livenessProbe</code> 失败才重启。<code>readiness</code> 只检查进程自身能否服务，<strong>不要查 DB / Redis</strong>——依赖一抖动会让所有副本同时被摘除，直接全站 503。</li>
+          <li><strong>资源声明</strong>：<code>requests</code> 决定调度到哪个节点，<code>limits</code> 决定 OOM / CPU 节流。内存 limit 必填，CPU limit 通常可不设（避免无谓节流）；不写 requests 的 Pod 在节点紧张时最先被驱逐。</li>
+          <li><strong>滚动与回滚</strong>：<code>maxUnavailable: 0</code> + <code>maxSurge: 1</code> 保证更新期间不减容量（代价是集群要有 1 个副本的空余资源）；流水线用 <code>rollout status --timeout</code> 等待，失败时用 <code>rollout history</code> 找 revision、<code>rollout undo --to-revision=N</code> 恢复。</li>
+          <li><strong>Secret 只是 base64，不是加密</strong>：不要把渲染后的 Secret YAML 提交到 Git。生产用 Sealed Secrets / External Secrets / 云 KMS，并开启 etcd 静态加密、用 RBAC 限制 <code>get secrets</code>。</li>
+          <li><strong>沿用 W10 的两个决定</strong>：SSE 路径要关 Ingress 的 <code>proxy-buffering</code>，否则进度条会卡住（W12 复盘里那个故障）；长任务 Worker 单独一个 Deployment，不要和 API 绑在一起扩缩容。</li>
+          <li><strong>有状态服务留在外面</strong>：MySQL / Redis 继续用托管实例或 W10 的 compose + 命名卷。放进 K8s 要处理 StatefulSet、PVC、备份、主从切换，复杂度远超本周收益。K8s 只承载<strong>无状态</strong>应用，这是对 W12 取舍的延续。</li>
+        </ul>
+        <pre><code><span class="fname">kind 集群与 kubectl 基础（bash）</span>brew install kind kubectl helm
+cat &lt;&lt;'EOF' &gt; kind-story.yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+  kubeadmConfigPatches:
+  - |
+    kind: InitConfiguration
+    nodeRegistration:
+      kubeletExtraArgs:
+        node-labels: "ingress-ready=true"
+  extraPortMappings:
+  - containerPort: 80
+    hostPort: 8080
+    protocol: TCP
+  - containerPort: 443
+    hostPort: 8443
+    protocol: TCP
+EOF
+# 映射到 8080/8443 是为避开本机 80/443；访问时带端口，无冲突时可改回 80/443
+kind create cluster --name story --config kind-story.yaml
+kubectl cluster-info --context kind-story
+kubectl create namespace story
+# 把生成的 kubeconfig 存成 Jenkins 的 Secret file 凭证（不要提交进仓库）
+kubectl config view --raw &gt; /tmp/story-kubeconfig</code></pre>
+        <pre><code><span class="fname">deploy/base/api.yaml（Deployment + Service 节选）</span>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: story
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxSurge: 1, maxUnavailable: 0 }
+  selector:
+    matchLabels: { app: api }
+  template:
+    metadata:
+      labels: { app: api }
+    spec:
+      containers:
+      - name: api
+        image: ghcr.io/you/story-api:&lt;COMMIT_SHA&gt;   # 由流水线 set image 覆盖
+        ports:
+        - containerPort: 3000
+        envFrom:
+        - configMapRef: { name: api-config }
+        - secretRef:     { name: api-secret }
+        startupProbe:
+          httpGet: { path: /health/live, port: 3000 }
+          failureThreshold: 30
+          periodSeconds: 5
+        readinessProbe:
+          httpGet: { path: /health/ready, port: 3000 }
+          periodSeconds: 5
+        livenessProbe:
+          httpGet: { path: /health/live, port: 3000 }
+          periodSeconds: 10
+        resources:
+          requests: { cpu: 100m, memory: 128Mi }
+          limits:   { memory: 512Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: story
+spec:
+  type: ClusterIP
+  selector: { app: api }
+  ports:
+  - port: 80
+    targetPort: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: story
+  namespace: story
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"   # W10：SSE 必须关缓冲
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: story.example.com
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: api
+            port: { number: 80 }</code></pre>
+        <pre><code><span class="fname">部署、排错与回滚（bash，顺序即排查顺序）</span>kubectl -n story apply -f deploy/base/
+kubectl -n story get deploy,po,svc,ing                       # ① 先看整体状态
+kubectl -n story describe pod &lt;pod&gt;                         # ② 事件：调度 / 拉镜像 / 探针
+kubectl -n story logs deploy/api --previous                 # ③ 崩溃前一轮日志
+kubectl -n story get events --sort-by=.lastTimestamp | tail -30
+kubectl -n story rollout history deploy/api                 # ④ 发布历史（change-cause）
+kubectl -n story rollout undo deploy/api --to-revision=3    # ⑤ 回滚
+kubectl -n story rollout status deploy/api --timeout=180s
+
+# 常见状态速查：
+# ImagePullBackOff  镜像名/tag 错或私有仓库没配 imagePullSecrets
+# CrashLoopBackOff  进程启动即退出，看 --previous 日志
+# Pending           资源不足 / 没有可调度的节点 / PVC 未绑定
+# OOMKilled         memory limit 太小，看 describe 的 Last State
+# Running 但 503    readiness 未通过，Service 里没有 endpoint</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong><code>readinessProbe</code> 里查数据库导致依赖抖动时全副本摘除；不给 <code>startupProbe</code>，慢启动被 liveness 反复杀；部署用 <code>latest</code>；<code>maxUnavailable: 0</code> 但节点没空余资源，滚动卡在 Pending；把 Secret YAML 提交上 Git；Worker 和 API 写在同一个 Deployment 导致扩缩容互相干扰；SSE 路径忘了关 proxy_buffering；把 kubeconfig 塞进 Jenkinsfile。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>Pod 是 Running，接口却一直 503，先查什么？<span class="ans">→ 查 readiness 是否通过、Service 是否有 endpoint（<code>kubectl get endpoints</code>），再看探针路径与 <code>targetPort</code> 是否和容器端口一致。</span></li>
+          <li>为什么镜像能回滚、数据库 schema 却不能一起回滚？<span class="ans">→ 镜像是不可变产物，改指针即可；schema 变更已经写入数据，回滚应用可能与新结构不兼容。所以 W11 的 expand/contract 迁移必须与发布解耦、分两次上线。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://kind.sigs.k8s.io/docs/user/quick-start/" target="_blank" rel="noopener noreferrer">kind · 快速开始</a><a href="https://kind.sigs.k8s.io/docs/user/ingress/" target="_blank" rel="noopener noreferrer">kind · Ingress</a><a href="https://kubernetes.io/docs/concepts/workloads/controllers/deployment/" target="_blank" rel="noopener noreferrer">K8s · Deployment</a><a href="https://kubernetes.io/docs/concepts/services-networking/service/" target="_blank" rel="noopener noreferrer">K8s · Service</a><a href="https://kubernetes.io/docs/concepts/services-networking/ingress/" target="_blank" rel="noopener noreferrer">K8s · Ingress</a><a href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/" target="_blank" rel="noopener noreferrer">K8s · 三类探针</a><a href="https://kubernetes.io/docs/concepts/configuration/secret/" target="_blank" rel="noopener noreferrer">K8s · Secret</a><a href="https://kubernetes.io/docs/reference/kubectl/" target="_blank" rel="noopener noreferrer">K8s · kubectl 参考</a><a href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/" target="_blank" rel="noopener noreferrer">K8s · 调试 Pod</a></span>
+      </section>
+
+      <section id="ops">
+        <div class="sec-head"><span class="num">05</span><h2>运维闭环与取舍：什么时候才真的需要 K8s</h2></div>
+        <p class="goal">读完你要能做到：不只「把服务跑起来」，还能说清配置、证书、观测、备份、回滚怎么闭环，以及这套东西对本项目的代价。</p>
+        <ul>
+          <li><strong>镜像仓库</strong>：GHCR 或 Harbor，部署账号只读拉取、构建账号只写推送，分开授权；开镜像漏洞扫描（Trivy）与保留策略；部署只认 SHA tag。<code>imagePullSecrets</code> 按 namespace 配置，不要塞进每个 Deployment。</li>
+          <li><strong>配置与镜像分离</strong>：同一份镜像 + 不同 <code>ConfigMap</code> / <code>Secret</code> 跑 staging / production，避免「为每个环境构建一个镜像」。用 kustomize overlays 或 Helm values 管理差异，<code>deploy/overlays/production/</code> 里流水线<strong>只改 <code>image.tag</code> 这一个字段</strong>。</li>
+          <li><strong>TLS 自动化</strong>：W10 用 certbot 手工签发，这里换成 <code>cert-manager</code> + Ingress annotation 自动申请续期。证书到期必须有告警——自动续期失败是常见的「静默线上事故」。</li>
+          <li><strong>观测三件套</strong>：Prometheus + Grafana（P95、错误率、Pod 重启、OOM、队列积压）、集中日志（Loki / EFK，容器日志默认随 Pod 销毁而丢失）、Sentry 异常（W11 已接）。每条告警都要配一段可执行的 runbook，否则只是噪音。<code>HPA</code> 依赖 metrics-server 和合理的 requests，别一上来就开自动扩缩。</li>
+          <li><strong>发布策略的阶梯</strong>：滚动更新（默认够用）→ 蓝绿（双 Deployment 切 Service selector，回滚最快但占双倍资源）→ 金丝雀（Ingress 权重 / Argo Rollouts，需要指标判定）。无论哪种，<strong>数据库迁移走 W11 的 expand/contract 与发布解耦</strong>，因为镜像能回滚、schema 不能。</li>
+          <li><strong>GitOps 是更清晰的边界</strong>：Argo CD 用<strong>拉模式</strong>，把 Git 当期望状态的单一真源，持续比对集群实际状态、检测并纠正手工 <code>kubectl</code> 造成的漂移。此时 Jenkins 只负责「构建镜像 + 更新清单仓库里的 tag」，<strong>不需要持有 kubeconfig</strong>，安全边界比推模式干净得多。推 / 拉两种模式可以并存演进。</li>
+          <li><strong>备份与可重建</strong>：延续 W11，DB 定时备份 + 恢复演练；所有部署清单、Jenkinsfile、Dockerfile 都在 Git，集群本身视为可丢弃；自建控制面才需要额外备份 etcd。RPO / 恢复耗时要有实测数字。</li>
+          <li><strong>取舍（写进 ADR）</strong>：单人 + 2C4G + 单体应用，K8s 控制面本身就要吃掉 1–2G 内存，还引入 Ingress / 证书 / 监控 / RBAC 一整套维护面，是<strong>净负担</strong>。W10 的 compose + W11 的 Actions 已经足够覆盖端到端交付。</li>
+        </ul>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:34%">出现这个信号</th><th>再考虑迁移到 K8s</th></tr></thead>
+          <tbody>
+            <tr><td>服务数 ≥ 3 且各自扩缩容节奏不同</td><td>Deployment + HPA 的编排收益开始超过成本</td></tr>
+            <tr><td>需要多副本、自愈、不中断发布 SLA</td><td>滚动更新 + 探针 + PDB 比手写脚本可靠</td></tr>
+            <tr><td>多人协作、需要环境隔离与权限边界</td><td>Namespace + RBAC + GitOps 审计链</td></tr>
+            <tr><td>流量有明显波峰、需要弹性伸缩</td><td>HPA / Cluster Autoscaler（前提是已有指标与资源基线）</td></tr>
+            <tr><td>仍只有 1 台小机器、1 个单体服务</td><td><strong>不要迁。</strong>继续 compose + 托管数据库，把时间花在功能与可观测上</td></tr>
+          </tbody>
+        </table></div>
+        <pre><code><span class="fname">仓库目录：构建定义与部署清单同仓、可追溯</span>story-platform/
+├── src/                       # 前后端代码（W1–W9）
+├── Dockerfile                 # 多阶段构建（W10）
+├── Jenkinsfile                # 构建 + 推镜像 + 更新清单（W13）
+├── .github/workflows/         # W11 的 Actions，与 Jenkins 二选一启用
+└── deploy/
+    ├── base/                  # deployment / service / ingress / configmap
+    └── overlays/
+        ├── staging/
+        └── production/        # 流水线只覆盖这里的 image.tag
+            └── kustomization.yaml
+
+# GitOps 演进：Jenkins 最后一步改为「提交 deploy/overlays/production 的 tag 变更」
+# Argo CD 检测到 Git 变化后自行同步到集群，Jenkins 不再需要 kubeconfig。</code></pre>
+        <div class="callout warn"><strong>常见坑：</strong>把 kubeconfig 当普通文件在流水线里传来传去；每个环境构建一个镜像导致「测过的镜像 ≠ 上线的镜像」；Secret 明文进 Git；证书自动续期失败无人知晓；HPA 没配 requests 根本不生效；告警一堆却没有 runbook；手工 <code>kubectl edit</code> 改了线上、Git 里没记录，下次发布被覆盖回去（漂移）；为了简历把项目硬迁到 K8s，结果 W12 的「为什么不用 K8s」答不上来。</div>
+        <div class="quiz"><strong>自测</strong><ol>
+          <li>Jenkins 推模式与 Argo CD 拉模式最本质的差别？<span class="ans">→ 谁持有集群凭证、谁是期望状态真源。推模式由 CI 拿 kubeconfig 调 kubectl；拉模式由集群内控制器读 Git 自行同步，CI 不接触集群，且能检测漂移。</span></li>
+          <li>面试被问「你项目为什么用 / 不用 K8s」，怎么答？<span class="ans">→ 先说约束（单人、单机、单体、Q1 目标是端到端交付），再给代价（控制面资源与运维面），最后给触发迁移的具体条件。说清条件比简单站队加分。</span></li>
+        </ol></div>
+        <span class="links"><b>官方原文</b><a href="https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry" target="_blank" rel="noopener noreferrer">GitHub · Container registry</a><a href="https://kubernetes.io/docs/concepts/containers/images/" target="_blank" rel="noopener noreferrer">K8s · 镜像与拉取策略</a><a href="https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/" target="_blank" rel="noopener noreferrer">K8s · 资源管理</a><a href="https://kubernetes.io/docs/concepts/workloads/autoscaling/" target="_blank" rel="noopener noreferrer">K8s · 自动扩缩</a><a href="https://kubernetes.github.io/ingress-nginx/" target="_blank" rel="noopener noreferrer">Ingress-NGINX Controller</a><a href="https://cert-manager.io/docs/installation/helm/" target="_blank" rel="noopener noreferrer">cert-manager · Helm 安装</a><a href="https://argo-cd.readthedocs.io/en/stable/core_concepts/" target="_blank" rel="noopener noreferrer">Argo CD · 核心概念</a><a href="https://helm.sh/docs/intro/quickstart/" target="_blank" rel="noopener noreferrer">Helm · 快速开始</a><a href="https://prometheus.io/docs/introduction/overview/" target="_blank" rel="noopener noreferrer">Prometheus · 概览</a></span>
+      </section>
+
+      <section id="do">
+        <div class="sec-head"><span class="num">06</span><h2>动手与验收</h2></div>
+        <p class="goal">目标：两条硬判据——<code>push feat/*</code> 不部署，<code>merge 到 main</code> 五分钟内集群里跑的是该提交的 SHA；以及一次故意失败的发布能被回滚。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th style="width:8%">#</th><th style="width:46%">任务</th><th>完成标志</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>整理单仓结构、保护 <code>main</code>、配置只读 Deploy Key</td><td><code>main</code> 无法直推，PR 必须通过 W8 的 CI 检查</td></tr>
+            <tr><td>2</td><td>Docker 起 Jenkins + 命名卷 + 四类 Credentials</td><td>删掉容器重建后 job 与凭证仍在</td></tr>
+            <tr><td>3</td><td>写 Jenkinsfile 六阶段，产出 SHA tag 镜像并推 GHCR</td><td>能在 GHCR 找到与 commit 对应的 tag</td></tr>
+            <tr><td>4</td><td>配 GitHub Webhook + 中继验签 / 分支过滤 / 幂等</td><td>伪造签名 403；同一 delivery 重放不产生第二次构建</td></tr>
+            <tr><td>5</td><td>打通全链路：push main → 构建 → set image</td><td><code>feat/*</code> 不部署；<code>main</code> 自动出镜像</td></tr>
+            <tr><td>6</td><td>kind 起集群，应用 Deployment / Service / Ingress</td><td>2 副本 Running，readiness 通过，域名可访问</td></tr>
+            <tr><td>7</td><td>滚动更新与故障演练（推一个起不来的镜像）</td><td><code>rollout status</code> 超时报错后 <code>undo</code> 恢复旧版本</td></tr>
+            <tr><td>8</td><td>写链路图 + 回滚 runbook + 一份「是否引入 K8s」ADR</td><td>能说清每层职责与迁移触发条件</td></tr>
+          </tbody>
+        </table></div>
+        <h3>可勾选执行清单</h3>
+        <p class="progress no-print" id="progress">进度：0 / 10</p>
+        <div class="checklist" id="checklist">
+          <label data-key="w13-1"><input type="checkbox" /><span>单仓结构与保护分支配置完成，Jenkins 只读拉取</span></label>
+          <label data-key="w13-2"><input type="checkbox" /><span>Jenkins 命名卷持久化验证通过（重建容器不丢 job / 凭证）</span></label>
+          <label data-key="w13-3"><input type="checkbox" /><span>Jenkinsfile 纳入仓库，六阶段全部跑通且凭证未出现在日志</span></label>
+          <label data-key="w13-4"><input type="checkbox" /><span>镜像 tag 为 commit SHA，GHCR 中可核对，未使用 latest 部署</span></label>
+          <label data-key="w13-5"><input type="checkbox" /><span>Webhook 签名校验（rawBody + timingSafeEqual）与 403 验证通过</span></label>
+          <label data-key="w13-6"><input type="checkbox" /><span>分支过滤三层齐备：feat/* 不部署、删除分支与 tag push 不误触发</span></label>
+          <label data-key="w13-7"><input type="checkbox" /><span>按 X-GitHub-Delivery 幂等去重，重放投递不重复部署</span></label>
+          <label data-key="w13-8"><input type="checkbox" /><span>kind 集群 2 副本就绪，探针 / 资源 / SSE 缓冲配置正确</span></label>
+          <label data-key="w13-9"><input type="checkbox" /><span>滚动更新不中断，故障发布可用 rollout undo 回滚</span></label>
+          <label data-key="w13-10"><input type="checkbox" /><span>链路图、回滚 runbook 与 K8s 取舍 ADR（含触发条件）完成</span></label>
+        </div>
+        <div class="callout"><strong>收尾：</strong>把本周成果作为 Q2 的第一份能力证据补进 W12 的简历与讲稿，但注意措辞——写「在本地 kind 集群复现了自建 CI/CD 到 K8s 的完整链路，并给出不迁移的判定条件」，比写「项目使用 K8s」更准确也更能体现工程判断。Q1 主作品的线上形态仍保持 W10 / W11 的 compose + Actions，不要为了炫技把已验收的环境改坏。</div>
+      </section>
+      <footer><p>本手册为《全栈转型-3个月职业规划》的 <strong>Q2 扩展周</strong>配套速学材料，不计入 W1–W12 的 G1 / G2 / G3 门禁，也不改变原计划的 12 周周期。要点依据链接所指向的官方文档提炼与转述，代码片段为配合主项目改写的最小示例（Generic Webhook Trigger 的具体字段、各插件版本差异以官方原文与所装插件文档为准）。样式文件：<code>manual-style.css</code>（同目录，完全离线，无 CDN）。</p><p>生成：2026-11-13 · W13：Q2 第 1–2 周自选执行 · 可打印为 PDF</p></footer>
+    </div>
+    <script>
+      (function () {
+        var box = document.getElementById("checklist"), hint = document.getElementById("progress");
+        if (!box || !hint) return;
+        var labels = Array.prototype.slice.call(box.querySelectorAll("label")), KEY = "w13-study-checklist-v1", saved = {};
+        try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { saved = {}; }
+        function render() {
+          var done = 0;
+          labels.forEach(function (label) {
+            var input = label.querySelector("input"), key = label.getAttribute("data-key");
+            input.checked = !!saved[key]; label.classList.toggle("done", input.checked);
+            if (input.checked) done++;
+          });
+          hint.textContent = "进度：" + done + " / " + labels.length;
+        }
+        labels.forEach(function (label) {
+          label.querySelector("input").addEventListener("change", function (e) {
+            saved[label.getAttribute("data-key")] = e.target.checked;
+            try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (err) {}
+            render();
+          });
+        });
+        render();
+      })();
+    </script>
+  </body>
+</html>
