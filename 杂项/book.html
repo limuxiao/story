@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>星夜书页 · 翻书阅读</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Cinzel:wght@400;600&display=swap');
+
+  :root {
+    --paper: #f4ead2;
+    --paper-dark: #e8d9b5;
+    --ink: #3a2f23;
+    --ink-soft: #6b5c46;
+    --gold: #b7893b;
+    --navy: #1c2a3a;
+    --spine: #121b26;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Noto Serif SC', 'Songti SC', 'SimSun', serif;
+    background:
+      radial-gradient(ellipse at 50% 35%, rgba(120, 84, 50, .35), transparent 60%),
+      repeating-linear-gradient(94deg, #3a2418 0px, #4a3020 6px, #3d2618 12px, #4d3321 19px),
+      #3a2418;
+    background-blend-mode: screen, normal;
+  }
+
+  /* 桌面暗角 */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 50% 45%, transparent 40%, rgba(0,0,0,.62) 100%);
+  }
+
+  .stage {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 2200px;
+  }
+
+  .scaler {
+    transform-origin: center center;
+    transition: transform .25s ease;
+  }
+
+  /* ---------- 书本 ---------- */
+  .book {
+    position: relative;
+    width: 960px;
+    height: 620px;
+    transform-style: preserve-3d;
+    filter: drop-shadow(0 40px 45px rgba(0,0,0,.6));
+    user-select: none;
+    cursor: grab;
+  }
+  .book:active { cursor: grabbing; }
+
+  /* 书底与纸张厚度 */
+  .book-base {
+    position: absolute;
+    inset: 6px -2px -8px 2px;
+    border-radius: 4px 10px 10px 4px;
+    background: linear-gradient(90deg, #cbbd9c, #f0e6cc 8%, #efe4c6 92%, #cdbf9e);
+    box-shadow:
+      inset 0 -10px 18px rgba(90,66,36,.28),
+      14px 16px 0 -4px #d9cca9,
+      16px 18px 0 -4px #b9aa86,
+      18px 20px 0 -4px #d9cca9,
+      20px 22px 0 -4px #9c8b66;
+    transform: translateZ(-14px);
+  }
+
+  /* 中缝阴影 */
+  .gutter {
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 50%;
+    width: 46px;
+    transform: translateX(-50%) translateZ(-6px);
+    background: linear-gradient(90deg,
+      transparent, rgba(60,40,18,.18) 35%, rgba(40,25,10,.5) 50%,
+      rgba(60,40,18,.18) 65%, transparent);
+    pointer-events: none;
+  }
+
+  /* 静态底页（右：后记 / 左：封底内页） */
+  .base-page {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 50%;
+    background: var(--paper);
+    overflow: hidden;
+  }
+  .base-page.right { left: 50%; border-radius: 0 6px 6px 0; }
+  .base-page.left  { left: 0; border-radius: 6px 0 0 6px; }
+
+  /* ---------- 书页（leaf） ---------- */
+  .leaf {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 50%;
+    height: 100%;
+    transform-origin: left center;
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+
+  .face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E"),
+      linear-gradient(180deg, var(--paper) 0%, #f6ecd6 50%, var(--paper-dark) 100%);
+    box-shadow: inset 0 0 32px rgba(120,92,52,.13);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .face.front {
+    border-radius: 0 5px 5px 0;
+    box-shadow: inset 16px 0 24px -16px rgba(60,40,18,.5), inset 0 0 32px rgba(120,92,52,.13);
+  }
+  .face.back {
+    border-radius: 5px 0 0 5px;
+    transform: rotateY(180deg);
+    box-shadow: inset -16px 0 24px -16px rgba(60,40,18,.5), inset 0 0 32px rgba(120,92,52,.13);
+  }
+
+  /* 翻页时的明暗阴影 */
+  .shade {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 5;
+  }
+  .face.front .shade {
+    background: linear-gradient(90deg, rgba(20,12,4,.72), rgba(20,12,4,.18) 38%, transparent 72%);
+  }
+  .face.back .shade {
+    background: linear-gradient(270deg, rgba(20,12,4,.72), rgba(20,12,4,.18) 38%, transparent 72%);
+  }
+
+  /* 页边装饰线 */
+  .face::before {
+    content: '';
+    position: absolute;
+    inset: 18px;
+    border: 1px solid rgba(150,120,70,.22);
+    pointer-events: none;
+  }
+  .face:has(.cover-face)::before,
+  .face:has(.titlepage)::before,
+  .face:has(.endpage)::before { display: none; }
+
+  /* ---------- 页面内容 ---------- */
+  .pg {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    padding: 52px 56px 44px;
+    display: flex;
+    flex-direction: column;
+    color: var(--ink);
+    overflow: hidden;
+  }
+  .face.back .pg { padding: 52px 56px 44px; }
+
+  .chapter {
+    font-size: 13px;
+    letter-spacing: .42em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin: 0 0 10px;
+    font-family: 'Cinzel', 'Noto Serif SC', serif;
+  }
+  .h-title {
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    margin: 0 0 26px;
+    color: #2f2417;
+  }
+  .h-title::after {
+    content: '';
+    display: block;
+    width: 54px;
+    height: 2px;
+    margin-top: 14px;
+    background: var(--gold);
+    opacity: .7;
+  }
+  .para {
+    font-size: 16px;
+    line-height: 2.05;
+    text-indent: 2em;
+    margin: 0 0 14px;
+    text-align: justify;
+    color: var(--ink-soft);
+  }
+  .quote {
+    margin: auto 0;
+    padding: 22px 26px;
+    border-left: 3px solid var(--gold);
+    background: rgba(183,137,59,.07);
+    font-size: 18px;
+    line-height: 1.9;
+    color: #4a3c28;
+    font-style: italic;
+  }
+  .drop::first-letter {
+    float: left;
+    font-size: 60px;
+    line-height: .82;
+    padding: 6px 10px 0 0;
+    color: var(--gold);
+  }
+  .pg-num {
+    margin-top: auto;
+    text-align: center;
+    font-size: 12px;
+    letter-spacing: .2em;
+    color: rgba(90,70,42,.5);
+    font-family: 'Cinzel', serif;
+  }
+  .ornament {
+    text-align: center;
+    color: var(--gold);
+    letter-spacing: .5em;
+    font-size: 14px;
+    margin: 10px 0 0;
+    opacity: .8;
+  }
+
+  /* ---------- 封面 / 扉页 ---------- */
+  .cover-face, .titlepage, .endpage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .cover-face {
+    background:
+      radial-gradient(circle at 50% 32%, rgba(255,255,255,.08), transparent 55%),
+      repeating-linear-gradient(45deg, rgba(255,255,255,.015) 0 2px, transparent 2px 4px),
+      linear-gradient(160deg, #243a52, #16253a 60%, #0f1b2b);
+    border-radius: 0 8px 8px 0;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #e8d7ac;
+  }
+  .cover-face::before {
+    inset: 22px;
+    border: 1px solid rgba(212,175,105,.55);
+    box-shadow: inset 0 0 0 5px rgba(212,175,105,.06), 0 0 0 5px rgba(212,175,105,.06);
+  }
+  .cover-inner {
+    position: relative;
+    z-index: 2;
+    padding: 40px;
+  }
+  .cover-star { font-size: 30px; color: #d9b96b; letter-spacing: .6em; margin-bottom: 26px; }
+  .cover-title {
+    font-size: 52px;
+    font-weight: 700;
+    letter-spacing: .22em;
+    margin: 0 0 16px;
+    color: #f0dfb5;
+    text-shadow: 0 2px 10px rgba(0,0,0,.5);
+  }
+  .cover-sub {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    letter-spacing: .32em;
+    color: #c9a95f;
+    margin-bottom: 70px;
+  }
+  .cover-author { font-size: 15px; letter-spacing: .2em; color: #d7c59b; }
+
+  .titlepage {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .titlepage .pg { justify-content: center; align-items: center; }
+  .tp-star { font-size: 22px; color: var(--gold); letter-spacing: .6em; margin-bottom: 24px; }
+  .tp-title { font-size: 40px; letter-spacing: .2em; margin: 0 0 14px; color: #2f2417; }
+  .tp-sub { font-family:'Cinzel',serif; letter-spacing:.3em; font-size:12px; color:var(--gold); margin-bottom: 40px; }
+  .tp-epigraph {
+    max-width: 300px;
+    font-size: 15px;
+    line-height: 2;
+    color: var(--ink-soft);
+    font-style: italic;
+    margin-bottom: 46px;
+  }
+  .tp-pub { font-size: 13px; letter-spacing: .25em; color: rgba(90,70,42,.6); }
+
+  .endpage { align-items: center; justify-content: center; text-align: center; }
+  .endpage .pg { justify-content: center; align-items: center; }
+  .end-big { font-size: 44px; letter-spacing: .3em; color: #2f2417; margin-bottom: 18px; }
+  .end-sub { font-family:'Cinzel',serif; letter-spacing:.4em; font-size:13px; color:var(--gold); }
+
+  /* ---------- 可点击的书角 ---------- */
+  .corner {
+    position: absolute;
+    z-index: 60;
+    width: 76px;
+    height: 76px;
+    cursor: pointer;
+  }
+  .corner.right { right: 0; top: 0; }
+  .corner.left  { left: 0; top: 0; }
+  .corner::before {
+    content: '';
+    position: absolute;
+    width: 0; height: 0;
+    border-style: solid;
+    transition: filter .2s, border-width .2s;
+  }
+  .corner.right::before {
+    top: 0; right: 0;
+    border-width: 0 62px 62px 0;
+    border-color: transparent rgba(120,90,50,.18) transparent transparent;
+  }
+  .corner.left::before {
+    top: 0; left: 0;
+    border-width: 62px 0 0 62px;
+    border-color: rgba(120,90,50,.18) transparent transparent transparent;
+  }
+  .corner:hover::before { filter: drop-shadow(0 2px 4px rgba(0,0,0,.35)); }
+  .corner.right:hover::before { border-width: 0 74px 74px 0; border-color: transparent rgba(183,137,59,.5) transparent transparent; }
+  .corner.left:hover::before  { border-width: 74px 0 0 74px; border-color: rgba(183,137,59,.5) transparent transparent transparent; }
+  .corner::after {
+    content: '›';
+    position: absolute;
+    font-size: 28px;
+    color: rgba(90,64,30,.55);
+    font-family: serif;
+  }
+  .corner.right::after { top: 8px; right: 14px; }
+  .corner.left::after { content: '‹'; top: 8px; left: 14px; }
+
+  /* ---------- 控制条 ---------- */
+  .controls {
+    position: fixed;
+    bottom: 26px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    background: rgba(20,26,32,.55);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(220,190,130,.18);
+    color: #e9dcc0;
+    font-size: 13px;
+    letter-spacing: .1em;
+  }
+  .controls button {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: 1px solid rgba(220,190,130,.4);
+    background: transparent;
+    color: #e9dcc0;
+    font-size: 20px;
+    cursor: pointer;
+    transition: .2s;
+    line-height: 1;
+  }
+  .controls button:hover:not(:disabled) { background: rgba(220,190,130,.18); transform: scale(1.08); }
+  .controls button:disabled { opacity: .3; cursor: default; }
+  .counter { min-width: 96px; text-align: center; font-family: 'Cinzel', serif; }
+  .counter b { color: #e7c274; font-size: 15px; }
+  .hint { position: fixed; top: 24px; left: 50%; transform: translateX(-50%); z-index: 100;
+    color: rgba(233,220,192,.65); font-size: 13px; letter-spacing: .18em; text-align:center; }
+  .hint small { display:block; margin-top:6px; font-size:11px; opacity:.7; letter-spacing:.1em; }
+</style>
+</head>
+<body>
+
+  <div class="hint">拖动书页，或点击右上角翻页<small>支持键盘 ← → 方向键翻页</small></div>
+
+  <div class="stage">
+    <div class="scaler" id="scaler">
+      <div class="book" id="book">
+        <div class="book-base"></div>
+        <div class="gutter"></div>
+        <div class="base-page left"></div>
+        <div class="base-page right" id="baseRight"></div>
+        <!-- leaves 由 JS 注入 -->
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="prev" title="上一页">‹</button>
+    <div class="counter"><b id="cur">1</b> / <span id="total">1</span></div>
+    <button id="next" title="下一页">›</button>
+  </div>
+
+<script>
+(function () {
+  'use strict';
+
+  const book = document.getElementById('book');
+  const scaler = document.getElementById('scaler');
+  const curEl = document.getElementById('cur');
+  const totalEl = document.getElementById('total');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+
+  /* ---------- 生成页面内容 ---------- */
+  const page = (heading, paras, num, opts = {}) => `
+    <div class="pg">
+      ${heading ? `<p class="chapter">${heading.label}</p><h2 class="h-title">${heading.title}</h2>` : ''}
+      ${paras.map((p, i) => `<p class="para${opts.drop && i === 0 ? ' drop' : ''}">${p}</p>`).join('')}
+      <p class="ornament">❧</p>
+      <div class="pg-num">— ${num} —</div>
+    </div>`;
+
+  const coverHTML = `
+    <div class="cover-face">
+      <div class="cover-inner">
+        <div class="cover-star">✦ ✧ ✦</div>
+        <h1 class="cover-title">星夜书页</h1>
+        <div class="cover-sub">A TALE OF STARS &amp; TIDES</div>
+        <div class="cover-author">— 夜航船主人 著 —</div>
+      </div>
+    </div>`;
+
+  const titleHTML = `
+    <div class="titlepage">
+      <div class="pg">
+        <div class="tp-star">✦</div>
+        <h1 class="tp-title">星夜书页</h1>
+        <div class="tp-sub">A TALE OF STARS AND TIDES</div>
+        <p class="tp-epigraph">献给所有在夜里，<br>仍愿意为陌生人点亮一盏灯的人。</p>
+        <div class="tp-pub">星夜出版社 · 初版 · 甲午年</div>
+      </div>
+    </div>`;
+
+  const data = [
+    { front: coverHTML, back: titleHTML },
+
+    { front: page(
+        { label: 'Chapter One', title: '第一章 · 起航' },
+        [
+          '海风在黎明前醒来，把港口的桅杆吹成一排低吟的琴弦。少年阿澈第一次站在船头，手里攥着一封没有署名的信。',
+          '信上只有一句话：「去灯塔，替一盏灯守夜。」',
+          '他不知道那是谁的笔迹，也不知道灯塔在哪个方向。他只知道，当第一缕光落在海平线上时，船已经离岸了。'
+        ], 1, { drop: true }),
+      back: page(null, [
+          '海面在晨光里像一匹缓缓展开的绸缎，褶皱处泛着淡淡的金。阿澈把信折好，贴身收起，仿佛那是一枚会被风吹散的承诺。',
+          '船老大写意地指了指远方：「看见了吗？礁石尽头那一点白，就是你要去的地方。」',
+          '阿澈眯起眼。在那片水天相接的朦胧里，他什么也没看清，却莫名觉得，有什么东西正在那里等他。'
+        ], 2) },
+
+    { front: page(
+        { label: 'Chapter Two', title: '第二章 · 灯塔' },
+        [
+          '灯塔立在礁石的尽头，像一枚被岁月磨旧的银针，缝补着夜与昼的裂缝。',
+          '守塔人是个沉默的老人。他递给阿澈一盏煤油灯，说：「灯不需要你点亮，只需要你记得添油。」',
+          '那天夜里，阿澈第一次看见海面上浮起无数微小的光点，它们随着潮水起伏，像一封封尚未寄出的信。'
+        ], 3),
+      back: page(null, [
+          '老人的手很粗糙，像被海水浸泡过的树皮。他领着阿澈登上螺旋的石阶，每一级都被几代人的脚步磨得发亮。',
+          '「灯室在最上面，」老人说，「风大的时候，整座塔都会唱歌。你要学会听，那是海在跟你说话。」',
+          '阿澈点点头。他听见风穿过石缝，呜咽如某种古老的歌谣。'
+        ], 4) },
+
+    { front: page(
+        { label: 'Chapter Three', title: '第三章 · 星与潮' },
+        [
+          '「那些是星星落进海里的倒影吗？」阿澈倚着栏杆问。',
+          '老人摇头：「那是被人思念着的人，化成了光。每一盏，都在等一个归人。」',
+          '阿澈忽然想起那封没有署名的信，心头一紧——也许写信的人，正站在某座灯塔下，等着一艘永远不会返航的船。'
+        ], 5),
+      back: page(null, [
+          '夜色渐深，光点愈发明亮，仿佛整片海都在低声回应着什么。',
+          '阿澈数着数着便放弃了。它们太多了，像天上的星，也像人间数不清的等待。',
+          '「我该走了。」老人忽然说。天亮时，礁石上只剩下一串渐渐被潮水抹去的脚印。'
+        ], 6) },
+
+    { front: page(
+        { label: 'Chapter Four', title: '第四章 · 守夜' },
+        [
+          '日子像潮水一样退去又涌来。阿澈学会了在风暴来临前收紧灯芯，学会了分辨远洋的巨轮与归巢的渔船。',
+          '他给灯添油，为灯罩拭灰，在每个黄昏亲手点亮它，又在每个黎明亲手熄灭。',
+          '他渐渐明白：守一盏灯，其实是在守一个承诺——总有人会在夜里迷路，总有一束光值得等待。'
+        ], 7),
+      back: page(null, [
+          '冬天来时，海面结了薄薄一层冰。阿澈独自守着塔，听见风在窗外呼啸，像有人一遍遍喊着一个名字。',
+          '他往灯里添了最后一次油，坐在灯室里，看着光柱一圈一圈扫过海面。',
+          '那一刻他不再孤单。他知道自己正与无数等待的人，一同守着同一片夜色。'
+        ], 8) },
+
+    { front: page(
+        { label: 'Chapter Five', title: '第五章 · 归信' },
+        [
+          '深秋的某个夜晚，一艘小船在礁石外搁浅。阿澈举灯奔去，在船头看见一位白发苍苍的女人。',
+          '她从怀里掏出一封泛黄的信——笔迹与那封一模一样。「我等了他四十年，」她说，「原来他一直在这里，替别人点灯。」',
+          '阿澈把灯交到她手里。那一夜，海面上的光点比任何时候都亮，像整片星空都落进了海里。'
+        ], 9),
+      back: page(null, [
+          '后来，阿澈成了新的守塔人。',
+          '他依旧在每个黄昏点灯，每个黎明熄灯。只是偶尔，他会往海里多望一眼——',
+          '他知道，那些光点里，有一盏，正对着他微笑。'
+        ], 10) },
+
+    { front: `<div class="endpage"><div class="pg"><div class="end-big">全书完</div><div class="end-sub">THE END</div><p class="ornament" style="margin-top:50px">✦</p></div></div>`,
+      back: `<div class="endpage"><div class="pg"><div class="end-sub" style="margin-bottom:24px">COLOPHON</div><p class="tp-epigraph">愿每一束守候的光，<br>都能照见归途。</p><div class="tp-pub">星夜书页 · 终</div></div></div>` }
+  ];
+
+  /* ---------- 构建书页 ---------- */
+  const leaves = [];
+  data.forEach(item => {
+    const leaf = document.createElement('div');
+    leaf.className = 'leaf';
+    leaf.innerHTML =
+      `<div class="face front">${item.front}<div class="shade"></div></div>` +
+      `<div class="face back">${item.back}<div class="shade"></div></div>`;
+    book.appendChild(leaf);
+    leaves.push(leaf);
+  });
+
+  const N = leaves.length;
+  totalEl.textContent = N;
+
+  // 右上角 / 左上角翻页角
+  const cornerR = document.createElement('div');
+  cornerR.className = 'corner right';
+  const cornerL = document.createElement('div');
+  cornerL.className = 'corner left';
+  book.appendChild(cornerR);
+  book.appendChild(cornerL);
+
+  document.getElementById('baseRight').innerHTML =
+    `<div class="pg" style="justify-content:center;align-items:center;text-align:center">
+      <div class="end-sub" style="margin-bottom:22px">FIN</div>
+      <p class="tp-epigraph">感谢你，读到了这里。<br>愿故事之外，你也有属于自己的灯塔。</p>
+      <div class="tp-pub">— 全书终 —</div>
+    </div>`;
+
+  let current = 0;   // 已翻过去的 leaf 数量
+  let busy = false;
+
+  function layout() {
+    leaves.forEach((leaf, i) => {
+      const flipped = i < current;
+      leaf.style.transition = '';
+      leaf.style.transform = flipped ? 'rotateY(-180deg)' : 'rotateY(0deg)';
+      leaf.style.zIndex = flipped ? (i + 1) : (N - i);
+      leaf.querySelectorAll('.shade').forEach(s => { s.style.opacity = 0; s.style.transition = ''; });
+    });
+    cornerR.style.display = current < N ? '' : 'none';
+    cornerL.style.display = current > 0 ? '' : 'none';
+    prevBtn.disabled = current <= 0;
+    nextBtn.disabled = current >= N;
+    curEl.textContent = current + 1;
+  }
+
+  /* ---------- 动画翻页 ---------- */
+  function flip(dir) {
+    if (busy) return;
+    if (dir === 1 && current >= N) return;
+    if (dir === -1 && current <= 0) return;
+    busy = true;
+
+    const idx = dir === 1 ? current : current - 1;
+    const leaf = leaves[idx];
+    leaf.style.transition = 'transform .92s cubic-bezier(.645,.045,.355,1)';
+    leaf.style.zIndex = N + 20;
+
+    const target = dir === 1 ? 'rotateY(-180deg)' : 'rotateY(0deg)';
+    const shades = leaf.querySelectorAll('.shade');
+    shades.forEach(s => {
+      s.style.transition = 'none';
+      s.style.opacity = 0;
+    });
+    void leaf.offsetWidth; // reflow
+    leaf.style.transform = target;
+    shades.forEach(s => {
+      s.style.transition = 'opacity .92s ease-in-out';
+      s.animate(
+        [{ opacity: 0 }, { opacity: .9, offset: .5 }, { opacity: 0 }],
+        { duration: 920, easing: 'ease-in-out' }
+      );
+    });
+
+    setTimeout(() => {
+      current += dir;
+      layout();
+      busy = false;
+    }, 930);
+  }
+
+  /* ---------- 拖拽翻页 ---------- */
+  let drag = null;
+
+  book.addEventListener('pointerdown', e => {
+    if (busy) return;
+    // 忽略控制条/角落之外——判断落在书的哪一半
+    const rect = book.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / (rect.width / 2); // 0..2
+    let dir, idx, startRot, endRot;
+    if (x >= 1 && current < N) {
+      dir = 1; idx = current; startRot = 0; endRot = -180;
+    } else if (x < 1 && current > 0) {
+      dir = -1; idx = current - 1; startRot = -180; endRot = 0;
+    } else {
+      return;
+    }
+    drag = {
+      startX: e.clientX, dir, idx, startRot, endRot,
+      leaf: leaves[idx],
+      shades: Array.from(leaves[idx].querySelectorAll('.shade')),
+      half: rect.width / 2,
+      progress: 0
+    };
+    drag.leaf.style.transition = 'none';
+    drag.leaf.style.zIndex = N + 20;
+    drag.shades.forEach(s => { s.style.transition = 'none'; });
+    try { book.setPointerCapture(e.pointerId); } catch (_) {}
+    e.preventDefault();
+  });
+
+  window.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const delta = e.clientX - drag.startX;
+    let p = drag.dir === 1 ? (-delta / drag.half) : (delta / drag.half);
+    p = Math.max(0, Math.min(1, p));
+    drag.progress = p;
+    const rot = drag.startRot + (drag.endRot - drag.startRot) * p;
+    drag.leaf.style.transform = `rotateY(${rot}deg)`;
+    const shade = Math.sin(p * Math.PI) * .92;
+    drag.shades.forEach(s => { s.style.opacity = shade; });
+  });
+
+  function endDrag() {
+    if (!drag) return;
+    const d = drag;
+    drag = null;
+    const commit = d.progress > .45;
+    const target = commit ? d.endRot : d.startRot;
+    d.leaf.style.transition = 'transform .5s cubic-bezier(.33,.02,.32,1)';
+    d.leaf.style.transform = `rotateY(${target}deg)`;
+    d.shades.forEach(s => {
+      s.style.transition = 'opacity .5s ease';
+      s.style.opacity = 0;
+    });
+    setTimeout(() => {
+      if (commit) current += d.dir;
+      layout();
+    }, 510);
+  }
+  window.addEventListener('pointerup', endDrag);
+  window.addEventListener('pointercancel', endDrag);
+
+  /* ---------- 控件 ---------- */
+  cornerR.addEventListener('pointerdown', e => e.stopPropagation());
+  cornerL.addEventListener('pointerdown', e => e.stopPropagation());
+  cornerR.addEventListener('click', () => flip(1));
+  cornerL.addEventListener('click', () => flip(-1));
+  nextBtn.addEventListener('click', () => flip(1));
+  prevBtn.addEventListener('click', () => flip(-1));
+  window.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); flip(1); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); flip(-1); }
+  });
+
+  /* ---------- 自适应缩放 ---------- */
+  function resize() {
+    const pad = window.innerWidth < 700 ? 24 : 90;
+    const topPad = 96, bottomPad = 110;
+    const scale = Math.min(
+      (window.innerWidth - pad) / 960,
+      (window.innerHeight - topPad - bottomPad) / 620,
+      1.15
+    );
+    scaler.style.transform = `scale(${scale})`;
+  }
+  window.addEventListener('resize', resize);
+
+  resize();
+  layout();
+})();
+</script>
+</body>
+</html>
