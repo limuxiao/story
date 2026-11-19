@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>黄金持仓计算器 · 加仓 / 减仓成本与收益</title>
+<style>
+  :root {
+    --gold: #b8860b;
+    --gold-2: #d4a72c;
+    --gold-soft: #f7ecd2;
+    --ink: #2b2418;
+    --muted: #857963;
+    --line: #e9e0cd;
+    --pos: #0a8f5b;
+    --neg: #cf3c3c;
+    --bg: #faf7f0;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+    padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  }
+
+  header {
+    background: linear-gradient(135deg, #2c2416, #4a3a18 55%, #6b521c);
+    color: #f6e7c2;
+    padding: calc(26px + env(safe-area-inset-top, 0px)) 20px 30px;
+    text-align: center;
+    box-shadow: 0 6px 24px rgba(70,52,18,.22);
+  }
+  header .badge {
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: .28em;
+    padding: 4px 12px;
+    border: 1px solid rgba(226,193,120,.5);
+    border-radius: 999px;
+    color: #e9cd8c;
+    margin-bottom: 12px;
+  }
+  header h1 { margin: 0; font-size: 23px; font-weight: 600; letter-spacing: .06em; }
+  header p { margin: 8px 0 0; font-size: 12px; color: rgba(246,231,194,.7); }
+
+  .wrap { max-width: 520px; margin: 0 auto; padding: 18px 16px 0; }
+
+  .card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 18px 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 3px 16px rgba(90,70,30,.05);
+  }
+  .card h2 {
+    margin: 0 0 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #6b572c;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card h2::before {
+    content: '';
+    width: 4px; height: 15px;
+    border-radius: 2px;
+    background: linear-gradient(var(--gold-2), var(--gold));
+  }
+
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 13px;
+    color: #5d5240;
+    margin-bottom: 7px;
+  }
+  .field label span.unit { font-size: 11px; color: var(--muted); }
+  .input-box { position: relative; }
+  .input-box input {
+    width: 100%;
+    height: 46px;
+    padding: 0 56px 0 14px;
+    font-size: 17px;
+    color: var(--ink);
+    border: 1.5px solid var(--line);
+    border-radius: 11px;
+    background: #fdfbf6;
+    outline: none;
+    transition: .18s;
+    font-family: inherit;
+  }
+  .input-box input:focus {
+    border-color: var(--gold-2);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(212,167,44,.13);
+  }
+  .input-box .suffix {
+    position: absolute;
+    right: 13px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  .segment {
+    display: flex;
+    background: #f2ecdd;
+    border-radius: 11px;
+    padding: 4px;
+    margin-bottom: 16px;
+  }
+  .segment label {
+    flex: 1;
+    text-align: center;
+    font-size: 14px;
+    padding: 9px 0;
+    border-radius: 8px;
+    color: #7a6c51;
+    cursor: pointer;
+    transition: .18s;
+  }
+  .segment input { display: none; }
+  .segment input:checked + label {
+    background: #fff;
+    color: #6b4e08;
+    font-weight: 600;
+    box-shadow: 0 2px 7px rgba(90,70,30,.12);
+  }
+
+  .warning {
+    color: var(--neg);
+    font-size: 12px;
+    min-height: 17px;
+    margin-top: 6px;
+  }
+
+  .hero {
+    background: linear-gradient(135deg, #fffdf7, #fff8e8);
+    border: 1px solid #ecdcae;
+    border-radius: 18px;
+    padding: 20px 18px;
+    margin-bottom: 14px;
+    box-shadow: 0 6px 20px rgba(160,120,30,.09);
+  }
+  .hero .label { font-size: 12px; color: #8a7440; letter-spacing: .08em; }
+  .hero .big {
+    font-size: 38px;
+    font-weight: 700;
+    color: #7a5a12;
+    line-height: 1.25;
+    margin: 4px 0 2px;
+    font-variant-numeric: tabular-nums;
+  }
+  .hero .big small { font-size: 14px; font-weight: 500; margin-left: 4px; color: #9c8549; }
+  .hero .sub { font-size: 12px; color: #9a8a64; }
+  .hero .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 16px;
+    padding-top: 15px;
+    border-top: 1px dashed #e3d3a8;
+  }
+  .hero .stats > div { text-align: center; }
+  .hero .stats .k { font-size: 11px; color: #9a8a64; margin-bottom: 2px; }
+  .hero .stats .v { font-size: 18px; font-weight: 600; color: #4a3b1e; font-variant-numeric: tabular-nums; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .cell {
+    background: #fbf9f4;
+    border: 1px solid #f0e9d9;
+    border-radius: 12px;
+    padding: 11px 12px;
+  }
+  .cell .k { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+  .cell .v { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; word-break: break-all; }
+  .cell .v small { font-size: 11px; font-weight: 400; color: var(--muted); margin-left: 2px; }
+
+  .pos { color: var(--pos) !important; }
+  .neg { color: var(--neg) !important; }
+
+  .note {
+    font-size: 11px;
+    color: #9a8d75;
+    line-height: 1.8;
+    padding: 4px 6px 10px;
+  }
+  .example {
+    display: inline-block;
+    font-size: 12px;
+    color: var(--gold);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: underline;
+    margin-left: 8px;
+  }
+
+  @media (min-width: 480px) {
+    .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 360px) {
+    .hero .big { font-size: 32px; }
+    .cell .v { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">GOLD CALCULATOR</div>
+  <h1>黄金持仓计算器</h1>
+  <p>加仓 / 减仓后的成本均价与收益测算</p>
+</header>
+
+<div class="wrap">
+
+  <div class="card">
+    <h2>持仓信息</h2>
+    <div class="field">
+      <label>原成本均价 <span class="unit">买入时的平均成本</span></label>
+      <div class="input-box">
+        <input id="cost" type="number" inputmode="decimal" step="any" min="0" placeholder="例如 480" />
+        <span class="suffix">元/g</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>当前持有克数 <span class="unit">操作前的持仓</span></label>
+      <div class="input-box">
+        <input id="grams" type="number" inputmode="decimal" step="any" min="0" placeholder="例如 100" />
+        <span class="suffix">g</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>现黄金价格 <span class="unit">当前成交/参考价</span></label>
+      <div class="input-box">
+        <input id="price" type="number" inputmode="decimal" step="any" min="0" placeholder="例如 560" />
+        <span class="suffix">元/g</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>操作设置 <button class="example" id="example" type="button">填入示例</button></h2>
+    <div class="segment">
+      <input type="radio" name="mode" id="modeAdd" value="add" checked />
+      <label for="modeAdd">加仓（买入）</label>
+      <input type="radio" name="mode" id="modeSell" value="sell" />
+      <label for="modeSell">减仓（卖出）</label>
+    </div>
+    <div class="field">
+      <label id="amountLabel">加仓金额 <span class="unit">本次买入投入金额</span></label>
+      <div class="input-box">
+        <input id="amount" type="number" inputmode="decimal" step="any" min="0" placeholder="例如 10000" />
+        <span class="suffix">元</span>
+      </div>
+    </div>
+    <div class="warning" id="warning"></div>
+  </div>
+
+  <div class="hero">
+    <div class="label" id="heroLabel">加仓后成本均价</div>
+    <div class="big"><span id="newCost">--</span><small>元/g</small></div>
+    <div class="sub" id="heroSub">请输入左侧数据自动计算</div>
+    <div class="stats">
+      <div>
+        <div class="k" id="gramsK">加仓后持有克数</div>
+        <div class="v"><span id="newGrams">--</span> <small>g</small></div>
+      </div>
+      <div>
+        <div class="k" id="deltaK">均价变化</div>
+        <div class="v" id="delta">--</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 id="detailTitle">加仓后明细</h2>
+    <div class="grid" id="grid">
+      <div class="cell"><div class="k">持仓成本</div><div class="v"><span id="c1">--</span> <small>元</small></div></div>
+      <div class="cell"><div class="k">当前市值</div><div class="v"><span id="c2">--</span> <small>元</small></div></div>
+      <div class="cell"><div class="k">浮动盈亏</div><div class="v"><span id="c3">--</span> <small>元</small></div></div>
+      <div class="cell"><div class="k">收益率</div><div class="v"><span id="c4">--</span></div></div>
+      <div class="cell" id="extra1"><div class="k" id="extra1K">本次买入克数</div><div class="v"><span id="c5">--</span> <small>g</small></div></div>
+      <div class="cell" id="extra2"><div class="k" id="extra2K">投入金额</div><div class="v"><span id="c6">--</span> <small>元</small></div></div>
+    </div>
+  </div>
+
+  <div class="note">
+    计算说明：加仓按「金额 ÷ 现价」折算新增克数，新旧成本合并后摊薄均价；减仓按「金额 ÷ 现价」折算卖出克数，采用平均成本法结转已实现盈亏，剩余持仓的成本均价保持不变。结果未计入手续费、点差及税费，仅供参考。
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const ids = ['cost','grams','price','amount','warning','heroLabel','newCost','heroSub',
+    'gramsK','newGrams','deltaK','delta','detailTitle','c1','c2','c3','c4','c5','c6',
+    'extra1','extra1K','extra2','extra2K','amountLabel'];
+
+  function num(id) {
+    const v = parseFloat($(id).value);
+    return isFinite(v) && v >= 0 ? v : NaN;
+  }
+  function fmt(n, d = 2) {
+    if (!isFinite(n)) return '--';
+    return n.toLocaleString('zh-CN', { minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+  function fmtG(n) {
+    if (!isFinite(n)) return '--';
+    return n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+  }
+  function signed(n, d = 2) { return (n > 0 ? '+' : '') + fmt(n, d); }
+  function color(el, n) {
+    el.classList.remove('pos', 'neg');
+    if (n > 0) el.classList.add('pos');
+    else if (n < 0) el.classList.add('neg');
+  }
+  function clear() {
+    ids.forEach(id => {
+      const el = $(id);
+      if (el && el.id !== 'warning' && el.id !== 'extra1' && el.id !== 'extra2' &&
+          el.id !== 'amountLabel' && el.id !== 'heroLabel' && el.id !== 'detailTitle' &&
+          el.id !== 'gramsK' && el.id !== 'deltaK' && el.id !== 'extra1K' && el.id !== 'extra2K' &&
+          el.id !== 'heroSub') {
+        if (el.tagName !== 'DIV' || el.classList.contains('v') || el.classList.contains('big') || el.classList.contains('stats')) {
+          el.textContent = '--';
+        }
+      }
+    });
+    $('newCost').textContent = '--';
+    $('newGrams').textContent = '--';
+    $('delta').textContent = '--';
+    $('delta').className = 'v';
+    ['c1','c2','c3','c4','c5','c6'].forEach(id => { $(id).textContent = '--'; $(id).className = ''; });
+  }
+
+  function calculate() {
+    const cost = num('cost'), grams = num('grams'), price = num('price'), amount = num('amount');
+    const isAdd = $('modeAdd').checked;
+    $('warning').textContent = '';
+
+    $('amountLabel').innerHTML = isAdd
+      ? '加仓金额 <span class="unit">本次买入投入金额</span>'
+      : '减仓金额 <span class="unit">本次卖出回收金额</span>';
+    $('heroLabel').textContent = isAdd ? '加仓后成本均价' : '减仓后成本均价';
+    $('gramsK').textContent = isAdd ? '加仓后持有克数' : '减仓后持有克数';
+    $('deltaK').textContent = isAdd ? '均价变化' : '已实现盈亏';
+    $('detailTitle').textContent = isAdd ? '加仓后明细' : '减仓后明细';
+    $('heroSub').textContent = '结果单位：元/g，持仓单位：g';
+
+    if (![cost, grams, price, amount].every(isFinite) || cost <= 0 || price <= 0 || grams <= 0 || amount < 0) {
+      clear();
+      $('heroSub').textContent = '请完整填写上方数据（数值需大于 0）';
+      return;
+    }
+
+    const marketValue = price * grams;
+    const totalCost = cost * grams;
+    const floatPL = marketValue - totalCost;
+    const rate = totalCost > 0 ? floatPL / totalCost * 100 : 0;
+
+    let newCostAvg, newGrams, newTotalCost, newMarketValue, newFloatPL, newRate;
+    let extra1Val, extra2Val, extra1Label, extra2Label;
+
+    if (isAdd) {
+      const buyGrams = amount / price;
+      newGrams = grams + buyGrams;
+      newTotalCost = totalCost + amount;
+      newCostAvg = newGrams > 0 ? newTotalCost / newGrams : 0;
+      newMarketValue = price * newGrams;
+      newFloatPL = newMarketValue - newTotalCost;
+      newRate = newTotalCost > 0 ? newFloatPL / newTotalCost * 100 : 0;
+      extra1Val = fmtG(buyGrams); extra1Label = '本次买入克数';
+      extra2Val = fmt(amount);  extra2Label = '投入金额';
+      $('delta').textContent = signed(newCostAvg - cost) + ' 元/g';
+      color($('delta'), -(newCostAvg - cost));
+      $('heroSub').textContent = '摊薄后成本均价（越低越好）';
+    } else {
+      if (amount > marketValue) {
+        clear();
+        $('warning').textContent = '减仓金额不能超过当前持仓市值 ' + fmt(marketValue) + ' 元';
+        return;
+      }
+      const sellGrams = amount / price;
+      const realized = (price - cost) * sellGrams;
+      newGrams = grams - sellGrams;
+      newCostAvg = cost;
+      newTotalCost = newGrams * cost;
+      newMarketValue = price * newGrams;
+      newFloatPL = newMarketValue - newTotalCost;
+      newRate = newTotalCost > 0 ? newFloatPL / newTotalCost * 100 : 0;
+      extra1Val = fmtG(sellGrams); extra1Label = '本次卖出克数';
+      extra2Val = fmt(realized);  extra2Label = '已实现盈亏';
+      $('delta').textContent = signed(realized) + ' 元';
+      color($('delta'), realized);
+      $('heroSub').textContent = '平均成本法：减仓后成本均价不变';
+    }
+
+    $('newCost').textContent = fmt(newCostAvg);
+    $('newGrams').textContent = fmtG(newGrams);
+
+    $('c1').textContent = fmt(newTotalCost);
+    $('c2').textContent = fmt(newMarketValue);
+    $('c3').textContent = signed(newFloatPL);
+    color($('c3'), newFloatPL);
+    $('c4').textContent = signed(newRate) + '%';
+    color($('c4'), newRate);
+    $('extra1K').textContent = extra1Label;
+    $('extra2K').textContent = extra2Label;
+    $('c5').textContent = extra1Val;
+    $('c6').textContent = extra2Val;
+    color($('c6'), isAdd ? 0 : parseFloat(extra2Val.replace(/,/g, '')));
+
+    $('extra1').style.display = '';
+    $('extra2').style.display = '';
+  }
+
+  ['cost','grams','price','amount'].forEach(id => $(id).addEventListener('input', calculate));
+  $('modeAdd').addEventListener('change', calculate);
+  $('modeSell').addEventListener('change', calculate);
+  $('example').addEventListener('click', () => {
+    $('cost').value = '480';
+    $('grams').value = '100';
+    $('price').value = '560';
+    $('amount').value = '10000';
+    calculate();
+  });
+
+  calculate();
+})();
+</script>
+</body>
+</html>
