@@ -1,0 +1,11 @@
+{
+  "pages": ["pages/index/index"],
+  "window": {
+    "navigationBarTitleText": "黄金持仓计算器",
+    "navigationBarBackgroundColor": "#2c2416",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#faf7f0"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

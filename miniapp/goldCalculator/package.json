@@ -1,0 +1,12 @@
+{
+  "name": "gold-calculator-miniapp",
+  "version": "1.0.0",
+  "description": "黄金持仓计算器微信小程序（原生 + TypeScript）",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "miniprogram-api-typings": "^3.12.0",
+    "typescript": "^5.4.0"
+  }
+}

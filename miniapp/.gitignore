@@ -1,0 +1,15 @@
+# 依赖包（由 npm install 生成）
+**/node_modules/
+
+# TypeScript 编译产物（由 npm run build 或微信开发者工具从 .ts 生成）
+**/*.js
+**/*.js.map
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 编辑器 / IDE
+.idea/
+.vscode/
+*.swp
