@@ -1,0 +1,1820 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>废弃船厂：最后一班 · WebGL FPS</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #080a0d;
+      }
+      body {
+        font-family: "SF Mono", Menlo, Consolas, monospace;
+        color: #d8e2e8;
+        user-select: none;
+      }
+      #gl {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+        cursor: crosshair;
+      }
+
+      .grain {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 4;
+        opacity: 0.14;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent 0 2px,
+          rgba(0, 0, 0, 0.35) 2px 3px
+        );
+      }
+      .vignette {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 5;
+        box-shadow: inset 0 0 180px 40px rgba(0, 0, 0, 0.72);
+      }
+      #damage {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 6;
+        opacity: 0;
+        box-shadow: inset 0 0 160px 60px rgba(190, 25, 20, 0.85);
+        transition: opacity 0.12s linear;
+      }
+      #flash {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 6;
+        opacity: 0;
+        background: #ffe6b0;
+      }
+
+      #hud {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 7;
+        display: none;
+      }
+      #hud.on {
+        display: block;
+      }
+      .panel-hud {
+        position: absolute;
+        padding: 10px 14px;
+        background: rgba(8, 14, 18, 0.55);
+        border: 1px solid rgba(150, 190, 205, 0.18);
+        backdrop-filter: blur(4px);
+        letter-spacing: 0.06em;
+      }
+      #hpBox {
+        top: 22px;
+        left: 22px;
+        min-width: 210px;
+      }
+      #hpLabel {
+        font-size: 11px;
+        color: #8fa6b2;
+        margin-bottom: 6px;
+      }
+      #hpNum {
+        font-size: 26px;
+        font-weight: 700;
+        color: #e7f1f4;
+        line-height: 1;
+      }
+      #hpBar {
+        height: 5px;
+        margin-top: 8px;
+        background: rgba(255, 255, 255, 0.12);
+      }
+      #hpFill {
+        height: 100%;
+        width: 100%;
+        background: #cf6a42;
+        transition: width 0.15s;
+      }
+      #statBox {
+        top: 22px;
+        right: 22px;
+        text-align: right;
+        font-size: 12px;
+        line-height: 1.9;
+        color: #a8bec8;
+      }
+      #statBox b {
+        color: #e8d2a0;
+        font-size: 15px;
+        font-weight: 600;
+      }
+      #ammoBox {
+        bottom: 26px;
+        right: 26px;
+        text-align: right;
+      }
+      #ammoNum {
+        font-size: 34px;
+        font-weight: 700;
+        color: #f0e6cf;
+        line-height: 1;
+      }
+      #ammoNum small {
+        font-size: 14px;
+        color: #8299a4;
+        font-weight: 400;
+      }
+      #reload {
+        font-size: 11px;
+        color: #e8b86a;
+        height: 14px;
+        margin-top: 6px;
+      }
+      #hintBox {
+        bottom: 28px;
+        left: 26px;
+        font-size: 11px;
+        color: #7d949f;
+        line-height: 1.8;
+      }
+      #waveMsg {
+        position: absolute;
+        top: 24%;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 28px;
+        letter-spacing: 0.3em;
+        color: #e8d2a0;
+        opacity: 0;
+        text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+        transition: opacity 0.4s;
+      }
+
+      #cross {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        width: 26px;
+        height: 26px;
+        transform: translate(-50%, -50%);
+        z-index: 8;
+        pointer-events: none;
+        display: none;
+      }
+      #cross.on {
+        display: block;
+      }
+      #cross i {
+        position: absolute;
+        background: rgba(235, 245, 248, 0.85);
+        box-shadow: 0 0 3px #000;
+      }
+      #cross i:nth-child(1) {
+        left: 12px;
+        top: 0;
+        width: 2px;
+        height: 8px;
+      }
+      #cross i:nth-child(2) {
+        left: 12px;
+        bottom: 0;
+        width: 2px;
+        height: 8px;
+      }
+      #cross i:nth-child(3) {
+        top: 12px;
+        left: 0;
+        height: 2px;
+        width: 8px;
+      }
+      #cross i:nth-child(4) {
+        top: 12px;
+        right: 0;
+        height: 2px;
+        width: 8px;
+      }
+      #cross i:nth-child(5) {
+        left: 12px;
+        top: 12px;
+        width: 2px;
+        height: 2px;
+        background: #e8b86a;
+      }
+      #hitmark {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        width: 30px;
+        height: 30px;
+        transform: translate(-50%, -50%) rotate(45deg);
+        z-index: 9;
+        pointer-events: none;
+        opacity: 0;
+      }
+      #hitmark i {
+        position: absolute;
+        background: #fff;
+      }
+      #hitmark i:nth-child(1) {
+        left: 14px;
+        top: 0;
+        width: 2px;
+        height: 30px;
+      }
+      #hitmark i:nth-child(2) {
+        top: 14px;
+        left: 0;
+        height: 2px;
+        width: 30px;
+      }
+
+      #overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(
+          ellipse at center,
+          rgba(9, 14, 18, 0.8),
+          rgba(4, 7, 10, 0.96)
+        );
+        backdrop-filter: blur(6px);
+      }
+      #overlay.hidden {
+        display: none;
+      }
+      .card {
+        width: min(700px, 92vw);
+        padding: 38px 42px;
+        border: 1px solid rgba(160, 190, 200, 0.2);
+        background: rgba(10, 16, 20, 0.82);
+        box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
+      }
+      .eyebrow {
+        font-size: 11px;
+        letter-spacing: 0.4em;
+        color: #c08a52;
+        margin-bottom: 14px;
+      }
+      h1 {
+        margin: 0 0 10px;
+        font-size: 42px;
+        letter-spacing: 0.08em;
+        font-weight: 700;
+        color: #e9f0f2;
+      }
+      .sub {
+        color: #90a5af;
+        font-size: 13px;
+        line-height: 1.9;
+        margin: 0 0 26px;
+      }
+      .keys {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px 26px;
+        margin-bottom: 30px;
+        font-size: 12px;
+        color: #9db1bb;
+      }
+      .keys div {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        padding-bottom: 7px;
+      }
+      kbd {
+        color: #e8d2a0;
+        font: inherit;
+      }
+      button {
+        pointer-events: auto;
+        cursor: pointer;
+        border: 1px solid #c08a52;
+        background: rgba(192, 138, 82, 0.12);
+        color: #f0dcb6;
+        padding: 13px 30px;
+        font: inherit;
+        font-size: 14px;
+        letter-spacing: 0.18em;
+        transition:
+          background 0.2s,
+          transform 0.2s;
+      }
+      button:hover {
+        background: rgba(192, 138, 82, 0.3);
+        transform: translateY(-1px);
+      }
+      #result {
+        display: none;
+        margin: 18px 0 24px;
+        font-size: 14px;
+        color: #e8d2a0;
+      }
+      #noWebgl {
+        display: none;
+        color: #e88;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="gl"></canvas>
+    <div class="grain"></div>
+    <div class="vignette"></div>
+    <div id="damage"></div>
+    <div id="flash"></div>
+
+    <div id="hud">
+      <div class="panel-hud" id="hpBox">
+        <div id="hpLabel">生命体征 / VITALS</div>
+        <div id="hpNum">100</div>
+        <div id="hpBar"><div id="hpFill"></div></div>
+      </div>
+      <div class="panel-hud" id="statBox">
+        <div>波次 <b id="wave">1</b></div>
+        <div>击杀 <b id="kills">0</b></div>
+        <div>得分 <b id="score">0</b></div>
+      </div>
+      <div class="panel-hud" id="ammoBox">
+        <div id="ammoNum">24 <small>/ ∞</small></div>
+        <div id="reload"></div>
+      </div>
+      <div id="hintBox">
+        WASD 移动 · Shift 疾跑 · 左键射击 · R 换弹 · F 手电 · Esc 暂停
+      </div>
+      <div id="waveMsg"></div>
+    </div>
+    <div id="cross"><i></i><i></i><i></i><i></i><i></i></div>
+    <div id="hitmark"><i></i><i></i></div>
+
+    <div id="overlay">
+      <div class="card">
+        <div class="eyebrow">SHIPYARD // SECTOR 07</div>
+        <h1>废弃船厂：最后一班</h1>
+        <p class="sub">
+          浓雾、锈蚀的龙门吊、废弃的集装箱堆场。<br />锈蚀哨兵已经苏醒。活下来，清空每一波敌人。点击开始后鼠标将被锁定，按
+          Esc 释放。
+        </p>
+        <div class="keys">
+          <div><span>移动</span><kbd>W A S D</kbd></div>
+          <div><span>疾跑</span><kbd>Shift</kbd></div>
+          <div><span>射击</span><kbd>鼠标左键</kbd></div>
+          <div><span>换弹</span><kbd>R</kbd></div>
+          <div><span>手电筒</span><kbd>F</kbd></div>
+          <div><span>暂停</span><kbd>Esc</kbd></div>
+        </div>
+        <div id="result"></div>
+        <button id="startBtn">进入船厂</button>
+        <div id="noWebgl">
+          当前浏览器不支持 WebGL，请使用 Chrome / Edge / Firefox 桌面版。
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (() => {
+        "use strict";
+
+        const canvas = document.getElementById("gl");
+        const gl = canvas.getContext("webgl", {
+          antialias: true,
+          alpha: false,
+          powerPreference: "high-performance",
+        });
+        if (!gl) {
+          document.getElementById("noWebgl").style.display = "block";
+          return;
+        }
+
+        // ---------- 数学 ----------
+        const norm = (v) => {
+          const l = Math.hypot(v[0], v[1], v[2]) || 1;
+          return [v[0] / l, v[1] / l, v[2] / l];
+        };
+        const cross = (a, b) => [
+          a[1] * b[2] - a[2] * b[1],
+          a[2] * b[0] - a[0] * b[2],
+          a[0] * b[1] - a[1] * b[0],
+        ];
+        const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+        function mul(a, b) {
+          const o = new Float32Array(16);
+          for (let c = 0; c < 4; c++)
+            for (let r = 0; r < 4; r++)
+              o[c * 4 + r] =
+                a[r] * b[c * 4] +
+                a[4 + r] * b[c * 4 + 1] +
+                a[8 + r] * b[c * 4 + 2] +
+                a[12 + r] * b[c * 4 + 3];
+          return o;
+        }
+        function persp(fovy, asp, n, f) {
+          const t = 1 / Math.tan(fovy / 2),
+            o = new Float32Array(16);
+          o[0] = t / asp;
+          o[5] = t;
+          o[10] = (f + n) / (n - f);
+          o[11] = -1;
+          o[14] = (2 * f * n) / (n - f);
+          return o;
+        }
+        function lookAt(eye, center, up) {
+          const z = norm([
+            eye[0] - center[0],
+            eye[1] - center[1],
+            eye[2] - center[2],
+          ]);
+          const x = norm(cross(up, z));
+          const y = cross(z, x);
+          return new Float32Array([
+            x[0],
+            y[0],
+            z[0],
+            0,
+            x[1],
+            y[1],
+            z[1],
+            0,
+            x[2],
+            y[2],
+            z[2],
+            0,
+            -dot(x, eye),
+            -dot(y, eye),
+            -dot(z, eye),
+            1,
+          ]);
+        }
+        function trs(x, y, z, ry, sx, sy, sz) {
+          const c = Math.cos(ry),
+            s = Math.sin(ry);
+          return new Float32Array([
+            c * sx,
+            0,
+            -s * sx,
+            0,
+            0,
+            sy,
+            0,
+            0,
+            s * sz,
+            0,
+            c * sz,
+            0,
+            x,
+            y,
+            z,
+            1,
+          ]);
+        }
+        const IDENT = new Float32Array([
+          1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
+        ]);
+
+        // ---------- 着色器 ----------
+        function compile(type, src) {
+          const s = gl.createShader(type);
+          gl.shaderSource(s, src.trim());
+          gl.compileShader(s);
+          if (!gl.getShaderParameter(s, gl.COMPILE_STATUS))
+            throw new Error(gl.getShaderInfoLog(s));
+          return s;
+        }
+        function program(vs, fs) {
+          const p = gl.createProgram();
+          gl.attachShader(p, compile(gl.VERTEX_SHADER, vs));
+          gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fs));
+          gl.linkProgram(p);
+          if (!gl.getProgramParameter(p, gl.LINK_STATUS))
+            throw new Error(gl.getProgramInfoLog(p));
+          return p;
+        }
+
+        const mainProg = program(
+          `
+    precision mediump float;
+    attribute vec3 aPos; attribute vec3 aNormal; attribute vec3 aColor; attribute float aGlow;
+    uniform mat4 uProj, uView, uModel;
+    varying vec3 vW, vN, vC; varying float vG;
+    void main() {
+      vec4 w = uModel * vec4(aPos, 1.0);
+      vW = w.xyz;
+      vN = normalize((uModel * vec4(aNormal, 0.0)).xyz);
+      vC = aColor; vG = aGlow;
+      gl_Position = uProj * uView * w;
+    }
+  `,
+          `
+    precision mediump float;
+    varying vec3 vW, vN, vC; varying float vG;
+    uniform vec3 uCamPos, uCamDir, uFogColor, uTint;
+    uniform float uFogDens, uFlash, uMuzzle, uEmissive;
+    float hash(vec3 p) { return fract(sin(dot(p, vec3(12.9898,78.233,45.164))) * 43758.5453); }
+    void main() {
+      vec3 N = normalize(vN);
+      vec3 lightDir = normalize(vec3(-0.45, 0.82, 0.32));
+      float diff = max(dot(N, lightDir), 0.0);
+      vec3 col = vC * uTint * (0.30 + 0.70 * diff);
+      float rust = hash(floor(vW * 1.7));
+      col *= 0.86 + 0.28 * rust;
+      vec3 toF = vW - uCamPos;
+      float d = length(toF);
+      vec3 dir = toF / max(d, 0.001);
+      float cone = smoothstep(0.90, 0.975, dot(dir, uCamDir)) * uFlash;
+      col += vec3(1.0, 0.87, 0.66) * cone * (2.2 / (1.0 + 0.10*d*d)) * (0.3 + 0.7*max(dot(N, -dir), 0.0));
+      col += vec3(1.0, 0.68, 0.30) * uMuzzle * (1.2 / (1.0 + 0.7*d*d));
+      col += vC * uTint * (vG * 1.6 + uEmissive);
+      float fog = 1.0 - exp(-d * uFogDens);
+      col = mix(col, uFogColor, clamp(fog, 0.0, 1.0));
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `,
+        );
+
+        const waterProg = program(
+          `
+    precision mediump float;
+    attribute vec2 aXZ;
+    uniform mat4 uProj, uView; uniform float uTime;
+    varying vec3 vW; varying vec2 vP;
+    void main() {
+      float y = -0.52 + sin(aXZ.x*0.33 + uTime*1.1)*0.045 + sin(aXZ.y*0.26 + uTime*0.77)*0.04;
+      vec3 p = vec3(aXZ.x, y, aXZ.y);
+      vW = p; vP = aXZ;
+      gl_Position = uProj * uView * vec4(p, 1.0);
+    }
+  `,
+          `
+    precision mediump float;
+    varying vec3 vW; varying vec2 vP;
+    uniform vec3 uCamPos, uFogColor; uniform float uTime, uFogDens;
+    void main() {
+      float ripple = sin(vP.x*1.7 + uTime*2.0) * sin(vP.y*1.3 - uTime*1.6);
+      float glint = pow(max(ripple, 0.0), 7.0);
+      vec3 col = mix(vec3(0.055,0.10,0.12), vec3(0.13,0.20,0.22), 0.5+0.5*ripple);
+      col += vec3(0.45,0.55,0.55) * glint * 0.55;
+      float d = length(vW - uCamPos);
+      col = mix(col, uFogColor, clamp(1.0-exp(-d*uFogDens), 0.0, 1.0));
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `,
+        );
+
+        const skyProg = program(
+          `
+    precision mediump float;
+    attribute vec2 aP; varying vec2 vUv;
+    void main() { vUv = aP*0.5+0.5; gl_Position = vec4(aP, 0.999, 1.0); }
+  `,
+          `
+    precision mediump float; varying vec2 vUv; uniform float uTime;
+    void main() {
+      vec3 col = mix(vec3(0.36,0.40,0.43), vec3(0.075,0.10,0.14), smoothstep(0.32, 0.95, vUv.y));
+      float sun = exp(-length((vUv - vec2(0.72,0.56))*vec2(1.6,2.6)) * 6.0);
+      col += vec3(0.65,0.44,0.24) * sun * 0.5;
+      col += vec3(0.02,0.025,0.03) * sin(vUv.x*30.0 + uTime*0.05);
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `,
+        );
+
+        function locs(p, names) {
+          const o = {};
+          for (const n of names) o[n] = gl.getUniformLocation(p, n);
+          return o;
+        }
+        const U = locs(mainProg, [
+          "uProj",
+          "uView",
+          "uModel",
+          "uCamPos",
+          "uCamDir",
+          "uFogColor",
+          "uTint",
+          "uFogDens",
+          "uFlash",
+          "uMuzzle",
+          "uEmissive",
+        ]);
+        const WU = locs(waterProg, [
+          "uProj",
+          "uView",
+          "uTime",
+          "uCamPos",
+          "uFogColor",
+          "uFogDens",
+        ]);
+        const SU = locs(skyProg, ["uTime"]);
+        const A = {
+          pos: gl.getAttribLocation(mainProg, "aPos"),
+          nrm: gl.getAttribLocation(mainProg, "aNormal"),
+          col: gl.getAttribLocation(mainProg, "aColor"),
+          glow: gl.getAttribLocation(mainProg, "aGlow"),
+        };
+
+        // ---------- 几何 ----------
+        const FACES = [
+          {
+            n: [0, 1, 0],
+            v: [
+              [-1, 1, -1],
+              [-1, 1, 1],
+              [1, 1, 1],
+              [1, 1, -1],
+            ],
+            s: 1.0,
+          },
+          {
+            n: [0, -1, 0],
+            v: [
+              [-1, -1, 1],
+              [-1, -1, -1],
+              [1, -1, -1],
+              [1, -1, 1],
+            ],
+            s: 0.45,
+          },
+          {
+            n: [0, 0, 1],
+            v: [
+              [-1, -1, 1],
+              [1, -1, 1],
+              [1, 1, 1],
+              [-1, 1, 1],
+            ],
+            s: 0.78,
+          },
+          {
+            n: [0, 0, -1],
+            v: [
+              [1, -1, -1],
+              [-1, -1, -1],
+              [-1, 1, -1],
+              [1, 1, -1],
+            ],
+            s: 0.66,
+          },
+          {
+            n: [1, 0, 0],
+            v: [
+              [1, -1, 1],
+              [1, -1, -1],
+              [1, 1, -1],
+              [1, 1, 1],
+            ],
+            s: 0.86,
+          },
+          {
+            n: [-1, 0, 0],
+            v: [
+              [-1, -1, -1],
+              [-1, -1, 1],
+              [-1, 1, 1],
+              [-1, 1, -1],
+            ],
+            s: 0.72,
+          },
+        ];
+        function addBox(arr, x, y, z, sx, sy, sz, c, glow = 0, jitter = true) {
+          const h = [sx / 2, sy / 2, sz / 2];
+          for (const f of FACES) {
+            const shade = f.s * (jitter ? 0.88 + Math.random() * 0.24 : 1);
+            const col = [c[0] * shade, c[1] * shade, c[2] * shade];
+            const vs = f.v.map((v) => [
+              x + v[0] * h[0],
+              y + v[1] * h[1],
+              z + v[2] * h[2],
+            ]);
+            for (const idx of [0, 1, 2, 0, 2, 3]) {
+              const p = vs[idx];
+              arr.push(
+                p[0],
+                p[1],
+                p[2],
+                f.n[0],
+                f.n[1],
+                f.n[2],
+                col[0],
+                col[1],
+                col[2],
+                glow,
+              );
+            }
+          }
+        }
+        function addCylinder(arr, x, y, z, r, h, c, seg = 10) {
+          for (let i = 0; i < seg; i++) {
+            const a = (i / seg) * Math.PI * 2,
+              b = ((i + 1) / seg) * Math.PI * 2;
+            const p0 = [x + Math.cos(a) * r, y - h / 2, z + Math.sin(a) * r],
+              p1 = [x + Math.cos(b) * r, y - h / 2, z + Math.sin(b) * r];
+            const p2 = [x + Math.cos(b) * r, y + h / 2, z + Math.sin(b) * r],
+              p3 = [x + Math.cos(a) * r, y + h / 2, z + Math.sin(a) * r];
+            const nx = Math.cos((a + b) / 2),
+              nz = Math.sin((a + b) / 2),
+              sh = 0.75 + Math.random() * 0.25;
+            for (const p of [p0, p1, p2, p0, p2, p3])
+              arr.push(
+                p[0],
+                p[1],
+                p[2],
+                nx,
+                0,
+                nz,
+                c[0] * sh,
+                c[1] * sh,
+                c[2] * sh,
+                0,
+              );
+            for (const p of [[x, y + h / 2, z], p3, p2])
+              arr.push(p[0], p[1], p[2], 0, 1, 0, c[0], c[1], c[2], 0);
+          }
+        }
+        function makeMesh(arr) {
+          const buf = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(arr), gl.STATIC_DRAW);
+          return { buf, count: arr.length / 10 };
+        }
+        function bindMesh(mesh) {
+          gl.bindBuffer(gl.ARRAY_BUFFER, mesh.buf);
+          const stride = 40;
+          gl.enableVertexAttribArray(A.pos);
+          gl.vertexAttribPointer(A.pos, 3, gl.FLOAT, false, stride, 0);
+          gl.enableVertexAttribArray(A.nrm);
+          gl.vertexAttribPointer(A.nrm, 3, gl.FLOAT, false, stride, 12);
+          gl.enableVertexAttribArray(A.col);
+          gl.vertexAttribPointer(A.col, 3, gl.FLOAT, false, stride, 24);
+          gl.enableVertexAttribArray(A.glow);
+          gl.vertexAttribPointer(A.glow, 1, gl.FLOAT, false, stride, 36);
+        }
+
+        // ---------- 船厂场景 ----------
+        const colliders = [];
+        function solid(x, y, z, sx, sy, sz, c, glow) {
+          addBox(worldArr, x, y, z, sx, sy, sz, c, glow);
+          colliders.push({
+            min: [x - sx / 2, y - sy / 2, z - sz / 2],
+            max: [x + sx / 2, y + sy / 2, z + sz / 2],
+          });
+        }
+        function deco(x, y, z, sx, sy, sz, c, glow) {
+          addBox(worldArr, x, y, z, sx, sy, sz, c, glow);
+        }
+        const worldArr = [];
+
+        const concrete = [0.31, 0.33, 0.34],
+          rust = [0.4, 0.24, 0.17],
+          steel = [0.27, 0.31, 0.34];
+        const craneYellow = [0.62, 0.44, 0.18],
+          darkMetal = [0.16, 0.19, 0.22];
+        const containerColors = [
+          [0.18, 0.36, 0.46],
+          [0.52, 0.28, 0.16],
+          [0.25, 0.39, 0.3],
+          [0.45, 0.34, 0.2],
+          [0.34, 0.2, 0.2],
+        ];
+
+        solid(16, -0.5, -25, 60, 1, 110, concrete); // 码头地面
+        solid(-32, -3, -25, 40, 1, 110, [0.1, 0.14, 0.16]); // 水底
+        colliders.push({
+          min: [-70, -6, -100],
+          max: [-14.2, 12, 40],
+          invisible: true,
+        }); // 水域阻挡
+
+        for (let z = -78; z <= 28; z += 9)
+          solid(-13.7, -0.35, z, 0.9, 1.3, 1.2, darkMetal); // 系船柱基座
+        for (let z = -75; z <= 25; z += 15) {
+          addCylinder(worldArr, -13.2, 0.25, z, 0.22, 0.5, darkMetal, 8);
+        }
+
+        // 龙门吊
+        function gantry(z, span, overWater) {
+          const top = 22;
+          for (const x of [-8, 20]) {
+            solid(x, top / 2, z, 1.6, top, 1.6, craneYellow);
+            solid(x, 1.0, z - 3.6, 1.0, 2.0, 7.5, darkMetal);
+            solid(x, 1.0, z + 3.6, 1.0, 2.0, 7.5, darkMetal);
+          }
+          deco(6, top, z, span, 1.8, 2.4, craneYellow);
+          deco(6, top + 1.6, z, span * 0.7, 0.35, 1.6, craneYellow);
+          deco(-8, 18, z, 1.2, 9, 1.2, craneYellow);
+          const bx = overWater ? -5 : 8;
+          deco(
+            bx,
+            12.5,
+            z,
+            5.6,
+            2.6,
+            2.5,
+            overWater ? containerColors[1] : containerColors[0],
+          );
+          for (const dx of [-1.8, 1.8])
+            deco(bx + dx, 18, z, 0.09, 9, 0.09, [0.12, 0.13, 0.14]);
+        }
+        gantry(-42, 30, true);
+        gantry(-12, 30, false);
+
+        // 远处的货轮
+        solid(6, 1.8, -70, 38, 7, 13, rust);
+        solid(6, 6.2, -73, 20, 3.2, 7, [0.3, 0.34, 0.35]);
+        solid(12, 9.2, -74, 6, 4, 5, [0.38, 0.4, 0.39]);
+        deco(12, 12.5, -74, 1.8, 3, 1.8, darkMetal);
+        deco(9.5, 12.2, -74, 0.9, 2.4, 0.9, [0.55, 0.22, 0.12], 0.6);
+        for (let i = 0; i < 7; i++)
+          deco(-10 + i * 5, 5.6, -63.6, 1.8, 1.2, 0.2, [0.12, 0.15, 0.17]);
+        colliders.push({
+          min: [-14, -2, -78],
+          max: [26, 14, -62],
+          invisible: true,
+        });
+
+        // 集装箱堆场
+        for (let row = 0; row < 5; row++) {
+          const z = -54 + row * 11;
+          for (let col = 0; col < 5; col++) {
+            const x = 1 + col * 7.2;
+            if ((row === 2 && col === 2) || (row === 3 && col === 0)) continue;
+            const h = 1 + ((row * 3 + col * 7) % 3);
+            const base =
+              containerColors[(row * 2 + col) % containerColors.length];
+            for (let k = 0; k < h; k++) {
+              solid(x, 1.3 + k * 2.62, z, 6.4, 2.55, 2.6, base);
+              deco(x, 1.3 + k * 2.62, z + 1.31, 6.1, 2.2, 0.04, [
+                base[0] * 0.85,
+                base[1] * 0.85,
+                base[2] * 0.85,
+              ]);
+            }
+          }
+        }
+
+        // 仓库
+        solid(34, 4, -22, 18, 8, 18, [0.34, 0.36, 0.35]);
+        deco(34, 8.4, -22, 19, 0.8, 19, [0.22, 0.25, 0.25]);
+        deco(34, 2.6, -13.05, 6.5, 5.2, 0.15, [0.07, 0.09, 0.1]);
+        deco(31, 6.5, -13.02, 1.2, 0.8, 0.1, [0.7, 0.6, 0.35], 0.5);
+
+        // 油桶、管道、栏杆、杂物
+        for (let i = 0; i < 26; i++) {
+          const x = -8 + Math.random() * 40,
+            z = -58 + Math.random() * 72;
+          if (Math.abs(x - 0) < 4 && z > 10) continue;
+          if (Math.random() < 0.55) {
+            addCylinder(
+              worldArr,
+              x,
+              0.55,
+              z,
+              0.42,
+              1.1,
+              i % 3 === 0 ? rust : darkMetal,
+              9,
+            );
+            colliders.push({
+              min: [x - 0.4, 0, z - 0.4],
+              max: [x + 0.4, 1.2, z + 0.4],
+            });
+          } else {
+            deco(x, 0.25, z, 1.2, 0.5, 0.9, [0.28, 0.27, 0.24]);
+          }
+        }
+        for (let z = -55; z < 10; z += 14) {
+          addCylinder(worldArr, 41, 0.5, z, 0.35, 4, steel, 9);
+        }
+        for (let z = -60; z <= 20; z += 4) {
+          deco(44, 1.1, z, 0.12, 2.2, 0.12, steel);
+          if (z < 20) deco(44, 1.9, z + 2, 0.08, 0.08, 4, steel);
+        }
+        // 路灯
+        for (const z of [-50, -28, -6, 16]) {
+          addCylinder(worldArr, -11.5, 4, z, 0.13, 8, darkMetal, 8);
+          deco(-10.6, 8, z, 2, 0.16, 0.16, darkMetal);
+          deco(-9.7, 7.85, z, 0.8, 0.12, 0.5, [1.0, 0.78, 0.42], 1.4);
+        }
+        // 散落碎片
+        for (let i = 0; i < 80; i++) {
+          const x = -10 + Math.random() * 52,
+            z = -60 + Math.random() * 82;
+          deco(
+            x,
+            0.06,
+            z,
+            0.2 + Math.random() * 0.7,
+            0.1,
+            0.2 + Math.random() * 0.6,
+            [0.2 + Math.random() * 0.18, 0.2, 0.18],
+          );
+        }
+
+        const worldMesh = makeMesh(worldArr);
+        const cubeArr = [];
+        addBox(cubeArr, 0, 0, 0, 1, 1, 1, [1, 1, 1], 0, false);
+        const cubeMesh = makeMesh(cubeArr);
+        const gunArr = [];
+        addBox(
+          gunArr,
+          0,
+          0,
+          -0.18,
+          0.17,
+          0.15,
+          0.52,
+          [0.17, 0.19, 0.22],
+          0,
+          false,
+        );
+        addBox(
+          gunArr,
+          0,
+          0.1,
+          -0.12,
+          0.13,
+          0.06,
+          0.32,
+          [0.26, 0.29, 0.32],
+          0,
+          false,
+        );
+        addBox(
+          gunArr,
+          0,
+          0.01,
+          -0.58,
+          0.075,
+          0.075,
+          0.36,
+          [0.11, 0.13, 0.15],
+          0,
+          false,
+        );
+        addBox(
+          gunArr,
+          0,
+          0.01,
+          -0.77,
+          0.11,
+          0.11,
+          0.09,
+          [0.28, 0.31, 0.34],
+          0,
+          false,
+        );
+        addBox(
+          gunArr,
+          0,
+          -0.16,
+          0.03,
+          0.1,
+          0.24,
+          0.13,
+          [0.2, 0.21, 0.23],
+          0,
+          false,
+        );
+        addBox(
+          gunArr,
+          0,
+          -0.15,
+          -0.22,
+          0.09,
+          0.2,
+          0.13,
+          [0.22, 0.23, 0.25],
+          0,
+          false,
+        );
+        addBox(
+          gunArr,
+          0,
+          0.15,
+          -0.06,
+          0.035,
+          0.045,
+          0.035,
+          [0.95, 0.66, 0.25],
+          1.0,
+          false,
+        );
+        addBox(
+          gunArr,
+          0.088,
+          0.02,
+          -0.18,
+          0.012,
+          0.025,
+          0.22,
+          [0.9, 0.52, 0.16],
+          1.0,
+          false,
+        );
+        const gunMesh = makeMesh(gunArr);
+
+        // 水面网格
+        const wv = [];
+        for (let x = -62; x < -13; x += 2)
+          for (let z = -92; z < 36; z += 2) {
+            wv.push(x, z, x, z + 2, x + 2, z + 2, x, z, x + 2, z + 2, x + 2, z);
+          }
+        const waterBuf = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, waterBuf);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(wv), gl.STATIC_DRAW);
+        const waterCount = wv.length / 2;
+        const skyBuf = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, skyBuf);
+        gl.bufferData(
+          gl.ARRAY_BUFFER,
+          new Float32Array([-1, -1, 3, -1, -1, 3]),
+          gl.STATIC_DRAW,
+        );
+
+        // ---------- 游戏状态 ----------
+        const FOG = [0.32, 0.36, 0.39],
+          FOG_DENS = 0.016;
+        const S = {
+          started: false,
+          paused: false,
+          over: false,
+          hp: 100,
+          ammo: 24,
+          reloading: 0,
+          score: 0,
+          kills: 0,
+          wave: 1,
+          enemies: [],
+          shots: [],
+          parts: [],
+          meds: [],
+          spawnLeft: 0,
+          spawnTimer: 0,
+          breakTimer: 0,
+          muzzle: 0,
+          recoil: 0,
+          dmgFlash: 0,
+          hitTimer: 0,
+          flash: true,
+          time: 0,
+          waveMsgTimer: 0,
+        };
+        const P = { x: 0, y: 1.65, z: 18, yaw: 0, pitch: -0.03 };
+
+        const el = (id) => document.getElementById(id);
+        const hud = el("hud"),
+          crossEl = el("cross"),
+          overlay = el("overlay"),
+          startBtn = el("startBtn");
+        const keys = Object.create(null);
+        let soundCtx = null;
+        function initAudio() {
+          if (!soundCtx)
+            soundCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (soundCtx.state === "suspended") soundCtx.resume();
+        }
+        function noise(dur, vol, freq) {
+          if (!soundCtx) return;
+          const n = Math.floor(soundCtx.sampleRate * dur),
+            buf = soundCtx.createBuffer(1, n, soundCtx.sampleRate),
+            d = buf.getChannelData(0);
+          for (let i = 0; i < n; i++)
+            d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2);
+          const src = soundCtx.createBufferSource();
+          src.buffer = buf;
+          const f = soundCtx.createBiquadFilter();
+          f.type = "lowpass";
+          f.frequency.value = freq;
+          const g = soundCtx.createGain();
+          g.gain.value = vol;
+          src.connect(f).connect(g).connect(soundCtx.destination);
+          src.start();
+        }
+        function tone(freq, dur, vol, type = "sine") {
+          if (!soundCtx) return;
+          const o = soundCtx.createOscillator(),
+            g = soundCtx.createGain();
+          o.type = type;
+          o.frequency.setValueAtTime(freq, soundCtx.currentTime);
+          o.frequency.exponentialRampToValueAtTime(
+            freq * 1.6,
+            soundCtx.currentTime + dur,
+          );
+          g.gain.setValueAtTime(vol, soundCtx.currentTime);
+          g.gain.exponentialRampToValueAtTime(
+            0.001,
+            soundCtx.currentTime + dur,
+          );
+          o.connect(g).connect(soundCtx.destination);
+          o.start();
+          o.stop(soundCtx.currentTime + dur);
+        }
+        const sfx = {
+          shoot() {
+            noise(0.14, 0.28, 2200);
+            tone(95, 0.1, 0.18, "square");
+          },
+          hit() {
+            tone(720, 0.07, 0.12);
+          },
+          enemyShoot() {
+            noise(0.2, 0.12, 700);
+          },
+          die() {
+            noise(0.35, 0.22, 900);
+            tone(180, 0.25, 0.12, "sawtooth");
+          },
+          hurt() {
+            noise(0.25, 0.25, 320);
+          },
+          reload() {
+            tone(420, 0.08, 0.08, "triangle");
+          },
+        };
+
+        function showWave(msg) {
+          el("waveMsg").textContent = msg;
+          el("waveMsg").style.opacity = 1;
+          S.waveMsgTimer = 2.2;
+        }
+        function startGame() {
+          S.started = true;
+          S.paused = false;
+          S.over = false;
+          S.hp = 100;
+          S.ammo = 24;
+          S.reloading = 0;
+          S.score = 0;
+          S.kills = 0;
+          S.wave = 1;
+          S.enemies = [];
+          S.shots = [];
+          S.parts = [];
+          S.meds = [];
+          S.spawnLeft = 3;
+          S.spawnTimer = 1;
+          S.breakTimer = 0;
+          S.dmgFlash = 0;
+          P.x = 0;
+          P.z = 18;
+          P.yaw = 0;
+          P.pitch = -0.03;
+          hud.classList.add("on");
+          crossEl.classList.add("on");
+          overlay.classList.add("hidden");
+          showWave("第 1 波 // 警戒");
+          initAudio();
+          canvas.requestPointerLock();
+        }
+        startBtn.addEventListener("click", () => {
+          if (S.over) location.reload();
+          else if (S.paused) canvas.requestPointerLock();
+          else startGame();
+        });
+        document.addEventListener("pointerlockchange", () => {
+          if (document.pointerLockElement !== canvas && S.started && !S.over) {
+            S.paused = true;
+            el("result").style.display = "none";
+            startBtn.textContent = "继续战斗";
+            overlay.classList.remove("hidden");
+          } else if (document.pointerLockElement === canvas) {
+            S.paused = false;
+            overlay.classList.add("hidden");
+          }
+        });
+        canvas.addEventListener("click", () => {
+          if (S.started && S.paused) canvas.requestPointerLock();
+        });
+
+        addEventListener("keydown", (e) => {
+          keys[e.code] = true;
+          if (e.code === "KeyR") reload();
+          if (e.code === "KeyF") S.flash = !S.flash;
+        });
+        addEventListener("keyup", (e) => {
+          keys[e.code] = false;
+        });
+        addEventListener("mousemove", (e) => {
+          if (document.pointerLockElement !== canvas) return;
+          P.yaw += e.movementX * 0.0022;
+          P.pitch = Math.max(
+            -1.35,
+            Math.min(1.35, P.pitch - e.movementY * 0.0022),
+          );
+        });
+        addEventListener("mousedown", (e) => {
+          if (
+            e.button === 0 &&
+            document.pointerLockElement === canvas &&
+            S.started &&
+            !S.paused &&
+            !S.over
+          )
+            shoot();
+        });
+
+        function forward() {
+          return [
+            Math.sin(P.yaw) * Math.cos(P.pitch),
+            Math.sin(P.pitch),
+            -Math.cos(P.yaw) * Math.cos(P.pitch),
+          ];
+        }
+        function eye() {
+          return [P.x, P.y, P.z];
+        }
+        function reload() {
+          if (!S.started || S.over || S.reloading > 0 || S.ammo === 24) return;
+          S.reloading = 1.55;
+          sfx.reload();
+        }
+
+        function rayAABB(o, d, b) {
+          let tmin = 0,
+            tmax = Infinity;
+          for (let i = 0; i < 3; i++) {
+            if (Math.abs(d[i]) < 1e-6) {
+              if (o[i] < b.min[i] || o[i] > b.max[i]) return Infinity;
+            } else {
+              let t1 = (b.min[i] - o[i]) / d[i],
+                t2 = (b.max[i] - o[i]) / d[i];
+              if (t1 > t2) {
+                const q = t1;
+                t1 = t2;
+                t2 = q;
+              }
+              tmin = Math.max(tmin, t1);
+              tmax = Math.min(tmax, t2);
+              if (tmin > tmax) return Infinity;
+            }
+          }
+          return tmin > 0.05 ? tmin : Infinity;
+        }
+        function raySphere(o, d, c, r) {
+          const oc = [o[0] - c[0], o[1] - c[1], o[2] - c[2]];
+          const b = dot(oc, d),
+            cc = dot(oc, oc) - r * r,
+            disc = b * b - cc;
+          if (disc < 0) return Infinity;
+          const t = -b - Math.sqrt(disc);
+          return t > 0.05 ? t : Infinity;
+        }
+        function insideWorld(p) {
+          for (const b of colliders)
+            if (
+              p[0] > b.min[0] &&
+              p[0] < b.max[0] &&
+              p[1] > b.min[1] &&
+              p[1] < b.max[1] &&
+              p[2] > b.min[2] &&
+              p[2] < b.max[2]
+            )
+              return true;
+          return false;
+        }
+        function spawnParts(p, n, color, power = 1) {
+          for (let i = 0; i < n; i++) {
+            const a = Math.random() * Math.PI * 2,
+              e = Math.random() * 1.2 - 0.2,
+              sp = (1 + Math.random() * 3) * power;
+            S.parts.push({
+              p: [...p],
+              v: [Math.cos(a) * sp, e * sp + 1.5, Math.sin(a) * sp],
+              life: 0.4 + Math.random() * 0.5,
+              max: 0.9,
+              c: color,
+              s: 0.05 + Math.random() * 0.09,
+            });
+          }
+        }
+        function hitmark() {
+          S.hitTimer = 0.16;
+          el("hitmark").style.opacity = 1;
+          sfx.hit();
+        }
+
+        function shoot() {
+          if (S.reloading > 0) return;
+          if (S.ammo <= 0) {
+            reload();
+            return;
+          }
+          S.ammo--;
+          S.recoil = 1;
+          S.muzzle = 1;
+          sfx.shoot();
+          const o = eye(),
+            d = forward();
+          let best = 800,
+            target = null,
+            hitP = null;
+          for (const b of colliders) {
+            if (b.invisible) continue;
+            const t = rayAABB(o, d, b);
+            if (t < best) {
+              best = t;
+              target = null;
+              hitP = [o[0] + d[0] * t, o[1] + d[1] * t, o[2] + d[2] * t];
+            }
+          }
+          for (const en of S.enemies) {
+            const t = raySphere(o, d, [en.x, en.y + 1.05, en.z], 0.62);
+            if (t < best) {
+              best = t;
+              target = en;
+              hitP = [o[0] + d[0] * t, o[1] + d[1] * t, o[2] + d[2] * t];
+            }
+          }
+          for (const m of S.meds) {
+            const t = raySphere(o, d, [m.x, m.y, m.z], 0.38);
+            if (t < best) {
+              best = t;
+              target = null;
+              hitP = [o[0] + d[0] * t, o[1] + d[1] * t, o[2] + d[2] * t];
+            }
+          }
+          if (target) {
+            target.hp -= 32 + Math.random() * 14;
+            target.flash = 0.12;
+            hitmark();
+            spawnParts(hitP, 8, [1.0, 0.45, 0.18], 0.7);
+            if (target.hp <= 0) {
+              S.score += 100;
+              S.kills++;
+              spawnParts(
+                [target.x, target.y + 1, target.z],
+                22,
+                [1.0, 0.3, 0.1],
+                1.4,
+              );
+              sfx.die();
+              if (Math.random() < 0.28)
+                S.meds.push({ x: target.x, y: 0.5, z: target.z, spin: 0 });
+              S.enemies.splice(S.enemies.indexOf(target), 1);
+            }
+          } else if (hitP) spawnParts(hitP, 6, [0.8, 0.72, 0.55], 0.55);
+          if (S.ammo === 0) reload();
+        }
+
+        function hurt(amount) {
+          S.hp = Math.max(0, S.hp - amount);
+          S.dmgFlash = 0.75;
+          sfx.hurt();
+          if (S.hp <= 0) gameOver();
+        }
+        function gameOver() {
+          S.over = true;
+          S.started = false;
+          document.exitPointerLock();
+          el("result").style.display = "block";
+          el("result").innerHTML =
+            `任务失败 · 抵达第 ${S.wave} 波 · 击杀 ${S.kills} · 得分 ${S.score}`;
+          startBtn.textContent = "重新开始";
+          overlay.classList.remove("hidden");
+          hud.classList.remove("on");
+          crossEl.classList.remove("on");
+        }
+
+        const spawnPoints = [
+          [-8, -42],
+          [12, -50],
+          [26, -46],
+          [-10, -20],
+          [32, -28],
+          [4, -60],
+          [40, -50],
+        ];
+        function spawnEnemy() {
+          const p = spawnPoints[Math.floor(Math.random() * spawnPoints.length)];
+          S.enemies.push({
+            x: p[0] + Math.random() * 3 - 1.5,
+            y: 0,
+            z: p[1] + Math.random() * 3 - 1.5,
+            hp: 65 + S.wave * 6,
+            flash: 0,
+            attack: 0,
+            shoot: 1 + Math.random() * 2,
+            gait: Math.random() * 6,
+          });
+        }
+        function resolve(pos, r) {
+          for (let it = 0; it < 3; it++)
+            for (const b of colliders) {
+              if (b.max[1] < 0.35 || b.min[1] > 1.9) continue;
+              if (
+                pos[0] + r < b.min[0] ||
+                pos[0] - r > b.max[0] ||
+                pos[2] + r < b.min[2] ||
+                pos[2] - r > b.max[2]
+              )
+                continue;
+              const pl = pos[0] + r - b.min[0],
+                pr = b.max[0] - (pos[0] - r),
+                pb = pos[2] + r - b.min[2],
+                pf = b.max[2] - (pos[2] - r);
+              const m = Math.min(pl, pr, pb, pf);
+              if (m === pl) pos[0] = b.min[0] - r;
+              else if (m === pr) pos[0] = b.max[0] + r;
+              else if (m === pb) pos[2] = b.min[2] - r;
+              else pos[2] = b.max[2] + r;
+            }
+        }
+
+        function update(dt) {
+          S.time += dt;
+          S.muzzle = Math.max(0, S.muzzle - dt * 7);
+          S.recoil = Math.max(0, S.recoil - dt * 5);
+          S.dmgFlash = Math.max(0, S.dmgFlash - dt * 1.8);
+          if (S.hitTimer > 0) {
+            S.hitTimer -= dt;
+            if (S.hitTimer <= 0) el("hitmark").style.opacity = 0;
+          }
+          if (S.waveMsgTimer > 0) {
+            S.waveMsgTimer -= dt;
+            if (S.waveMsgTimer <= 0) el("waveMsg").style.opacity = 0;
+          }
+          if (S.reloading > 0) {
+            S.reloading -= dt;
+            if (S.reloading <= 0) {
+              S.ammo = 24;
+              S.reloading = 0;
+            }
+          }
+
+          const sprint = keys.ShiftLeft || keys.ShiftRight;
+          const speed = sprint ? 8.2 : 5.0;
+          let f = (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0),
+            r = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0);
+          if (f || r) {
+            const l = Math.hypot(f, r);
+            f /= l;
+            r /= l;
+            const pos = [
+              P.x +
+                f * Math.sin(P.yaw) * speed * dt +
+                r * Math.cos(P.yaw) * speed * dt,
+              0,
+              P.z +
+                f * -Math.cos(P.yaw) * speed * dt +
+                r * Math.sin(P.yaw) * speed * dt,
+            ];
+            resolve(pos, 0.38);
+            P.x = pos[0];
+            P.z = pos[2];
+          }
+          P.x = Math.max(-13, Math.min(45, P.x));
+          P.z = Math.max(-60, Math.min(29, P.z));
+
+          // 波次
+          if (S.breakTimer > 0) {
+            S.breakTimer -= dt;
+            if (S.breakTimer <= 0) {
+              S.wave++;
+              S.spawnLeft = 2 + S.wave;
+              S.spawnTimer = 0.6;
+              showWave("第 " + S.wave + " 波 // 敌情接近");
+            }
+          } else if (S.spawnLeft > 0) {
+            S.spawnTimer -= dt;
+            if (S.spawnTimer <= 0) {
+              spawnEnemy();
+              S.spawnLeft--;
+              S.spawnTimer = 1.1;
+            }
+          } else if (S.enemies.length === 0 && S.meds.length >= 0) {
+            S.breakTimer = 4;
+            showWave("区域清空 // 休整");
+          }
+
+          // 敌人
+          for (let i = S.enemies.length - 1; i >= 0; i--) {
+            const e = S.enemies[i];
+            e.flash = Math.max(0, e.flash - dt);
+            e.gait += dt * 7;
+            e.attack -= dt;
+            e.shoot -= dt;
+            let dx = P.x - e.x,
+              dz = P.z - e.z;
+            const dist = Math.hypot(dx, dz) || 1;
+            dx /= dist;
+            dz /= dist;
+            if (dist > 7) {
+              const spd = 1.9 + S.wave * 0.12;
+              const pos = [
+                e.x + dx * spd * dt + Math.sin(e.gait) * 0.12,
+                0,
+                e.z + dz * spd * dt,
+              ];
+              resolve(pos, 0.42);
+              e.x = pos[0];
+              e.z = pos[2];
+            } else if (dist < 2.2 && e.attack <= 0) {
+              e.attack = 1.1;
+              hurt(7 + S.wave);
+            }
+            if (dist < 32 && e.shoot <= 0 && dist > 3) {
+              e.shoot = 1.9 + Math.random() * 1.4;
+              const jitter = 0.045;
+              const dir = norm([
+                dx + (Math.random() - 0.5) * jitter,
+                0.06 + (Math.random() - 0.5) * jitter * 0.5,
+                dz + (Math.random() - 0.5) * jitter,
+              ]);
+              S.shots.push({
+                p: [e.x, 1.35, e.z],
+                v: [dir[0] * 17, dir[1] * 17, dir[2] * 17],
+                life: 5,
+              });
+              sfx.enemyShoot();
+            }
+          }
+
+          // 敌方弹丸
+          for (let i = S.shots.length - 1; i >= 0; i--) {
+            const s = S.shots[i];
+            const steps = 3;
+            let dead = false;
+            for (let k = 0; k < steps; k++) {
+              s.p[0] += (s.v[0] * dt) / steps;
+              s.p[1] += (s.v[1] * dt) / steps;
+              s.p[2] += (s.v[2] * dt) / steps;
+              s.v[1] -= (2.2 * dt) / steps;
+              if (Math.hypot(s.p[0] - P.x, s.p[1] - P.y, s.p[2] - P.z) < 0.85) {
+                hurt(9 + S.wave);
+                dead = true;
+                break;
+              }
+              if (s.p[1] < 0.05 || insideWorld(s.p)) {
+                spawnParts(s.p, 5, [1, 0.5, 0.15], 0.5);
+                dead = true;
+                break;
+              }
+            }
+            s.life -= dt;
+            if (dead || s.life <= 0) S.shots.splice(i, 1);
+          }
+
+          // 粒子
+          for (let i = S.parts.length - 1; i >= 0; i--) {
+            const p = S.parts[i];
+            p.life -= dt;
+            p.v[1] -= 9 * dt;
+            p.p[0] += p.v[0] * dt;
+            p.p[1] += p.v[1] * dt;
+            p.p[2] += p.v[2] * dt;
+            if (p.p[1] < 0.05) {
+              p.p[1] = 0.05;
+              p.v[1] *= -0.3;
+              p.v[0] *= 0.6;
+              p.v[2] *= 0.6;
+            }
+            if (p.life <= 0) S.parts.splice(i, 1);
+          }
+
+          // 医疗包
+          for (let i = S.meds.length - 1; i >= 0; i--) {
+            const m = S.meds[i];
+            m.spin += dt * 1.6;
+            if (Math.hypot(m.x - P.x, m.z - P.z) < 1.3) {
+              S.hp = Math.min(100, S.hp + 32);
+              S.meds.splice(i, 1);
+              tone(880, 0.15, 0.1);
+              showWave("+32 生命");
+            }
+          }
+
+          // HUD
+          el("hpNum").textContent = Math.ceil(S.hp);
+          el("hpFill").style.width = S.hp + "%";
+          el("wave").textContent = S.wave;
+          el("kills").textContent = S.kills;
+          el("score").textContent = S.score;
+          el("ammoNum").innerHTML = S.ammo + " <small>/ ∞</small>";
+          el("reload").textContent =
+            S.reloading > 0
+              ? "装填中 " + Math.round((1 - S.reloading / 1.55) * 100) + "%"
+              : S.ammo === 0
+                ? "按 R 换弹"
+                : "";
+          el("damage").style.opacity = (S.dmgFlash * 0.65).toFixed(3);
+          el("flash").style.opacity = (S.muzzle * 0.1).toFixed(3);
+        }
+
+        // ---------- 渲染 ----------
+        function resize() {
+          const dpr = Math.min(devicePixelRatio || 1, 1.6);
+          const w = Math.floor(innerWidth * dpr),
+            h = Math.floor(innerHeight * dpr);
+          if (canvas.width !== w || canvas.height !== h) {
+            canvas.width = w;
+            canvas.height = h;
+          }
+          gl.viewport(0, 0, canvas.width, canvas.height);
+        }
+        function setCommon(proj, view, camPos, camDir) {
+          gl.useProgram(mainProg);
+          gl.uniformMatrix4fv(U.uProj, false, proj);
+          gl.uniformMatrix4fv(U.uView, false, view);
+          gl.uniform3fv(U.uCamPos, camPos);
+          gl.uniform3fv(U.uCamDir, camDir);
+          gl.uniform3fv(U.uFogColor, FOG);
+          gl.uniform1f(U.uFogDens, FOG_DENS);
+          gl.uniform1f(U.uFlash, S.flash ? 1 : 0);
+          gl.uniform1f(U.uMuzzle, S.muzzle);
+        }
+        function drawMesh(mesh, model, tint, emissive) {
+          gl.uniformMatrix4fv(U.uModel, false, model);
+          gl.uniform3fv(U.uTint, tint);
+          gl.uniform1f(U.uEmissive, emissive);
+          bindMesh(mesh);
+          gl.drawArrays(gl.TRIANGLES, 0, mesh.count);
+        }
+
+        function render() {
+          resize();
+          gl.clearColor(FOG[0], FOG[1], FOG[2], 1);
+          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+          gl.enable(gl.DEPTH_TEST);
+          gl.depthFunc(gl.LEQUAL);
+          gl.disable(gl.CULL_FACE);
+          gl.disable(gl.BLEND);
+
+          gl.disable(gl.DEPTH_TEST);
+          gl.depthMask(false);
+          gl.useProgram(skyProg);
+          gl.uniform1f(SU.uTime, S.time);
+          gl.bindBuffer(gl.ARRAY_BUFFER, skyBuf);
+          const sk = gl.getAttribLocation(skyProg, "aP");
+          gl.enableVertexAttribArray(sk);
+          gl.vertexAttribPointer(sk, 2, gl.FLOAT, false, 0, 0);
+          gl.drawArrays(gl.TRIANGLES, 0, 3);
+          gl.enable(gl.DEPTH_TEST);
+          gl.depthMask(true);
+          // 关闭天空的属性数组，避免和主着色器冲突
+          gl.disableVertexAttribArray(sk);
+
+          const proj = persp(
+            Math.PI / 2.85,
+            canvas.width / canvas.height,
+            0.05,
+            220,
+          );
+          const dir = forward(),
+            cam = [P.x, P.y, P.z];
+          const center = [P.x + dir[0], P.y + dir[1], P.z + dir[2]];
+          const view = lookAt(cam, center, [0, 1, 0]);
+          setCommon(proj, view, cam, dir);
+          drawMesh(worldMesh, IDENT, [1, 1, 1], 0);
+
+          // 水
+          gl.useProgram(waterProg);
+          gl.uniformMatrix4fv(WU.uProj, false, proj);
+          gl.uniformMatrix4fv(WU.uView, false, view);
+          gl.uniform1f(WU.uTime, S.time);
+          gl.uniform3fv(WU.uCamPos, cam);
+          gl.uniform3fv(WU.uFogColor, FOG);
+          gl.uniform1f(WU.uFogDens, FOG_DENS);
+          gl.bindBuffer(gl.ARRAY_BUFFER, waterBuf);
+          const wa = gl.getAttribLocation(waterProg, "aXZ");
+          gl.enableVertexAttribArray(wa);
+          gl.vertexAttribPointer(wa, 2, gl.FLOAT, false, 0, 0);
+          gl.drawArrays(gl.TRIANGLES, 0, waterCount);
+          gl.disableVertexAttribArray(wa);
+          setCommon(proj, view, cam, dir);
+
+          // 敌人
+          for (const e of S.enemies) {
+            const ang = Math.atan2(e.x - P.x, e.z - P.z);
+            const base = trs(e.x, 0, e.z, ang, 1, 1, 1);
+            const flash = e.flash > 0 ? 1.2 : 0;
+            drawMesh(
+              cubeMesh,
+              mul(base, trs(0, 0.72, 0, 0, 0.82, 1.1, 0.62)),
+              [0.26 + e.flash * 2, 0.29, 0.32],
+              flash,
+            );
+            drawMesh(
+              cubeMesh,
+              mul(base, trs(0, 1.42, 0, 0, 0.56, 0.42, 0.52)),
+              [0.33, 0.36, 0.38],
+              flash,
+            );
+            drawMesh(
+              cubeMesh,
+              mul(base, trs(0, 1.43, -0.28, 0, 0.34, 0.09, 0.06)),
+              [1.0, 0.16, 0.1],
+              1.0,
+            );
+            drawMesh(
+              cubeMesh,
+              mul(base, trs(0, 0.82, -0.33, 0, 0.34, 0.22, 0.05)),
+              [0.85, 0.22, 0.1],
+              0.7,
+            );
+          }
+          // 弹丸
+          for (const s of S.shots)
+            drawMesh(
+              cubeMesh,
+              trs(s.p[0], s.p[1], s.p[2], S.time * 5, 0.16, 0.16, 0.16),
+              [1.0, 0.52, 0.12],
+              1.3,
+            );
+          // 医疗包
+          for (const m of S.meds)
+            drawMesh(
+              cubeMesh,
+              trs(
+                m.x,
+                m.y + Math.sin(S.time * 2) * 0.1,
+                m.z,
+                m.spin,
+                0.48,
+                0.48,
+                0.48,
+              ),
+              [0.16, 0.95, 0.45],
+              1.0,
+            );
+          // 粒子
+          for (const p of S.parts) {
+            const k = Math.max(0, p.life / p.max);
+            drawMesh(
+              cubeMesh,
+              trs(
+                p.p[0],
+                p.p[1],
+                p.p[2],
+                0,
+                p.s * (0.5 + k),
+                p.s * (0.5 + k),
+                p.s * (0.5 + k),
+              ),
+              p.c,
+              k * 1.4,
+            );
+          }
+
+          // 武器视图模型：清深度后用相机空间绘制
+          gl.clear(gl.DEPTH_BUFFER_BIT);
+          setCommon(proj, IDENT, [0, 0, 0], [0, 0, -1]);
+          gl.uniform1f(U.uFogDens, 0);
+          gl.uniform1f(U.uFlash, 0);
+          gl.uniform1f(U.uMuzzle, 0);
+          const swayX = Math.sin(S.time * 1.4) * 0.004,
+            swayY = Math.cos(S.time * 1.1) * 0.005;
+          const gunBase = trs(
+            0.32 + swayX,
+            -0.27 + swayY - S.recoil * 0.035,
+            -0.55 + S.recoil * 0.09,
+            -0.05,
+            1,
+            1,
+            1,
+          );
+          drawMesh(gunMesh, gunBase, [1, 1, 1], 0);
+          if (S.muzzle > 0) {
+            const f = trs(
+              0.01,
+              0.01,
+              -0.86,
+              S.time * 30,
+              0.18 * S.muzzle,
+              0.18 * S.muzzle,
+              0.22 * S.muzzle,
+            );
+            drawMesh(cubeMesh, mul(gunBase, f), [1.0, 0.82, 0.4], 2.5);
+          }
+        }
+
+        let last = performance.now();
+        function loop(t) {
+          const dt = Math.min((t - last) / 1000, 0.05);
+          last = t;
+          if (S.started && !S.paused && !S.over) update(dt);
+          else S.time += dt * 0.15;
+          render();
+          requestAnimationFrame(loop);
+        }
+        requestAnimationFrame(loop);
+      })();
+    </script>
+  </body>
+</html>
