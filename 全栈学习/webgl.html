@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGL 核心概念学习笔记</title>
+    <style>
+        :root {
+            --bg: #0f1722;
+            --surface: #1a2533;
+            --border: #2d3f52;
+            --text: #e1e8f0;
+            --muted: #94a3b8;
+            --accent: #38bdf8;
+            --code-bg: #0b1119;
+            --tag-attr: #f472b6;
+            --tag-uni: #34d399;
+            --tag-var: #fbbf24;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.75;
+            padding: 2rem 1rem;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 {
+            font-size: 1.8rem;
+            color: var(--accent);
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        h2 {
+            font-size: 1.35rem;
+            color: var(--accent);
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            padding-left: 0.5rem;
+            border-left: 4px solid var(--accent);
+        }
+        h3 {
+            font-size: 1.1rem;
+            color: #cbd5e1;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        p { margin-bottom: 0.85rem; color: #cbd5e1; }
+        ul, ol { margin-bottom: 1rem; padding-left: 1.5rem; color: #cbd5e1; }
+        li { margin-bottom: 0.4rem; }
+        strong { color: #f1f5f9; }
+        code {
+            font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+            background: var(--code-bg);
+            padding: 0.15em 0.4em;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #e2e8f0;
+        }
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.2rem;
+            overflow-x: auto;
+            margin: 0.8rem 0 1.2rem;
+            font-size: 0.88rem;
+            line-height: 1.6;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+            font-size: inherit;
+        }
+        .tag {
+            display: inline-block;
+            padding: 0.1em 0.5em;
+            border-radius: 4px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            margin-right: 0.4em;
+        }
+        .tag-attr { background: #4a1d3a; color: var(--tag-attr); }
+        .tag-uni  { background: #143d2e; color: var(--tag-uni); }
+        .tag-var  { background: #4a3a12; color: var(--tag-var); }
+        .note {
+            background: #1e2a3a;
+            border-left: 4px solid var(--accent);
+            padding: 0.8rem 1rem;
+            border-radius: 0 6px 6px 0;
+            margin: 1rem 0;
+            font-size: 0.93rem;
+        }
+        .note strong { color: var(--accent); }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0 1.5rem;
+            font-size: 0.9rem;
+        }
+        th, td {
+            border: 1px solid var(--border);
+            padding: 0.6rem 0.8rem;
+            text-align: left;
+        }
+        th {
+            background: #1e2d3e;
+            color: var(--accent);
+            font-weight: 600;
+        }
+        td { color: #cbd5e1; }
+        tr:nth-child(even) td { background: #151f2b; }
+        .toc {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .toc ul { list-style: none; padding-left: 0; margin: 0; }
+        .toc li { margin: 0.3rem 0; }
+        .toc a { color: var(--accent); text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+        .resource-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 0.75rem;
+            margin: 1rem 0;
+        }
+        .resource-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.8rem 1rem;
+        }
+        .resource-card a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .resource-card a:hover { text-decoration: underline; }
+        .resource-card p { font-size: 0.85rem; color: var(--muted); margin: 0.3rem 0 0; }
+        .footer {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.85rem;
+            color: var(--muted);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+<h1>WebGL 核心概念学习笔记</h1>
+<p style="color: var(--muted); margin-bottom: 1.5rem;">基于对话整理 · 涵盖渲染管线、着色器、数据流转与多物体绘制</p>
+
+<div class="toc">
+    <strong style="color: var(--accent);">目录</strong>
+    <ul>
+        <li><a href="#pipeline">1. 渲染管线总览</a></li>
+        <li><a href="#shader-var">2. 着色器变量：attribute / uniform / varying</a></li>
+        <li><a href="#vertex-frag">3. 顶点着色器与片段着色器</a></li>
+        <li><a href="#rasterization">4. 光栅化与片段</a></li>
+        <li><a href="#buffer">5. 缓冲区与绘制调用</a></li>
+        <li><a href="#matrix">6. MVP 矩阵：uModel / uView / uProjection</a></li>
+        <li><a href="#multi-object">7. 多物体绘制</a></li>
+        <li><a href="#perspective">8. 透视投影与近大远小</a></li>
+        <li><a href="#resources">9. 深入学习资源</a></li>
+    </ul>
+</div>
+
+<!-- ==================== 1 ==================== -->
+<h2 id="pipeline">1. 渲染管线总览</h2>
+<p>WebGL 的渲染管线主干可以概括为：</p>
+<pre><code>顶点数据（CPU 缓冲区）
+    ↓
+顶点着色器（可编程，逐顶点）
+    ↓
+图元装配 + 光栅化（固定功能）
+    ↓
+片段着色器（可编程，逐片段/像素）
+    ↓
+逐片段操作（深度测试、混合等，固定功能）
+    ↓
+帧缓冲区 → 屏幕</code></pre>
+
+<div class="note">
+    <strong>关键认知：</strong>开发者主要编写的是<strong>顶点着色器</strong>和<strong>片段着色器</strong>，以及 CPU 端的 JavaScript 数据准备。光栅化是 GPU 固定功能，开发者无法编程其逻辑，只能通过图元类型、viewport 等 API 间接影响。
+</div>
+
+<p>WebGL 程序的基本结构遵循两阶段模式[citation:3][citation:10]：</p>
+<ul>
+    <li><strong>初始化阶段</strong>：创建着色器和程序、查找 location、创建缓冲区、上传顶点数据</li>
+    <li><strong>渲染阶段</strong>：清屏、设置全局状态 → 对每个物体：设置属性、设置 uniform、调用 <code>drawArrays</code> / <code>drawElements</code></li>
+</ul>
+
+<!-- ==================== 2 ==================== -->
+<h2 id="shader-var">2. 着色器变量：attribute / uniform / varying</h2>
+<p>GLSL 中有三种核心变量限定符，各自用途完全不同[citation:2]：</p>
+
+<table>
+    <tr>
+        <th>限定符</th>
+        <th>可用着色器</th>
+        <th>数据粒度</th>
+        <th>典型用途</th>
+        <th>WebGL 设置方式</th>
+    </tr>
+    <tr>
+        <td><span class="tag tag-attr">attribute</span></td>
+        <td>仅顶点着色器</td>
+        <td>每个顶点一份</td>
+        <td>位置、法线、UV、顶点色</td>
+        <td><code>vertexAttribPointer</code></td>
+    </tr>
+    <tr>
+        <td><span class="tag tag-uni">uniform</span></td>
+        <td>顶点 & 片段</td>
+        <td>每次绘制共享一份</td>
+        <td>变换矩阵、时间、光照参数</td>
+        <td><code>uniformMatrix4fv</code> 等</td>
+    </tr>
+    <tr>
+        <td><span class="tag tag-var">varying</span></td>
+        <td>顶点→片段（单向）</td>
+        <td>顶点写入，光栅化插值</td>
+        <td>渐变坐标、纹理坐标、法线</td>
+        <td>两边同名声明即可</td>
+    </tr>
+</table>
+
+<h3>核心理解</h3>
+<ul>
+    <li><strong>attribute</strong>：逐顶点数据，必须来自缓冲区，通过 <code>getAttribLocation</code> 获取整数索引。</li>
+    <li><strong>uniform</strong>：全局共享，通过 <code>getUniformLocation</code> 获取不透明对象。如果着色器声明了但未实际使用，会被优化掉，查询返回 <code>null</code>。</li>
+    <li><strong>varying</strong>：不是“共用变量”，而是<strong>顶点着色器写入 → 光栅化插值 → 片段着色器读取</strong>的单向管道。两边必须同名同类型。</li>
+</ul>
+
+<!-- ==================== 3 ==================== -->
+<h2 id="vertex-frag">3. 顶点着色器与片段着色器</h2>
+
+<h3>顶点着色器：逐顶点执行</h3>
+<p>核心任务是计算 <code>gl_Position</code>，并可通过 varying 向片段着色器传递插值数据：</p>
+<pre><code>attribute vec2 aPosition;
+uniform mat4 uProjection, uView, uModel;
+varying vec2 vPosition;
+
+void main() {
+    vPosition = aPosition;
+    gl_Position = uProjection * uView * uModel * vec4(aPosition, 0.0, 1.0);
+}</code></pre>
+
+<h3>片段着色器：逐片段执行</h3>
+<p>核心任务是计算 <code>gl_FragColor</code>（WebGL 1），决定像素颜色：</p>
+<pre><code>precision mediump float;
+uniform vec3 uColor;
+varying vec2 vPosition;
+
+void main() {
+    float t = vPosition.x * 0.5 + 0.5;  // 映射到 [0,1]
+    gl_FragColor = vec4(uColor * (0.3 + 0.7 * t), 1.0);
+}</code></pre>
+
+<p>片段着色器不仅能“设颜色”，还能做纹理采样、光照计算、程序化图案、<code>discard</code> 丢弃片段等，但它<strong>不能改变图元形状</strong>——三角形覆盖哪些像素是光栅化决定的[citation:13]。</p>
+
+<!-- ==================== 4 ==================== -->
+<h2 id="rasterization">4. 光栅化与片段</h2>
+<p>光栅化是 GPU 固定功能阶段，负责两件事：</p>
+<ol>
+    <li><strong>确定三角形覆盖了哪些像素网格位置</strong></li>
+    <li><strong>对 varying 变量在三角形内部进行插值</strong></li>
+</ol>
+
+<div class="note">
+    <strong>片段 ≠ 最终像素。</strong>光栅化生成的“片段”是候选像素，要经过深度测试、模板测试、混合等逐片段操作，通过测试的才写入帧缓冲区成为最终像素。片段着色器的执行次数 = 生成的片段数，而非最终可见像素数。
+</div>
+
+<p>默认情况下，一个片段对应一个像素网格位置。多重采样（MSAA）和可变速率着色（VRS）等技术会改变这种对应关系，但不是 WebGL 的默认行为。</p>
+
+<!-- ==================== 5 ==================== -->
+<h2 id="buffer">5. 缓冲区与绘制调用</h2>
+<p>顶点数据通过缓冲区上传到 GPU：</p>
+<pre><code>const vertices = new Float32Array([...]);
+const buffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);</code></pre>
+
+<p>告诉 GPU 如何解读数据：</p>
+<pre><code>gl.enableVertexAttribArray(loc.position);
+gl.vertexAttribPointer(loc.position, 2, gl.FLOAT, false, 0, 0);</code></pre>
+
+<p>图元类型决定了顶点如何组装：</p>
+<table>
+    <tr><th>mode</th><th>规则</th><th>典型用途</th></tr>
+    <tr><td><code>gl.TRIANGLES</code></td><td>每 3 个顶点一个独立三角形</td><td>通用、矩形拆两三角形</td></tr>
+    <tr><td><code>gl.TRIANGLE_STRIP</code></td><td>相邻三角形共享边</td><td>条带表面、省顶点</td></tr>
+    <tr><td><code>gl.TRIANGLE_FAN</code></td><td>共享第一个顶点呈扇形</td><td>圆形/锥体</td></tr>
+    <tr><td><code>gl.LINE_STRIP</code></td><td>顶点依次相连</td><td>折线、曲线</td></tr>
+</table>
+
+<p>WebGL 没有矩形图元，矩形必须用两个三角形（<code>gl.TRIANGLES</code>）或 <code>TRIANGLE_STRIP</code> 实现。</p>
+
+<!-- ==================== 6 ==================== -->
+<h2 id="matrix">6. MVP 矩阵：uModel / uView / uProjection</h2>
+<p>这是 WebGL 3D 渲染的核心概念[citation:4]：</p>
+
+<pre><code>局部坐标 ─×uModel→ 世界坐标 ─×uView→ 相机坐标 ─×uProjection→ 裁剪空间</code></pre>
+
+<table>
+    <tr><th>矩阵</th><th>作用</th><th>变化频率</th><th>谁不同</th></tr>
+    <tr>
+        <td><strong>uModel</strong></td>
+        <td>物体自身的平移/旋转/缩放</td>
+        <td>每帧（物体动）</td>
+        <td>每个物体不同</td>
+    </tr>
+    <tr>
+        <td><strong>uView</strong></td>
+        <td>相机位置/朝向（世界→相机）</td>
+        <td>相机移动时（FPS 几乎每帧）</td>
+        <td>整个场景共享</td>
+    </tr>
+    <tr>
+        <td><strong>uProjection</strong></td>
+        <td>投影方式（相机→裁剪）</td>
+        <td>resize / FOV 变化时</td>
+        <td>整个场景共享</td>
+    </tr>
+</table>
+
+<div class="note">
+    <strong>单位矩阵的含义：</strong>如果 <code>uProjection</code> 传单位矩阵，等价于“不做投影变换”，顶点直接当 NDC 坐标用，可见范围 [-1,1]。这是简化 2D 示例的常见做法，正式 3D 项目不会这么做。
+</div>
+
+<!-- ==================== 7 ==================== -->
+<h2 id="multi-object">7. 多物体绘制</h2>
+<p><strong>不需要为每个物体写着色器。</strong>通常一类渲染逻辑共用一个 program，通过每次 draw call 前设置不同的 <code>uModel</code> 和绑定各自的缓冲区来区分物体[citation:10]。</p>
+
+<p>典型的渲染循环：</p>
+<pre><code>gl.useProgram(program);           // 若程序不变，一次即可
+// 设置全局 uniform（projection、view、time）
+for (const obj of objects) {
+    gl.uniformMatrix4fv(loc.model, false, obj.modelMatrix);
+    gl.bindBuffer(gl.ARRAY_BUFFER, obj.buffer);
+    gl.vertexAttribPointer(...);
+    gl.drawArrays(gl.TRIANGLES, 0, obj.count);
+}</code></pre>
+
+<p>只有渲染逻辑本质不同（如 3D 光照 vs 后处理）才需要多个 program。大量相同几何的物体可用 <strong>instancing</strong>（<code>drawArraysInstanced</code>）合并 draw call。</p>
+
+<div class="note">
+    <strong>CPU 与 GPU 的分工：</strong>CPU 每帧计算游戏逻辑、碰撞检测、每个物体的变换矩阵；GPU 顶点着色器用矩阵并行变换顶点，片段着色器上色。CPU <strong>不逐顶点计算位置</strong>（除非特殊场景如 CPU 蒙皮）。
+</div>
+
+<!-- ==================== 8 ==================== -->
+<h2 id="perspective">8. 透视投影与近大远小</h2>
+<p>近大远小的效果来自<strong>透视投影矩阵</strong>。其核心机制是：矩阵让输出的 <code>w</code> 分量等于相机空间的深度，GPU 自动做透视除法（x、y、z 除以 w），远处物体 w 更大，xy 被除得更小，投影到屏幕上就更小[citation:5]。</p>
+
+<pre><code>function perspective(fovy, aspect, near, far) {
+    const f = 1 / Math.tan(fovy / 2);
+    const nf = 1 / (near - far);
+    return new Float32Array([
+        f / aspect, 0, 0, 0,
+        0, f, 0, 0,
+        0, 0, (far + near) * nf, -1,   // 关键：-1 让 w = -z
+        0, 0, 2 * far * near * nf, 0,
+    ]);
+}</code></pre>
+
+<p><strong>玩家跑动时不调整 uProjection</strong>，而是调整 <code>uView</code>（相机位置变）。透视矩阵作为“规则”缓存复用，只有 FOV 变（开镜）、宽高比变（resize）、裁剪面变时才重算。</p>
+
+<p>配套设置：3D 场景需要 <code>gl.enable(gl.DEPTH_TEST)</code> 并每帧清深度缓冲 <code>gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)</code>。</p>
+
+<!-- ==================== 9 ==================== -->
+<h2 id="resources">9. 深入学习资源</h2>
+
+<h3>官方与权威教程</h3>
+<div class="resource-grid">
+    <div class="resource-card">
+        <a href="https://developer.mozilla.org/zh-CN/docs/Web/API/WebGL_API/Tutorial" target="_blank">MDN WebGL 教程</a>
+        <p>从入门到纹理、光照的完整教程，权威且中文支持好[citation:6][citation:7]</p>
+    </div>
+    <div class="resource-card">
+        <a href="https://webglfundamentals.org/" target="_blank">WebGL Fundamentals</a>
+        <p>最推荐的基础教程，讲解透彻，有中文翻译[citation:3][citation:10]</p>
+    </div>
+    <div class="resource-card">
+        <a href="https://webgl2fundamentals.org/" target="_blank">WebGL2 Fundamentals</a>
+        <p>WebGL2 版本，涵盖透视投影、3D 等进阶内容[citation:5]</p>
+    </div>
+    <div class="resource-card">
+        <a href="https://developer.mozilla.org/zh-CN/docs/Web/API/WebGL_API/WebGL_model_view_projection" target="_blank">MDN：模型、视图、投影矩阵</a>
+        <p>深入讲解 MVP 三个矩阵的原理与实现[citation:4]</p>
+    </div>
+</div>
+
+<h3>常用库（降低开发复杂度）</h3>
+<ul>
+    <li><strong>glMatrix</strong>：高性能矩阵/向量库，WebGL 项目常用[citation:7]</li>
+    <li><strong>Three.js</strong>：功能最全的 3D 库，适合快速出效果</li>
+    <li><strong>twgl</strong>：轻量封装，减少 WebGL 样板代码[citation:7]</li>
+</ul>
+
+<h3>进阶方向</h3>
+<ul>
+    <li><strong>纹理与采样</strong>：<code>gl.texImage2D</code>、<code>sampler2D</code>、UV 映射</li>
+    <li><strong>光照模型</strong>：法线变换、漫反射/高光计算</li>
+    <li><strong>帧缓冲对象（FBO）</strong>：后处理、渲染到纹理</li>
+    <li><strong>Instancing</strong>：<code>vertexAttribDivisor</code> + <code>drawArraysInstanced</code></li>
+    <li><strong>WebGL2 新特性</strong>：VAO、UBO、MRT、更灵活的 GLSL ES 3.00[citation:7]</li>
+</ul>
+
+<div class="note">
+    <strong>学习建议：</strong>先跟着 WebGL Fundamentals 把“画一个三角形 → 画多个物体 → 加纹理 → 加 3D 透视”这条线走一遍，每步都理解“CPU 做了什么、GPU 做了什么”。遇到问题时，优先检查：着色器编译/链接是否成功、attribute location 是否获取到、缓冲区是否绑定正确、uniform 是否在 draw call 前设置。
+</div>
+
+<div class="footer">
+    整理自 WebGL 学习对话 · 供复习与深入学习参考
+</div>
+
+</div>
+</body>
+</html>

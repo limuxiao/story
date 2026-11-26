@@ -1,0 +1,921 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WebGL 最小代码骨架 · 交互 Demo</title>
+    <style>
+      :root {
+        --paper: #faf7f2;
+        --card: #fffdfa;
+        --ink: #2b2620;
+        --ink2: #5f574d;
+        --muted: #8a8075;
+        --line: #e6dfd4;
+        --accent: #b4702c;
+        --accent-soft: #fbf1e4;
+        --accent-deep: #8c5220;
+        --green: #4c7a5d;
+        --green-soft: #edf5ef;
+        --blue: #3f6f82;
+        --blue-soft: #eaf3f6;
+        --red: #a4441a;
+        --red-soft: #fbe9e0;
+        --code-bg: #f4efe7;
+        --shadow: 0 14px 34px rgba(65, 50, 30, 0.09);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        font-size: 15px;
+        line-height: 1.7;
+      }
+
+      .wrap {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 40px 26px 80px;
+      }
+
+      header {
+        margin-bottom: 22px;
+      }
+
+      .tag {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        color: var(--accent-deep);
+        background: var(--accent-soft);
+        border: 1px solid #ead7bd;
+        border-radius: 999px;
+        padding: 4px 12px;
+        margin-bottom: 12px;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: 34px;
+        line-height: 1.25;
+        letter-spacing: -0.02em;
+      }
+
+      .lead {
+        margin: 0;
+        color: var(--ink2);
+        max-width: 820px;
+      }
+
+      .app {
+        display: grid;
+        grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.85fr);
+        gap: 18px;
+        align-items: start;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 18px;
+        box-shadow: var(--shadow);
+      }
+
+      .stage {
+        position: relative;
+        overflow: hidden;
+        padding: 0;
+        background: #101820;
+      }
+
+      #gl {
+        display: block;
+        width: 100%;
+        height: 520px;
+        cursor: crosshair;
+      }
+
+      .badge {
+        position: absolute;
+        left: 14px;
+        top: 14px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .badge span {
+        font-size: 11px;
+        color: #d8e2e8;
+        background: rgba(10, 16, 22, 0.68);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 999px;
+        padding: 4px 10px;
+        backdrop-filter: blur(6px);
+      }
+
+      .hint {
+        position: absolute;
+        left: 14px;
+        bottom: 14px;
+        font-size: 12px;
+        color: rgba(230, 238, 242, 0.86);
+        background: rgba(10, 16, 22, 0.62);
+        border-radius: 8px;
+        padding: 6px 10px;
+      }
+
+      #errorBox {
+        display: none;
+        position: absolute;
+        inset: 16px;
+        background: rgba(90, 25, 15, 0.94);
+        color: #fff1e8;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 12px;
+        padding: 18px;
+        white-space: pre-wrap;
+        font-family: Menlo, Consolas, monospace;
+        font-size: 13px;
+      }
+
+      h2 {
+        margin: 0 0 12px;
+        font-size: 18px;
+      }
+
+      .controls {
+        display: grid;
+        gap: 12px;
+      }
+
+      .control-row {
+        display: grid;
+        gap: 6px;
+        padding: 10px 12px;
+        background: #f8f3ec;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+      }
+
+      label {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--ink2);
+      }
+
+      input[type="range"] {
+        width: 100%;
+      }
+
+      select {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: white;
+        color: var(--ink);
+      }
+
+      .check {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        font-size: 13px;
+        color: var(--ink2);
+      }
+
+      .buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        border: 1px solid #ddcbb4;
+        background: var(--accent-soft);
+        color: var(--accent-deep);
+        font-weight: 800;
+        font-size: 13px;
+        border-radius: 9px;
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #f5e3cc;
+      }
+
+      button.secondary {
+        background: #fff;
+        color: var(--ink2);
+        border-color: var(--line);
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .stat {
+        background: var(--blue-soft);
+        border: 1px solid #cfe0e7;
+        border-radius: 10px;
+        padding: 8px 10px;
+      }
+
+      .stat b {
+        display: block;
+        font-size: 16px;
+        color: var(--blue);
+      }
+
+      .stat span {
+        font-size: 11px;
+        color: var(--ink2);
+      }
+
+      .steps {
+        display: grid;
+        gap: 7px;
+      }
+
+      .step {
+        display: grid;
+        grid-template-columns: 26px 1fr;
+        gap: 8px;
+        align-items: start;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        font-size: 13px;
+        color: var(--ink2);
+        transition: 0.2s ease;
+      }
+
+      .step .num {
+        width: 22px;
+        height: 22px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: #eee7de;
+        color: var(--muted);
+        font-weight: 800;
+        font-size: 11px;
+      }
+
+      .step.active {
+        border-color: #e3c39a;
+        background: var(--accent-soft);
+      }
+
+      .step.done {
+        border-color: #cfe2d3;
+        background: var(--green-soft);
+      }
+
+      .step.done .num {
+        background: var(--green);
+        color: white;
+      }
+
+      .log {
+        height: 118px;
+        overflow: auto;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: #191d22;
+        color: #c7d3da;
+        font-family: Menlo, Consolas, monospace;
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .section {
+        margin-top: 18px;
+      }
+
+      details {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px 16px;
+      }
+
+      summary {
+        cursor: pointer;
+        font-weight: 800;
+      }
+
+      pre {
+        background: var(--code-bg);
+        border: 1px solid #e3d8ca;
+        border-radius: 12px;
+        padding: 14px 16px;
+        overflow: auto;
+        font-size: 13px;
+        line-height: 1.6;
+        color: #39342e;
+      }
+
+      code {
+        font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+      }
+
+      .note {
+        background: var(--green-soft);
+        border: 1px solid #cfe2d3;
+        border-left: 4px solid var(--green);
+        border-radius: 10px;
+        padding: 12px 14px;
+        color: var(--ink2);
+        font-size: 14px;
+        margin: 14px 0;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        margin-top: 10px;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid var(--line);
+        padding: 8px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        color: var(--accent-deep);
+      }
+
+      @media (max-width: 920px) {
+        .app {
+          grid-template-columns: 1fr;
+        }
+
+        #gl {
+          height: 420px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="tag">WEBGL · MINIMAL DEMO</div>
+        <h1>WebGL 最小代码骨架 · 交互 Demo</h1>
+        <p class="lead">
+          这个页面只做一件事：把一个三角形画到屏幕上，并把 WebGL
+          的关键步骤可视化出来。你可以改时间、改颜色模式、旋转模型，然后观察每一步发生了什么。
+        </p>
+      </header>
+
+      <div class="app">
+        <section class="card stage">
+          <canvas id="gl"></canvas>
+          <div class="badge">
+            <span>WebGL 1</span>
+            <span>1 个 Program</span>
+            <span>3 个顶点</span>
+          </div>
+          <div class="hint">移动鼠标可改变“鼠标调色”模式的颜色</div>
+          <div id="errorBox"></div>
+        </section>
+
+        <aside>
+          <section class="card">
+            <h2>控制台</h2>
+            <div class="controls">
+              <div class="control-row">
+                <label for="mode">片元着色器颜色来源 · uMode</label>
+                <select id="mode">
+                  <option value="0">时间生成彩色 · cos(uTime)</option>
+                  <option value="1">固定橙色</option>
+                  <option value="2">鼠标位置调色 · uPointer</option>
+                </select>
+              </div>
+
+              <div class="control-row">
+                <label for="speed">时间流速 · uTime += dt × speed</label>
+                <input
+                  id="speed"
+                  type="range"
+                  min="0"
+                  max="3"
+                  step="0.1"
+                  value="1" />
+              </div>
+
+              <div class="control-row check">
+                <input id="animate" type="checkbox" checked />
+                <span>自动播放动画</span>
+              </div>
+
+              <div class="control-row check">
+                <input id="rotate" type="checkbox" checked />
+                <span>用模型矩阵旋转三角形 · uModel</span>
+              </div>
+
+              <div class="buttons">
+                <button id="stepBtn">画一帧</button>
+                <button id="resetBtn" class="secondary">重置时间</button>
+                <button id="replayBtn" class="secondary">重放步骤</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="card section">
+            <h2>实时状态</h2>
+            <div class="stats">
+              <div class="stat"><b id="fps">0</b><span>FPS</span></div>
+              <div class="stat">
+                <b id="drawCount">0</b><span>drawArrays 次数</span>
+              </div>
+              <div class="stat">
+                <b id="timeValue">0.00</b><span>uTime</span>
+              </div>
+              <div class="stat">
+                <b id="vertexCount">3</b><span>顶点数</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="card section">
+            <h2>执行步骤</h2>
+            <div class="steps" id="steps">
+              <div class="step" data-step="1">
+                <span class="num">1</span
+                ><span>获取 canvas 与 WebGL context</span>
+              </div>
+              <div class="step" data-step="2">
+                <span class="num">2</span
+                ><span>编写 vertex / fragment shader</span>
+              </div>
+              <div class="step" data-step="3">
+                <span class="num">3</span
+                ><span>编译 shader 并 link program</span>
+              </div>
+              <div class="step" data-step="4">
+                <span class="num">4</span
+                ><span>创建 buffer，上传 3 个顶点</span>
+              </div>
+              <div class="step" data-step="5">
+                <span class="num">5</span
+                ><span>获取 attribute / uniform location</span>
+              </div>
+              <div class="step" data-step="6">
+                <span class="num">6</span
+                ><span>设置矩阵 uniform：P / V / M</span>
+              </div>
+              <div class="step" data-step="7">
+                <span class="num">7</span><span>调用 drawArrays 提交绘制</span>
+              </div>
+              <div class="step" data-step="8">
+                <span class="num">8</span
+                ><span>requestAnimationFrame 循环</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="card section">
+            <h2>运行日志</h2>
+            <div class="log" id="log"></div>
+          </section>
+        </aside>
+      </div>
+
+      <div class="note">
+        <strong>观察重点：</strong>
+        三角形的位置由顶点 shader 里的
+        <code>uProjection × uView × uModel × aPosition</code> 决定；颜色由片元
+        shader 里的 <code>uTime</code>、<code>uMode</code>、<code
+          >uPointer</code
+        >
+        决定。JS 不直接画像素，它只负责传数据和参数。
+      </div>
+
+      <details class="section">
+        <summary>展开：这个 Demo 对应的最小代码骨架</summary>
+        <pre><code>const canvas = document.querySelector('#gl');
+const gl = canvas.getContext('webgl');
+
+function compile(type, source) {
+  const shader = gl.createShader(type);
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    throw new Error(gl.getShaderInfoLog(shader));
+  }
+  return shader;
+}
+
+function createProgram(vsSource, fsSource) {
+  const program = gl.createProgram();
+  gl.attachShader(program, compile(gl.VERTEX_SHADER, vsSource));
+  gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fsSource));
+  gl.linkProgram(program);
+  return program;
+}
+
+// buffer：3 个二维顶点
+const vertices = new Float32Array([
+  -0.65, -0.55,
+   0.65, -0.55,
+   0.00,  0.72,
+]);
+
+const buffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+// 每帧：清屏 → 使用 program → 设置 uniform → 绑定 attribute → 绘制
+gl.clearColor(0.05, 0.08, 0.11, 1);
+gl.clear(gl.COLOR_BUFFER_BIT);
+gl.useProgram(program);
+gl.uniformMatrix4fv(uProjection, false, projection);
+gl.uniformMatrix4fv(uView, false, view);
+gl.uniformMatrix4fv(uModel, false, model);
+gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+gl.enableVertexAttribArray(aPosition);
+gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
+gl.drawArrays(gl.TRIANGLES, 0, 3);</code></pre>
+      </details>
+
+      <details class="section">
+        <summary>展开：每一步对应什么 WebGL API</summary>
+        <table>
+          <thead>
+            <tr>
+              <th>步骤</th>
+              <th>关键 API</th>
+              <th>作用</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>获取上下文</td>
+              <td>canvas.getContext('webgl')</td>
+              <td>拿到操作 GPU 的入口对象。</td>
+            </tr>
+            <tr>
+              <td>编译 shader</td>
+              <td>createShader / shaderSource / compileShader</td>
+              <td>把 GLSL 字符串编译成 GPU 可执行的着色器。</td>
+            </tr>
+            <tr>
+              <td>链接 program</td>
+              <td>createProgram / attachShader / linkProgram</td>
+              <td>把顶点 shader 和片元 shader 组成渲染程序。</td>
+            </tr>
+            <tr>
+              <td>上传顶点</td>
+              <td>createBuffer / bindBuffer / bufferData</td>
+              <td>把 CPU 里的顶点数组复制到 GPU buffer。</td>
+            </tr>
+            <tr>
+              <td>取 location</td>
+              <td>getAttribLocation / getUniformLocation</td>
+              <td>拿到 shader 中变量的位置引用。</td>
+            </tr>
+            <tr>
+              <td>传 uniform</td>
+              <td>uniformMatrix4fv / uniform1f / uniform1i</td>
+              <td>每帧传矩阵、时间、模式等参数。</td>
+            </tr>
+            <tr>
+              <td>绑定 attribute</td>
+              <td>enableVertexAttribArray / vertexAttribPointer</td>
+              <td>告诉 WebGL 顶点数据如何读取。</td>
+            </tr>
+            <tr>
+              <td>绘制</td>
+              <td>drawArrays</td>
+              <td>真正提交绘制命令。</td>
+            </tr>
+          </tbody>
+        </table>
+      </details>
+    </div>
+
+    <script>
+      (() => {
+        "use strict";
+
+        const canvas = document.querySelector("#gl");
+        const errorBox = document.querySelector("#errorBox");
+        const logBox = document.querySelector("#log");
+        const modeEl = document.querySelector("#mode");
+        const speedEl = document.querySelector("#speed");
+        const animateEl = document.querySelector("#animate");
+        const rotateEl = document.querySelector("#rotate");
+        const fpsEl = document.querySelector("#fps");
+        const drawCountEl = document.querySelector("#drawCount");
+        const timeEl = document.querySelector("#timeValue");
+        const stepEls = [...document.querySelectorAll(".step")];
+
+        let drawCount = 0;
+        let simTime = 0;
+        let pointer = [0.5, 0.5];
+        let replayTimers = [];
+
+        function fail(message) {
+          errorBox.style.display = "block";
+          errorBox.textContent = message;
+          console.error(message);
+        }
+
+        function log(message) {
+          const time = new Date().toLocaleTimeString();
+          const line = document.createElement("div");
+          line.textContent = `[${time}] ${message}`;
+          logBox.appendChild(line);
+          logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        function markStep(index, state) {
+          const el = stepEls[index - 1];
+          el.classList.remove("active", "done");
+          if (state) el.classList.add(state);
+          if (state === "done") {
+            el.querySelector(".num").textContent = "✓";
+          }
+        }
+
+        function replaySteps() {
+          replayTimers.forEach(clearTimeout);
+          replayTimers = [];
+          logBox.innerHTML = "";
+          stepEls.forEach((el, i) => {
+            el.classList.remove("active", "done");
+            el.querySelector(".num").textContent = String(i + 1);
+          });
+          const messages = [
+            "canvas.getContext('webgl') 成功",
+            "GLSL 源码已准备好：vertex + fragment",
+            "shader 编译成功，program 链接成功",
+            "buffer 已创建：3 个顶点，每个顶点 2 个 float",
+            "attribute / uniform location 已获取",
+            "每帧上传 uProjection / uView / uModel",
+            "每帧调用 gl.drawArrays(TRIANGLES, 0, 3)",
+            "requestAnimationFrame 已启动",
+          ];
+          messages.forEach((msg, i) => {
+            replayTimers.push(
+              setTimeout(() => {
+                stepEls.forEach((el, j) => {
+                  if (j < i) markStep(j + 1, "done");
+                });
+                markStep(i + 1, "active");
+                log(msg);
+                if (i === messages.length - 1) {
+                  replayTimers.push(setTimeout(() => markStep(8, "done"), 650));
+                }
+              }, i * 320),
+            );
+          });
+        }
+
+        const gl = canvas.getContext("webgl", {
+          antialias: true,
+          alpha: false,
+        });
+
+        if (!gl) {
+          fail("当前浏览器或环境不支持 WebGL。");
+          return;
+        }
+
+        log("WebGL context 创建成功");
+
+        const vertexShaderSource = `
+          attribute vec2 aPosition;
+
+          uniform mat4 uProjection;
+          uniform mat4 uView;
+          uniform mat4 uModel;
+
+          varying vec2 vPosition;
+
+          void main() {
+            vPosition = aPosition;
+            gl_Position = uProjection * uView * uModel * vec4(aPosition, 0.0, 1.0);
+          }
+        `;
+
+        const fragmentShaderSource = `
+          precision mediump float;
+
+          uniform float uTime;
+          uniform int uMode;
+          uniform vec2 uPointer;
+
+          varying vec2 vPosition;
+
+          void main() {
+            vec3 color;
+
+            if (uMode == 0) {
+              vec3 phase = vec3(0.0, 2.1, 4.2);
+              color = 0.5 + 0.5 * cos(vec3(uTime * 0.65) + phase);
+            } else if (uMode == 1) {
+              color = vec3(1.0, 0.52, 0.18);
+            } else {
+              color = vec3(uPointer.x, uPointer.y, 0.55 + 0.45 * sin(uTime));
+            }
+
+            float edge = smoothstep(0.0, 0.75, length(vPosition));
+            gl_FragColor = vec4(color * (1.0 - 0.18 * edge), 1.0);
+          }
+        `;
+
+        function compile(type, source) {
+          const shader = gl.createShader(type);
+          gl.shaderSource(shader, source);
+          gl.compileShader(shader);
+          if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            throw new Error(gl.getShaderInfoLog(shader) || "shader 编译失败");
+          }
+          return shader;
+        }
+
+        function createProgram(vsSource, fsSource) {
+          const program = gl.createProgram();
+          gl.attachShader(program, compile(gl.VERTEX_SHADER, vsSource));
+          gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fsSource));
+          gl.linkProgram(program);
+          if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            throw new Error(
+              gl.getProgramInfoLog(program) || "program 链接失败",
+            );
+          }
+          return program;
+        }
+
+        let program;
+        try {
+          program = createProgram(vertexShaderSource, fragmentShaderSource);
+          log("vertex shader / fragment shader 编译成功，program 链接成功");
+        } catch (err) {
+          fail("Shader 编译或链接失败：\n" + err.message);
+          return;
+        }
+
+        const vertices = new Float32Array([
+          -0.65, -0.55, 0.65, -0.55, 0.0, 0.72,
+        ]);
+
+        const buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+        log("顶点 buffer 上传完成：3 vertices × 2 floats");
+
+        const loc = {
+          position: gl.getAttribLocation(program, "aPosition"),
+          projection: gl.getUniformLocation(program, "uProjection"),
+          view: gl.getUniformLocation(program, "uView"),
+          model: gl.getUniformLocation(program, "uModel"),
+          time: gl.getUniformLocation(program, "uTime"),
+          mode: gl.getUniformLocation(program, "uMode"),
+          pointer: gl.getUniformLocation(program, "uPointer"),
+        };
+
+        const IDENTITY = new Float32Array([
+          1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
+        ]);
+
+        function rotationZ(angle) {
+          const c = Math.cos(angle);
+          const s = Math.sin(angle);
+          return new Float32Array([
+            c,
+            s,
+            0,
+            0,
+            -s,
+            c,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+          ]);
+        }
+
+        function resizeCanvas() {
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          const width = Math.floor(canvas.clientWidth * dpr);
+          const height = Math.floor(canvas.clientHeight * dpr);
+          if (canvas.width !== width || canvas.height !== height) {
+            canvas.width = width;
+            canvas.height = height;
+            gl.viewport(0, 0, width, height);
+          }
+        }
+
+        function drawFrame() {
+          resizeCanvas();
+
+          gl.clearColor(0.035, 0.06, 0.085, 1);
+          gl.clear(gl.COLOR_BUFFER_BIT);
+          gl.disable(gl.DEPTH_TEST);
+
+          gl.useProgram(program);
+
+          gl.uniformMatrix4fv(loc.projection, false, IDENTITY);
+          gl.uniformMatrix4fv(loc.view, false, IDENTITY);
+          const model = rotateEl.checked ? rotationZ(simTime * 0.8) : IDENTITY;
+          gl.uniformMatrix4fv(loc.model, false, model);
+
+          gl.uniform1f(loc.time, simTime);
+          gl.uniform1i(loc.mode, Number(modeEl.value));
+          gl.uniform2f(loc.pointer, pointer[0], pointer[1]);
+
+          gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+          gl.enableVertexAttribArray(loc.position);
+          gl.vertexAttribPointer(loc.position, 2, gl.FLOAT, false, 0, 0);
+
+          gl.drawArrays(gl.TRIANGLES, 0, 3);
+          drawCount += 1;
+          drawCountEl.textContent = drawCount;
+          timeEl.textContent = simTime.toFixed(2);
+        }
+
+        let last = performance.now();
+        let fpsLast = last;
+        let frames = 0;
+
+        function loop(now) {
+          const dt = Math.min((now - last) / 1000, 0.05);
+          last = now;
+
+          if (animateEl.checked) {
+            simTime += dt * Number(speedEl.value);
+          }
+
+          drawFrame();
+
+          frames += 1;
+          if (now - fpsLast > 500) {
+            fpsEl.textContent = Math.round((frames * 1000) / (now - fpsLast));
+            frames = 0;
+            fpsLast = now;
+          }
+
+          requestAnimationFrame(loop);
+        }
+
+        canvas.addEventListener("pointermove", (e) => {
+          const rect = canvas.getBoundingClientRect();
+          pointer[0] = Math.max(
+            0,
+            Math.min(1, (e.clientX - rect.left) / rect.width),
+          );
+          pointer[1] = Math.max(
+            0,
+            Math.min(1, 1 - (e.clientY - rect.top) / rect.height),
+          );
+        });
+
+        document.querySelector("#stepBtn").addEventListener("click", () => {
+          simTime += 0.12;
+          drawFrame();
+          log("手动调用 drawFrame()：执行一帧绘制");
+        });
+
+        document.querySelector("#resetBtn").addEventListener("click", () => {
+          simTime = 0;
+          log("uTime 重置为 0");
+        });
+
+        document
+          .querySelector("#replayBtn")
+          .addEventListener("click", replaySteps);
+
+        replaySteps();
+        requestAnimationFrame(loop);
+      })();
+    </script>
+  </body>
+</html>

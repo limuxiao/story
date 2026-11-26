@@ -1,0 +1,1103 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WebGL 与 Three.js 快速学习手册</title>
+    <style>
+      :root {
+        --paper: #faf7f2;
+        --card: #fffdfa;
+        --ink: #2b2620;
+        --ink2: #5f574d;
+        --muted: #8a8075;
+        --line: #e6dfd4;
+        --accent: #b4702c;
+        --accent-soft: #fbf1e4;
+        --accent-deep: #8c5220;
+        --green: #4c7a5d;
+        --green-soft: #edf5ef;
+        --blue: #3f6f82;
+        --blue-soft: #eaf3f6;
+        --red: #a4441a;
+        --red-soft: #fbe9e0;
+        --code-bg: #f4efe7;
+        --shadow: 0 12px 30px rgba(65, 50, 30, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        font-size: 15px;
+        line-height: 1.78;
+      }
+
+      a {
+        color: var(--accent-deep);
+      }
+
+      code,
+      pre {
+        font-family:
+          "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+      }
+
+      .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 48px 28px 96px;
+      }
+
+      header.hero {
+        padding: 42px 40px 34px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background:
+          radial-gradient(
+            circle at 88% 10%,
+            rgba(180, 112, 44, 0.16),
+            transparent 30%
+          ),
+          linear-gradient(135deg, #fffdfa, #f7efe4);
+        box-shadow: var(--shadow);
+      }
+
+      .tag {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        color: var(--accent-deep);
+        background: var(--accent-soft);
+        border: 1px solid #ead7bd;
+        border-radius: 999px;
+        padding: 4px 12px;
+        margin-bottom: 14px;
+      }
+
+      h1 {
+        font-size: 36px;
+        line-height: 1.25;
+        margin: 0 0 12px;
+        letter-spacing: -0.02em;
+      }
+
+      h2 {
+        margin: 52px 0 16px;
+        font-size: 24px;
+        line-height: 1.35;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      h3 {
+        margin: 28px 0 10px;
+        font-size: 18px;
+      }
+
+      p {
+        margin: 10px 0;
+      }
+
+      .lead {
+        color: var(--ink2);
+        font-size: 16px;
+        max-width: 780px;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 20px;
+      }
+
+      .meta span {
+        font-size: 12.5px;
+        color: var(--ink2);
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 4px 11px;
+      }
+
+      nav.toc {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        margin: 24px 0 10px;
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: rgba(255, 253, 250, 0.94);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 6px 18px rgba(64, 48, 28, 0.06);
+      }
+
+      nav.toc strong {
+        font-size: 12px;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+        margin-right: 8px;
+      }
+
+      nav.toc a {
+        display: inline-block;
+        font-size: 13px;
+        margin: 4px 10px 4px 0;
+        text-decoration: none;
+        color: var(--ink2);
+      }
+
+      nav.toc a:hover {
+        color: var(--accent-deep);
+      }
+
+      .callout {
+        background: var(--green-soft);
+        border: 1px solid #cfe2d3;
+        border-left: 4px solid var(--green);
+        border-radius: 12px;
+        padding: 14px 18px;
+        margin: 18px 0;
+        color: var(--ink2);
+      }
+
+      .callout.warn {
+        background: var(--red-soft);
+        border-color: #edd3c4;
+        border-left-color: var(--red);
+      }
+
+      .callout.info {
+        background: var(--blue-soft);
+        border-color: #cfe0e7;
+        border-left-color: var(--blue);
+      }
+
+      .callout strong {
+        color: var(--ink);
+      }
+
+      .grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      .grid.two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid.three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 7px 18px rgba(65, 50, 30, 0.05);
+      }
+
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .card p:last-child {
+        margin-bottom: 0;
+      }
+
+      .kicker {
+        font-size: 12px;
+        color: var(--muted);
+        letter-spacing: 0.08em;
+        font-weight: 700;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 16px 0;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f6efe6;
+        color: var(--ink);
+        font-weight: 800;
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
+
+      ul,
+      ol {
+        padding-left: 22px;
+      }
+
+      li {
+        margin: 6px 0;
+      }
+
+      pre {
+        background: var(--code-bg);
+        border: 1px solid #e3d8ca;
+        border-radius: 12px;
+        padding: 14px 16px;
+        overflow: auto;
+        font-size: 13px;
+        line-height: 1.6;
+        color: #39342e;
+      }
+
+      code.inline {
+        background: var(--code-bg);
+        border: 1px solid #e3d8ca;
+        border-radius: 5px;
+        padding: 1px 5px;
+        font-size: 13px;
+      }
+
+      .flow {
+        display: flex;
+        align-items: stretch;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 14px 0;
+      }
+
+      .flow .step {
+        flex: 1 1 150px;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px 14px;
+        min-width: 140px;
+      }
+
+      .flow .step b {
+        display: block;
+        color: var(--accent-deep);
+        font-size: 12px;
+        margin-bottom: 4px;
+      }
+
+      .flow .arrow {
+        align-self: center;
+        color: var(--muted);
+      }
+
+      details {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--card);
+        padding: 10px 14px;
+        margin: 10px 0;
+      }
+
+      summary {
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      .checklist {
+        list-style: none;
+        padding-left: 0;
+      }
+
+      .checklist li {
+        padding-left: 28px;
+        position: relative;
+      }
+
+      .checklist li::before {
+        content: "□";
+        position: absolute;
+        left: 0;
+        color: var(--accent);
+        font-weight: 800;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        background: var(--accent-soft);
+        color: var(--accent-deep);
+        border: 1px solid #ead7bd;
+      }
+
+      .small {
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      footer {
+        margin-top: 64px;
+        padding-top: 20px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      @media (max-width: 860px) {
+        .grid.two,
+        .grid.three {
+          grid-template-columns: 1fr;
+        }
+
+        header.hero {
+          padding: 30px 24px;
+        }
+
+        h1 {
+          font-size: 28px;
+        }
+
+        .wrap {
+          padding: 28px 18px 70px;
+        }
+      }
+
+      @media print {
+        body {
+          background: white;
+        }
+
+        nav.toc {
+          position: static;
+          box-shadow: none;
+        }
+
+        .card,
+        header.hero,
+        pre {
+          box-shadow: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="hero">
+        <div class="tag">GRAPHICS · WEBGL · THREE.JS</div>
+        <h1>WebGL 与 Three.js 快速学习手册</h1>
+        <p class="lead">
+          这份文档的目标是：用最短路径建立 3D Web 开发的底层心智模型。先理解
+          WebGL 在做什么，再看 Three.js
+          如何把它封装成场景、相机、网格、材质和动画。
+        </p>
+        <div class="meta">
+          <span>适合：前端 / 全栈开发者</span>
+          <span>建议周期：7 天</span>
+          <span>形式：概念 + 对照 + 练习</span>
+          <span>项目案例：shipyard-fps</span>
+        </div>
+      </header>
+
+      <nav class="toc">
+        <strong>目录</strong>
+        <a href="#mindset">心智模型</a>
+        <a href="#roadmap">7 天路线</a>
+        <a href="#webgl">WebGL 底层</a>
+        <a href="#three">Three.js 封装</a>
+        <a href="#mapping">逐项对照</a>
+        <a href="#cases">项目案例</a>
+        <a href="#practice">练习任务</a>
+        <a href="#debug">调试清单</a>
+        <a href="#cheatsheet">速查表</a>
+      </nav>
+
+      <div class="callout">
+        <strong>一句话总览：</strong>
+        WebGL 是“手动告诉 GPU 怎么画”；Three.js 是“用对象描述场景，由引擎翻译成
+        WebGL”。你学 Three.js 时，如果理解它背后对应的 WebGL
+        步骤，进步会快很多。
+      </div>
+
+      <h2 id="mindset">一、先建立心智模型</h2>
+
+      <p>
+        不管用原生 WebGL 还是 Three.js，最终流程都一样：把几何数据送到
+        GPU，用着色器计算顶点位置和像素颜色，然后输出到一个 canvas 上。
+      </p>
+
+      <div class="flow">
+        <div class="step"><b>1. 几何数据</b>顶点、法线、UV、索引</div>
+        <div class="arrow">→</div>
+        <div class="step"><b>2. 变换矩阵</b>模型、视图、投影</div>
+        <div class="arrow">→</div>
+        <div class="step"><b>3. 着色器</b>顶点 shader + 片元 shader</div>
+        <div class="arrow">→</div>
+        <div class="step"><b>4. 光栅化</b>三角形变像素</div>
+        <div class="arrow">→</div>
+        <div class="step"><b>5. 输出画面</b>framebuffer / canvas</div>
+      </div>
+
+      <div class="grid two">
+        <div class="card">
+          <h3>原生 WebGL 关注什么</h3>
+          <ul>
+            <li>怎么创建 context</li>
+            <li>怎么编译 shader</li>
+            <li>怎么上传 buffer</li>
+            <li>怎么设置 attribute / uniform</li>
+            <li>怎么调用 drawArrays / drawElements</li>
+            <li>怎么管理 depth / blend / cull 等状态</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Three.js 关注什么</h3>
+          <ul>
+            <li>Scene 里放什么对象</li>
+            <li>Camera 放在哪里、看向哪里</li>
+            <li>Mesh 用什么 Geometry 和 Material</li>
+            <li>Light / Fog / Shadow 怎么配置</li>
+            <li>动画怎么播放</li>
+            <li>交互怎么通过 Raycaster 检测</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <strong>关键理解：</strong>
+        Three.js 没有绕开 WebGL，它只是把 WebGL 的低层命令组织成了对象系统。调用
+        <code class="inline">renderer.render(scene, camera)</code> 时，Three.js
+        内部仍然在做 buffer 绑定、shader 选择、uniform 上传和 draw call。
+      </div>
+
+      <h2 id="roadmap">二、7 天快速学习路线</h2>
+
+      <div class="grid three">
+        <div class="card">
+          <div class="kicker">DAY 1</div>
+          <h3>WebGL 最小闭环</h3>
+          <p>
+            学会创建 context、编译
+            shader、画一个三角形。目标不是做项目，而是知道 GPU 被怎样驱动。
+          </p>
+        </div>
+        <div class="card">
+          <div class="kicker">DAY 2</div>
+          <h3>矩阵与坐标</h3>
+          <p>
+            掌握模型矩阵、视图矩阵、投影矩阵。理解
+            <code class="inline">MVP = P × V × M</code>。
+          </p>
+        </div>
+        <div class="card">
+          <div class="kicker">DAY 3</div>
+          <h3>Three.js 三件套</h3>
+          <p>Renderer、Scene、Camera。再用 Geometry + Material 拼出 Mesh。</p>
+        </div>
+        <div class="card">
+          <div class="kicker">DAY 4</div>
+          <h3>光照与材质</h3>
+          <p>
+            理解
+            MeshBasicMaterial、MeshStandardMaterial、DirectionalLight、SpotLight、Fog。
+          </p>
+        </div>
+        <div class="card">
+          <div class="kicker">DAY 5</div>
+          <h3>交互与动画</h3>
+          <p>
+            用 Raycaster 做点击/射击检测，用 AnimationMixer 播放 glTF 动画。
+          </p>
+        </div>
+        <div class="card">
+          <div class="kicker">DAY 6</div>
+          <h3>性能优化</h3>
+          <p>
+            合并几何体、InstancedMesh、纹理压缩、减少 draw call、正确 dispose。
+          </p>
+        </div>
+        <div class="card">
+          <div class="kicker">DAY 7</div>
+          <h3>做一个小 FPS</h3>
+          <p>第一人称相机、WASD、碰撞、射击、敌人、HUD、波次系统。</p>
+        </div>
+        <div class="card">
+          <div class="kicker">贯穿全程</div>
+          <h3>一边写一边看</h3>
+          <p>
+            对照 <code class="inline">fps/shipyard-fps.html</code> 和
+            <code class="inline">fps/shipyard-fps-three.html</code
+            >，看同一个功能两种写法。
+          </p>
+        </div>
+        <div class="card">
+          <div class="kicker">学习方法</div>
+          <h3>不要只看 API</h3>
+          <p>每个 API 都问一句：它对应 WebGL 的哪一步？这样能建立长期记忆。</p>
+        </div>
+      </div>
+
+      <h2 id="webgl">三、原生 WebGL 是怎么工作的</h2>
+
+      <h3>1. 最小代码骨架</h3>
+
+      <pre><code>const canvas = document.querySelector('#gl');
+const gl = canvas.getContext('webgl');
+
+function compile(type, source) {
+  const shader = gl.createShader(type);
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    throw new Error(gl.getShaderInfoLog(shader));
+  }
+  return shader;
+}
+
+function createProgram(vsSource, fsSource) {
+  const program = gl.createProgram();
+  gl.attachShader(program, compile(gl.VERTEX_SHADER, vsSource));
+  gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fsSource));
+  gl.linkProgram(program);
+  return program;
+}</code></pre>
+
+      <h3>2. 顶点着色器负责“位置”</h3>
+
+      <pre><code>attribute vec2 aPosition;
+
+uniform mat4 uProjection;
+uniform mat4 uView;
+uniform mat4 uModel;
+
+void main() {
+  gl_Position = uProjection * uView * uModel * vec4(aPosition, 0.0, 1.0);
+}</code></pre>
+
+      <h3>3. 片元着色器负责“颜色”</h3>
+
+      <pre><code>precision mediump float;
+
+void main() {
+  gl_FragColor = vec4(1.0, 0.55, 0.2, 1.0);
+}</code></pre>
+
+      <h3>4. 数据上传和绘制</h3>
+
+      <pre><code>const vertices = new Float32Array([
+  -0.6, -0.4,
+   0.6, -0.4,
+   0.0,  0.6,
+]);
+
+const buffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+const loc = gl.getAttribLocation(program, 'aPosition');
+gl.enableVertexAttribArray(loc);
+gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+gl.useProgram(program);
+gl.drawArrays(gl.TRIANGLES, 0, 3);</code></pre>
+
+      <div class="callout warn">
+        <strong>新手最容易卡住的地方：</strong>
+        shader 编译失败、attribute location
+        没启用、矩阵顺序写反、忘记开深度测试、顶点绕序和面剔除冲突、canvas
+        尺寸和视口尺寸不一致。
+      </div>
+
+      <h3>5. 原生 WebGL 的开发顺序</h3>
+
+      <ol>
+        <li>创建 canvas 和 WebGL context。</li>
+        <li>编写顶点着色器和片元着色器。</li>
+        <li>准备顶点数据、索引、颜色、UV。</li>
+        <li>把数据上传成 buffer。</li>
+        <li>计算模型、视图、投影矩阵。</li>
+        <li>设置 uniform 和 attribute。</li>
+        <li>调用 drawArrays 或 drawElements。</li>
+        <li>用 requestAnimationFrame 重复执行。</li>
+      </ol>
+
+      <h2 id="three">四、Three.js 如何封装这些步骤</h2>
+
+      <p>
+        Three.js 的核心价值是把“命令式 GPU
+        调用”变成“声明式场景描述”。你不再直接管理 buffer 和 shader
+        program，而是创建 Scene、Camera、Mesh、Material、Light 等对象。
+      </p>
+
+      <h3>1. 最小 Three.js 场景</h3>
+
+      <pre><code>const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x202830);
+
+const camera = new THREE.PerspectiveCamera(
+  70,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  100
+);
+camera.position.z = 5;
+
+const geometry = new THREE.BoxGeometry(1, 1, 1);
+const material = new THREE.MeshStandardMaterial({ color: 0xff8844 });
+const cube = new THREE.Mesh(geometry, material);
+scene.add(cube);
+
+const light = new THREE.DirectionalLight(0xffffff, 2);
+light.position.set(3, 5, 4);
+scene.add(light);
+
+function loop() {
+  cube.rotation.y += 0.01;
+  renderer.render(scene, camera);
+  requestAnimationFrame(loop);
+}
+loop();</code></pre>
+
+      <h3>2. renderer.render 内部做了什么</h3>
+
+      <pre><code>renderer.render(scene, camera)
+
+  1. scene.updateMatrixWorld()
+  2. camera.updateMatrixWorld()
+  3. 计算 projection × view，生成视锥
+  4. 遍历 Scene 树：projectObject()
+  5. 过滤 visible、layers、frustumCulled
+  6. 收集灯光、阴影、可渲染对象
+  7. 对不透明/透明对象排序
+  8. 为每个对象选择或生成 shader program
+  9. 绑定 geometry / material / texture
+ 10. 上传 uniform
+ 11. 调用底层 drawArrays / drawElements</code></pre>
+
+      <div class="callout info">
+        <strong>学习建议：</strong>
+        不要把 Three.js 当成完全不同的东西。每学一个 Three.js
+        类，都反向问：它替代了原生 WebGL 的哪段代码？例如
+        <code class="inline">BufferGeometry</code> 替代手写 buffer，<code
+          class="inline"
+          >Material</code
+        >
+        替代手写 shader uniform，<code class="inline">Object3D</code>
+        替代手写矩阵层级。
+      </div>
+
+      <h2 id="mapping">五、WebGL 与 Three.js 逐项对照</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>原生 WebGL</th>
+            <th>Three.js</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code class="inline">getContext('webgl')</code></td>
+            <td><code class="inline">WebGLRenderer</code></td>
+            <td>渲染器内部创建和管理 WebGL context。</td>
+          </tr>
+          <tr>
+            <td>手写向量、矩阵</td>
+            <td>
+              <code class="inline">Vector3</code> /
+              <code class="inline">Matrix4</code> /
+              <code class="inline">Quaternion</code>
+            </td>
+            <td>Three.js 提供完整数学库。</td>
+          </tr>
+          <tr>
+            <td><code class="inline">persp()</code></td>
+            <td><code class="inline">PerspectiveCamera</code></td>
+            <td>相机自动维护 projectionMatrix。</td>
+          </tr>
+          <tr>
+            <td><code class="inline">lookAt()</code></td>
+            <td><code class="inline">camera.lookAt()</code></td>
+            <td>自动生成视图方向。</td>
+          </tr>
+          <tr>
+            <td><code class="inline">createBuffer()</code></td>
+            <td><code class="inline">BufferGeometry</code></td>
+            <td>几何数据容器，内部再转成 WebGL buffer。</td>
+          </tr>
+          <tr>
+            <td><code class="inline">vertexAttribPointer()</code></td>
+            <td>
+              <code class="inline">BufferAttribute</code> + 渲染器内部绑定
+            </td>
+            <td>无需手动设置 stride/offset。</td>
+          </tr>
+          <tr>
+            <td><code class="inline">compileShader()</code></td>
+            <td>
+              <code class="inline">Material</code> /
+              <code class="inline">ShaderMaterial</code>
+            </td>
+            <td>内置材质自动生成 shader，也可自定义 GLSL。</td>
+          </tr>
+          <tr>
+            <td><code class="inline">uniformMatrix4fv()</code></td>
+            <td>材质属性 / 渲染器内部 uniform 上传</td>
+            <td>
+              例如 <code class="inline">material.color</code>、<code
+                class="inline"
+                >mesh.matrixWorld</code
+              >。
+            </td>
+          </tr>
+          <tr>
+            <td>手写物体数组</td>
+            <td>
+              <code class="inline">Scene</code> /
+              <code class="inline">Object3D</code>
+            </td>
+            <td>自动维护父子关系和世界矩阵。</td>
+          </tr>
+          <tr>
+            <td>手动排序和剔除</td>
+            <td><code class="inline">WebGLRenderLists</code> + Frustum</td>
+            <td>自动视锥剔除、透明排序。</td>
+          </tr>
+          <tr>
+            <td>手写射线求交</td>
+            <td><code class="inline">Raycaster</code></td>
+            <td>鼠标拾取、射击检测更方便。</td>
+          </tr>
+          <tr>
+            <td>手写模型动画</td>
+            <td><code class="inline">AnimationMixer</code></td>
+            <td>播放 glTF / GLB 中的 AnimationClip。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2 id="cases">六、结合当前项目理解</h2>
+
+      <div class="grid two">
+        <div class="card">
+          <h3><span class="pill">原生版</span> shipyard-fps.html</h3>
+          <p>这是手写 WebGL 管理版：</p>
+          <ul>
+            <li>
+              <code class="inline">canvas.getContext('webgl')</code> 创建上下文
+            </li>
+            <li>
+              自己写 <code class="inline">persp()</code>、<code class="inline"
+                >lookAt()</code
+              >、<code class="inline">trs()</code>
+            </li>
+            <li>
+              自己编译 <code class="inline">mainProg</code>、<code
+                class="inline"
+                >waterProg</code
+              >、<code class="inline">skyProg</code>
+            </li>
+            <li>自己把立方体顶点塞进数组并上传 buffer</li>
+            <li>自己写雾、手电、水面波纹 shader</li>
+            <li>自己在 render 里按天空、世界、水、敌人、枪械顺序绘制</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3><span class="pill">Three.js 版</span> shipyard-fps-three.html</h3>
+          <p>这是对象封装版：</p>
+          <ul>
+            <li><code class="inline">WebGLRenderer</code> 管理 GPU 渲染</li>
+            <li><code class="inline">Scene</code> 管理场景树</li>
+            <li><code class="inline">PerspectiveCamera</code> 管理相机</li>
+            <li><code class="inline">Mesh</code> = Geometry + Material</li>
+            <li>
+              <code class="inline">FogExp2</code>、<code class="inline"
+                >SpotLight</code
+              >
+              管理氛围光
+            </li>
+            <li>
+              <code class="inline">GLTFLoader</code> 加载机器人，<code
+                class="inline"
+                >AnimationMixer</code
+              >
+              播放动画
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Three.js 核心文件怎么看</h3>
+
+      <p>
+        当前项目的 <code class="inline">fps/vendor/three.module.js</code> 是
+        Three.js r160
+        核心包。它包含场景图、数学库、WebGLRenderer、材质、灯光、动画、射线检测和大量内置几何体。
+      </p>
+      <p>
+        注意：<code class="inline">GLTFLoader</code>、<code class="inline"
+          >SkeletonUtils</code
+        >
+        这类扩展不在核心文件里，而在
+        <code class="inline">vendor/addons/</code> 下。
+      </p>
+
+      <div class="callout warn">
+        <strong>版本意识：</strong>
+        Three.js API 变化较快。学习时要先确认版本。当前项目是 r160，使用的是
+        <code class="inline">outputColorSpace</code>、<code class="inline"
+          >SRGBColorSpace</code
+        >
+        这类较新的色彩管理 API。
+      </div>
+
+      <h2 id="practice">七、推荐练习任务</h2>
+
+      <div class="grid two">
+        <div class="card">
+          <h3>练习 1：原生 WebGL 三角形</h3>
+          <p>目标：理解 shader、buffer、draw call。</p>
+          <ol>
+            <li>创建 canvas 和 WebGL context。</li>
+            <li>写最小顶点/片元 shader。</li>
+            <li>上传 3 个顶点。</li>
+            <li>画出三角形。</li>
+            <li>用 uniform 传入时间，让颜色变化。</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h3>练习 2：Three.js 旋转立方体</h3>
+          <p>目标：理解 Scene / Camera / Mesh。</p>
+          <ol>
+            <li>创建 renderer、scene、camera。</li>
+            <li>添加 BoxGeometry + MeshStandardMaterial。</li>
+            <li>添加方向光。</li>
+            <li>每帧旋转立方体。</li>
+            <li>加 OrbitControls 观察。</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h3>练习 3：第一人称移动</h3>
+          <p>目标：理解相机和输入。</p>
+          <ol>
+            <li>WASD 修改 camera.position。</li>
+            <li>鼠标 movementX/Y 控制 yaw/pitch。</li>
+            <li>加重力和跳跃。</li>
+            <li>用 AABB 做简单碰撞。</li>
+            <li>限制相机不要穿墙。</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h3>练习 4：Raycaster 射击</h3>
+          <p>目标：理解射线检测。</p>
+          <ol>
+            <li>鼠标点击时创建 Raycaster。</li>
+            <li>检测敌人 Mesh 数组。</li>
+            <li>命中后改变颜色或播放粒子。</li>
+            <li>增加血量和击杀计数。</li>
+            <li>增加弹道特效。</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h3>练习 5：加载 glTF 模型</h3>
+          <p>目标：理解外部模型和动画。</p>
+          <ol>
+            <li>用 GLTFLoader 加载 GLB。</li>
+            <li>用 Box3 计算模型尺寸。</li>
+            <li>归一化缩放。</li>
+            <li>找到 Walking / Death 动画。</li>
+            <li>用 AnimationMixer 播放。</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h3>练习 6：敌人类型系统</h3>
+          <p>目标：理解对象数据和行为差异。</p>
+          <ol>
+            <li>定义敌人配置表。</li>
+            <li>给不同敌人不同血量/速度/伤害。</li>
+            <li>给不同敌人不同模型或颜色。</li>
+            <li>按波次解锁敌人。</li>
+            <li>增加精英词缀。</li>
+          </ol>
+        </div>
+      </div>
+
+      <h2 id="debug">八、调试清单</h2>
+
+      <h3>WebGL 黑屏排查</h3>
+      <ul class="checklist">
+        <li>context 是否创建成功？</li>
+        <li>shader 是否编译成功？查看 gl.getShaderInfoLog。</li>
+        <li>program 是否 link 成功？查看 gl.getProgramInfoLog。</li>
+        <li>attribute location 是否有效？是否 enableVertexAttribArray？</li>
+        <li>vertexAttribPointer 的 size、stride、offset 是否正确？</li>
+        <li>uniform location 是否为 null？</li>
+        <li>矩阵乘法顺序是否正确？</li>
+        <li>是否设置了 viewport？</li>
+        <li>是否 clear 了 color/depth buffer？</li>
+        <li>物体是否在视锥内？</li>
+      </ul>
+
+      <h3>Three.js 物体看不见排查</h3>
+      <ul class="checklist">
+        <li>是否 scene.add(object)？</li>
+        <li>object.visible 是否为 true？</li>
+        <li>position / scale 是否异常？</li>
+        <li>几何体包围盒是否正确？</li>
+        <li>frustumCulled 是否误剔除？</li>
+        <li>材质 side 是否朝向正确？</li>
+        <li>是否需要灯光？MeshBasicMaterial 不需要，Standard 需要。</li>
+        <li>透明度、深度写入、renderOrder 是否冲突？</li>
+        <li>模型缩放是否按真实几何尺寸计算？骨骼模型尤其要注意。</li>
+      </ul>
+
+      <h3>性能优化清单</h3>
+      <ul class="checklist">
+        <li>减少 draw call：合并静态几何体。</li>
+        <li>重复物体使用 InstancedMesh。</li>
+        <li>减少材质种类和 program 切换。</li>
+        <li>纹理使用压缩格式。</li>
+        <li>启用视锥剔除。</li>
+        <li>阴影贴图尺寸不要盲目过大。</li>
+        <li>粒子系统用 Points 或实例化，不要大量 Mesh。</li>
+        <li>
+          删除对象时调用 geometry.dispose() / material.dispose() /
+          texture.dispose()。
+        </li>
+      </ul>
+
+      <details>
+        <summary>常见问题：为什么机器人模型加载了却看不见？</summary>
+        <p>
+          常见原因是缩放计算错误。骨骼模型用
+          <code class="inline">Box3.setFromObject()</code>
+          时可能把骨骼层级也算进去，导致 scale 极小。更稳妥的做法是只遍历真实
+          Mesh，用每个 geometry 的 boundingBox 乘以 matrixWorld 后合并包围盒。
+        </p>
+      </details>
+
+      <details>
+        <summary>
+          常见问题：Three.js 为什么还要自己写 requestAnimationFrame？
+        </summary>
+        <p>
+          Three.js 的 renderer
+          只负责“渲染一帧”，游戏循环仍然由你控制。你也可以用
+          <code class="inline">renderer.setAnimationLoop()</code>，它在 XR
+          场景里更方便，但普通项目里手写 rAF 更直观。
+        </p>
+      </details>
+
+      <h2 id="cheatsheet">九、速查表</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>目标</th>
+            <th>原生 WebGL</th>
+            <th>Three.js</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>画一个立方体</td>
+            <td>手写 36 个顶点或索引</td>
+            <td><code class="inline">new THREE.BoxGeometry()</code></td>
+          </tr>
+          <tr>
+            <td>设置颜色</td>
+            <td>顶点属性或 uniform</td>
+            <td><code class="inline">material.color</code></td>
+          </tr>
+          <tr>
+            <td>移动物体</td>
+            <td>重算 modelMatrix</td>
+            <td><code class="inline">mesh.position.x += 1</code></td>
+          </tr>
+          <tr>
+            <td>旋转物体</td>
+            <td>手写旋转矩阵</td>
+            <td><code class="inline">mesh.rotation.y += 0.01</code></td>
+          </tr>
+          <tr>
+            <td>相机移动</td>
+            <td>重算 viewMatrix</td>
+            <td>改 camera.position / rotation</td>
+          </tr>
+          <tr>
+            <td>雾</td>
+            <td>fragment shader 中计算</td>
+            <td><code class="inline">scene.fog = new THREE.FogExp2()</code></td>
+          </tr>
+          <tr>
+            <td>手电筒</td>
+            <td>shader 中计算聚光锥</td>
+            <td><code class="inline">SpotLight</code></td>
+          </tr>
+          <tr>
+            <td>命中检测</td>
+            <td>手写射线与 AABB/球相交</td>
+            <td><code class="inline">Raycaster</code></td>
+          </tr>
+          <tr>
+            <td>模型动画</td>
+            <td>自己插值骨骼矩阵</td>
+            <td><code class="inline">AnimationMixer</code></td>
+          </tr>
+          <tr>
+            <td>批量物体</td>
+            <td>instancing 扩展</td>
+            <td><code class="inline">InstancedMesh</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>最后建议</h3>
+      <div class="card">
+        <p>
+          最有效的学习顺序不是“先啃完 Three.js 所有 API”，而是：先用原生 WebGL
+          画一个三角形，理解 GPU 管线；再用 Three.js
+          重写同一个场景；然后逐步加相机、光照、模型、动画和交互。每加一个功能，都思考它背后的
+          WebGL 步骤。
+        </p>
+        <p>
+          如果你要做游戏，真正难的部分通常不是 WebGL
+          API，而是：坐标系统、矩阵、碰撞、状态管理、资源生命周期、性能预算和调试能力。
+        </p>
+      </div>
+
+      <footer>
+        WebGL 与 Three.js 快速学习手册 · 放到 <strong>全栈学习</strong> 文件夹 ·
+        可直接用浏览器打开，也可打印为 PDF。
+      </footer>
+    </div>
+  </body>
+</html>
